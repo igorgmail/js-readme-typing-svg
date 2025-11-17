@@ -1,0 +1,26 @@
+{
+  "name": "js-readme-typing-svg",
+  "version": "1.0.0",
+  "description": "Dynamic SVG typing animation generator",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "svg",
+    "typing",
+    "animation",
+    "readme"
+  ],
+  "author": "igorford1@gmail.com",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+

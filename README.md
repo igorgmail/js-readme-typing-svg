@@ -21,6 +21,35 @@
 
 ## 🚀 Быстрый старт
 
+> 💡 **Новичок?** Читайте [QUICKSTART.md](QUICKSTART.md) для быстрого введения!
+
+### Запуск локального сервера
+
+1. Установите зависимости:
+```bash
+npm install
+```
+
+2. Запустите сервер:
+```bash
+npm start
+```
+
+3. Откройте нужную страницу:
+   - **Генератор URL**: `http://localhost:3000/generator.html`
+   - **Тестовая страница**: `http://localhost:3000/test-server.html`
+   - **Демо**: `http://localhost:3000/index.html`
+
+4. Используйте API эндпоинт:
+```
+http://localhost:3000/svg?lines=Hello+World&fontSize=32&color=0077cc
+```
+
+📖 **Документация**:
+- [Запуск сервера](docs/SERVER_SETUP.md)
+- [Примеры использования API](docs/API_EXAMPLES.md)
+- [Деплой на продакшн](docs/DEPLOY.md)
+
 ### Использование через URL
 
 Просто добавьте параметры в URL:
@@ -31,6 +60,12 @@ https://yourusername.github.io/js-readme-typing-svg/?lines=Hello+World&fontSize=
 
 ### В GitHub Profile README
 
+Через сервер (рекомендуется):
+```markdown
+![Typing SVG](http://localhost:3000/svg?lines=Welcome+to+my+profile!;I'm+a+developer;Check+my+projects&fontSize=24&color=0077cc&center=true)
+```
+
+Или через GitHub Pages:
 ```markdown
 ![Typing SVG](https://yourusername.github.io/js-readme-typing-svg/?lines=Welcome+to+my+profile!;I'm+a+developer;Check+my+projects&center=true)
 ```

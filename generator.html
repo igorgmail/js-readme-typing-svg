@@ -120,10 +120,9 @@
       justify-content: center;
     }
     
-    .preview iframe {
-      border: none;
-      width: 100%;
-      min-height: 180px;
+    .preview img {
+      max-width: 100%;
+      height: auto;
     }
     
     .button-group {
@@ -263,7 +262,8 @@ Welcome!</textarea>
   
   <script type="module">
     window.generateURL = function() {
-      const baseURL = window.location.origin + window.location.pathname.replace('generator.html', 'index.html');
+      // Используем эндпоинт /svg для генерации SVG
+      const baseURL = window.location.origin + '/svg';
       
       // Собираем параметры
       const lines = document.getElementById('lines').value.split('\n').filter(l => l.trim());
@@ -293,9 +293,9 @@ Welcome!</textarea>
       const html = `<img src="${fullURL}" alt="Typing SVG" />`;
       document.getElementById('htmlOutput').value = html;
       
-      // Показываем превью через iframe
+      // Показываем превью через img (теперь /svg возвращает правильный Content-Type)
       const preview = document.getElementById('preview');
-      preview.innerHTML = `<iframe src="${fullURL}" title="SVG Preview"></iframe>`;
+      preview.innerHTML = `<img src="${fullURL}" alt="SVG Preview" />`;
       
       window.generatedURL = fullURL;
     }
