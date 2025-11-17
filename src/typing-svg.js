@@ -4,23 +4,34 @@ import { parseLines } from './variables.js';
 export function createMultilineBlockTypingSVG(opts = {}) {
   const {
     lines: rawLines = [],
-    color = "#000",
-    printSpeed = 80,
-    eraseSpeed = 50,
-    delayAfterBlockPrint = 800,
-    delayAfterErase = 500,
-    fontSize = 16,
-    lineHeight = 1.35,
-    width = 800,
-    height = 200,
-    paddingX = 16,
-    paddingY = 20,
-		multiLine = false,
-    verticalAlign = "top",
-    horizontalAlign = "left", // left | center | right
-    typingMode = "expand", // expand | static
-    eraseMode = "line", // line | block | wipe-down | fade
-    background = "transparent",
+    // Цвета
+    color = "#000000", // Цвет текста
+    background = "transparent", // Цвет фона
+    
+    // Скорости анимации (в миллисекундах)
+    printSpeed = 80, // Скорость печати (10-500): меньше = быстрее
+    eraseSpeed = 50, // Скорость стирания (10-200): меньше = быстрее
+    delayAfterBlockPrint = 800, // Пауза после печати (0-5000)
+    delayAfterErase = 500, // Пауза после стирания (0-5000)
+    
+    // Размеры и отступы
+    fontSize = 16, // Размер шрифта в px
+    lineHeight = 1.35, // Межстрочный интервал
+    width = 800, // Ширина SVG в px
+    height = 200, // Высота SVG в px
+    paddingX = 16, // Горизонтальный отступ в px
+    paddingY = 20, // Вертикальный отступ в px
+    
+    // Выравнивание
+    verticalAlign = "top", // Вертикальное: top | middle | bottom
+    horizontalAlign = "left", // Горизонтальное: left | center | right
+    
+    // Режимы работы
+    multiLine = false, // Многострочный режим: true | false
+    typingMode = "expand", // Режим печати: expand | static
+    eraseMode = "line", // Режим стирания: line | block | wipe-down | fade
+    
+    // Контейнер
     container = document.getElementById("demo"),
   } = opts;
 

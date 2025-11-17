@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Test URL Parser</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .test-url {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 2px solid #ddd;
+      word-break: break-all;
+    }
+    .result {
+      background: #e8f5e9;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #4caf50;
+    }
+    button {
+      background: #0077cc;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    #demo {
+      margin-top: 20px;
+      border: 2px solid #333;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Тестирование URL Parser</h1>
+  
+  <h2>Текущий URL:</h2>
+  <div class="test-url" id="currentUrl"></div>
+  
+  <h2>Тестовые URL:</h2>
+  <button onclick="testSimple()">Простой тест</button>
+  <button onclick="testFull()">Полный тест</button>
+  <button onclick="testVariables()">С переменными</button>
+  
+  <h2>Результат парсинга:</h2>
+  <div class="result">
+    <pre id="result">Нажмите кнопку теста</pre>
+  </div>
+  
+  <h2>SVG Preview:</h2>
+  <div id="demo"></div>
+  
+  <script type="module">
+    import { parseURLParams, urlParamsToOptions } from './src/url-parser.js';
+    import { createMultilineBlockTypingSVG } from './src/typing-svg.js';
+    
+    // Показываем текущий URL
+    document.getElementById('currentUrl').textContent = window.location.href;
+    
+    // Если есть параметры, парсим их
+    const urlParams = parseURLParams();
+    if (Object.keys(urlParams).length > 0) {
+      const options = urlParamsToOptions(urlParams);
+      document.getElementById('result').textContent = JSON.stringify(options, null, 2);
+      
+      // Создаем SVG
+      try {
+        createMultilineBlockTypingSVG(options);
+      } catch (error) {
+        document.getElementById('result').textContent += '\n\nОшибка создания SVG:\n' + error.message;
+      }
+    }
+    
+    window.testSimple = function() {
+      const testUrl = window.location.origin + window.location.pathname + 
+        '?lines=Hello+World&fontSize=32&color=0077cc';
+      window.location.href = testUrl;
+    }
+    
+    window.testFull = function() {
+      const testUrl = window.location.origin + window.location.pathname + 
+        '?lines=Line+1;Line+2;Line+3' +
+        '&fontSize=20' +
+        '&color=1A5975' +
+        '&background=81BECE' +
+        '&width=1000' +
+        '&height=100' +
+        '&center=true' +
+        '&typingMode=static' +
+        '&eraseMode=fade' +
+        '&multiLine=false' +
+        '&printSpeed=50';
+      window.location.href = testUrl;
+    }
+    
+    window.testVariables = function() {
+      const testUrl = window.location.origin + window.location.pathname + 
+        '?lines=' + encodeURIComponent('Today is $DATE{weekday: long, month: long, day: numeric}') +
+        '&fontSize=24' +
+        '&color=333333';
+      window.location.href = testUrl;
+    }
+  </script>
+</body>
+</html>
+
