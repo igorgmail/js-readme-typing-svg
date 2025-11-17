@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lines: [
         "🅷🅴🆈 My name`s Igor",
         "Today is $DATE{weekday: long, month: long, day: numeric, locale: en}",
-        "Started coding $RELDATE{value: -2, unit: hour, locale: ru}"
+        "It`s a great day to code."
       ],
       
       // Цвета (дефолт: color="#000000", background="transparent")

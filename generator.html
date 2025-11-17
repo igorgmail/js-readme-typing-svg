@@ -120,6 +120,12 @@
       justify-content: center;
     }
     
+    .preview iframe {
+      border: none;
+      width: 100%;
+      min-height: 180px;
+    }
+    
     .button-group {
       margin-top: 20px;
     }
@@ -287,9 +293,9 @@ Welcome!</textarea>
       const html = `<img src="${fullURL}" alt="Typing SVG" />`;
       document.getElementById('htmlOutput').value = html;
       
-      // Показываем превью
+      // Показываем превью через iframe
       const preview = document.getElementById('preview');
-      preview.innerHTML = `<img src="${fullURL}" alt="SVG Preview" />`;
+      preview.innerHTML = `<iframe src="${fullURL}" title="SVG Preview"></iframe>`;
       
       window.generatedURL = fullURL;
     }
