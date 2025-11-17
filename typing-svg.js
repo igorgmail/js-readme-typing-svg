@@ -1,4 +1,6 @@
-function createMultilineBlockTypingSVG(opts = {}) {
+import { typeLine, eraseLine, eraseBlock, eraseWipeDown, eraseFade } from './animations.js';
+
+export function createMultilineBlockTypingSVG(opts = {}) {
   const {
     lines = [],
     color = "#000",
@@ -125,110 +127,37 @@ function createMultilineBlockTypingSVG(opts = {}) {
     caret.setAttribute("y", caretY);
   }
 
-  // type one line
-  function typeLine(lineIndex) {
-    return new Promise((resolve) => {
-      let i = 0;
-      const interval = setInterval(() => {
-        updateCaret(lineIndex, i);
-        i++;
-        if (i > lines[lineIndex].length) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, printSpeed);
-    });
-  }
+  // Обертки для функций анимации с контекстом
+  const typeLineWithContext = (lineIndex) => 
+    typeLine(lineIndex, lines, printSpeed, updateCaret);
 
-  // erase one line
-  function eraseLine(lineIndex) {
-    return new Promise((resolve) => {
-      let i = lines[lineIndex].length;
-      const interval = setInterval(() => {
-        updateCaret(lineIndex, i);
-        i--;
-        if (i < 0) {
-          clearInterval(interval);
-          const t = multiLine ? textEls[lineIndex] : textEls[0];
-          t.textContent = "";
-          resolve();
-        }
-      }, eraseSpeed);
-    });
-  }
+  const eraseLineWithContext = (lineIndex) => 
+    eraseLine(lineIndex, lines, eraseSpeed, updateCaret, textEls, multiLine);
 
-  // erase block mode (right to left)
-  async function eraseBlock() {
-    const maxLen = Math.max(...lines.map((l) => l.length));
-    for (let step = maxLen; step >= 0; step--) {
-      for (let i = 0; i < lines.length; i++) {
-        const remain = Math.min(step, lines[i].length);
-        updateCaret(i, remain);
-      }
-      await new Promise((r) => setTimeout(r, eraseSpeed));
-    }
-    textEls.forEach((t) => (t.textContent = ""));
-  }
+  const eraseBlockWithContext = () => 
+    eraseBlock(lines, eraseSpeed, updateCaret, textEls);
 
-  // wipe-down effect
-  async function eraseWipeDown() {
-    // mask rectangle
-    const maskId = "mask_" + Date.now();
-    const mask = document.createElementNS(NS, "mask");
-    mask.setAttribute("id", maskId);
-    svg.appendChild(mask);
+  const eraseWipeDownWithContext = () => 
+    eraseWipeDown(NS, svg, width, height, eraseSpeed, textEls);
 
-    // white rect (mask visible)
-    const whiteRect = document.createElementNS(NS, "rect");
-    whiteRect.setAttribute("x", 0);
-    whiteRect.setAttribute("y", 0);
-    whiteRect.setAttribute("width", width);
-    whiteRect.setAttribute("height", 0);
-    whiteRect.setAttribute("fill", "white");
-    mask.appendChild(whiteRect);
-
-    textEls.forEach((t) => t.setAttribute("mask", `url(#${maskId})`));
-
-    const steps = 50;
-    for (let i = 0; i <= steps; i++) {
-      whiteRect.setAttribute("height", (height * i) / steps);
-      await new Promise((r) => setTimeout(r, eraseSpeed));
-    }
-    // cleanup
-    textEls.forEach((t) => t.setAttribute("mask", null));
-    svg.removeChild(mask);
-    textEls.forEach((t) => (t.textContent = ""));
-  }
-
-  // fade effect
-  async function eraseFade() {
-    const steps = 20;
-    for (let s = steps; s >= 0; s--) {
-      const o = s / steps;
-      textEls.forEach((t) => t.setAttribute("opacity", o));
-      await new Promise((r) => setTimeout(r, eraseSpeed));
-    }
-    textEls.forEach((t) => {
-      t.setAttribute("opacity", 1);
-      t.textContent = "";
-    });
-  }
+  const eraseFadeWithContext = () => 
+    eraseFade(eraseSpeed, textEls);
 
   async function loop() {
     if (multiLine) {
       // режим: все строки одновременно
       while (true) {
-        for (let i = 0; i < lines.length; i++) await typeLine(i);
+        for (let i = 0; i < lines.length; i++) await typeLineWithContext(i);
         await new Promise((r) => setTimeout(r, delayAfterBlockPrint));
 
         if (eraseMode === "line") {
-          for (let i = lines.length - 1; i >= 0; i--) await eraseLine(i);
+          for (let i = lines.length - 1; i >= 0; i--) await eraseLineWithContext(i);
         } else if (eraseMode === "block") {
-          await eraseBlock();
+          await eraseBlockWithContext();
         } else if (eraseMode === "wipe-down") {
-          await eraseWipeDown();
+          await eraseWipeDownWithContext();
         } else if (eraseMode === "fade") {
-          await eraseFade();
+          await eraseFadeWithContext();
         }
 
         await new Promise((r) => setTimeout(r, delayAfterErase));
@@ -237,17 +166,17 @@ function createMultilineBlockTypingSVG(opts = {}) {
       // режим: одна строка меняется на другую
       let currentLineIndex = 0;
       while (true) {
-        await typeLine(currentLineIndex);
+        await typeLineWithContext(currentLineIndex);
         await new Promise((r) => setTimeout(r, delayAfterBlockPrint));
 
         // стираем текущую строку одним из эффектов
         if (eraseMode === "fade") {
-          await eraseFade();
+          await eraseFadeWithContext();
         } else if (eraseMode === "wipe-down") {
-          await eraseWipeDown();
+          await eraseWipeDownWithContext();
         } else {
           // для остальных режимов используем eraseLine
-          await eraseLine(currentLineIndex);
+          await eraseLineWithContext(currentLineIndex);
         }
 
         await new Promise((r) => setTimeout(r, delayAfterErase));

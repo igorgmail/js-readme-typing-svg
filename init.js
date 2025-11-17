@@ -1,9 +1,11 @@
+import { createMultilineBlockTypingSVG } from './typing-svg.js';
+
 // --------------- DEMO --------------------
 document.addEventListener("DOMContentLoaded", () => {
   createMultilineBlockTypingSVG({
     lines: [
       "🅷🅴🆈 My name`s Igor",
-      "Today is Wednesday, $DATE(YYYY-MM-DD)",
+      "Today is $DATE{format: YYYY-MM-DD, locale: ru}",
 			"it`s a great day to code."
     ],
     printSpeed: 50,
