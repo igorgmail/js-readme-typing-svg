@@ -5,8 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   createMultilineBlockTypingSVG({
     lines: [
       "🅷🅴🆈 My name`s Igor",
-      "Today is $DATE{format: YYYY-MM-DD, locale: ru}",
-			"it`s a great day to code."
+      "Today is $DATE{weekday: long, month: long, day: numeric, locale: en}",
+      "Started coding $RELDATE{value: -2, unit: hour, locale: ru}"
     ],
     printSpeed: 50,
     fontSize: 20,

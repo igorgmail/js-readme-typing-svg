@@ -1,8 +1,9 @@
 import { typeLine, eraseLine, eraseBlock, eraseWipeDown, eraseFade } from './animations.js';
+import { parseLines } from './variables.js';
 
 export function createMultilineBlockTypingSVG(opts = {}) {
   const {
-    lines = [],
+    lines: rawLines = [],
     color = "#000",
     printSpeed = 80,
     eraseSpeed = 50,
@@ -22,6 +23,9 @@ export function createMultilineBlockTypingSVG(opts = {}) {
     background = "transparent",
     container = document.getElementById("demo"),
   } = opts;
+
+  // Парсим переменные в строках
+  const lines = parseLines(rawLines);
 
   const NS = "http://www.w3.org/2000/svg";
 
