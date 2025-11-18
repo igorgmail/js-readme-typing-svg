@@ -10,14 +10,19 @@
 
 ## ✨ Особенности
 
+- 🎬 **SMIL-анимация v2** — улучшенная версия без JavaScript для GitHub README (работает в `<img>`)
+  - ✅ Поддержка textPath режима (эффект печатной машинки)
+  - ✅ Мигающий курсор
+  - ✅ Адаптация эффектов из animations.js
 - 🌍 **Нативные Intl API** — поддержка всех локалей через `Intl.DateTimeFormat` и `Intl.RelativeTimeFormat`
 - 📅 **Динамические переменные** — `$DATE` для дат, `$RELDATE` для относительного времени
 - 🎭 **4 режима стирания** — fade, line, block, wipe-down
-- ⚡ **2 режима печати** — expand (сдвиг текста), static (фиксированная позиция)
+- ⚡ **2 режима печати** — expand (сдвиг текста), static (фиксированная позиция), textPath
 - 🎯 **URL параметры** — полная настройка через query string
 - 🖌️ **Визуальный генератор** — создавайте URL через удобный интерфейс
 - 📦 **ES6 модули** — современный, чистый код без зависимостей
 - 🌈 **Гибкая настройка** — цвета, размеры, скорости, выравнивание
+- 🚀 **Серверная генерация** — SVG формируется на сервере
 
 ## 🚀 Быстрый старт
 
@@ -46,6 +51,8 @@ http://localhost:3000/svg?lines=Hello+World&fontSize=32&color=0077cc
 ```
 
 📖 **Документация**:
+- [🎬 SMIL-анимация v2 (для GitHub)](docs/SMIL_ANIMATION.md) — **ВАЖНО для README!**
+- [🔄 Миграция animations.js → SMIL](docs/ANIMATIONS_TO_SMIL.md) — **сравнение эффектов**
 - [Запуск сервера](docs/SERVER_SETUP.md)
 - [Примеры использования API](docs/API_EXAMPLES.md)
 - [Деплой на продакшн](docs/DEPLOY.md)
@@ -60,12 +67,19 @@ https://yourusername.github.io/js-readme-typing-svg/?lines=Hello+World&fontSize=
 
 ### В GitHub Profile README
 
-Через сервер (рекомендуется):
+⭐ **Рекомендуется:** Используйте SMIL-версию (без JavaScript):
 ```markdown
-![Typing SVG](http://localhost:3000/svg?lines=Welcome+to+my+profile!;I'm+a+developer;Check+my+projects&fontSize=24&color=0077cc&center=true)
+![Typing SVG](http://localhost:3000/svg-smil?lines=Welcome+to+my+profile!;I'm+a+developer;Check+my+projects&fontSize=24&color=0077cc&typingMode=textPath)
 ```
 
-Или через GitHub Pages:
+Стандартная версия (требует `<object>` вместо `![]()`):
+```markdown
+<object type="image/svg+xml" data="http://localhost:3000/svg?lines=Welcome+to+my+profile!">
+  Your browser does not support SVG
+</object>
+```
+
+Через GitHub Pages:
 ```markdown
 ![Typing SVG](https://yourusername.github.io/js-readme-typing-svg/?lines=Welcome+to+my+profile!;I'm+a+developer;Check+my+projects&center=true)
 ```
@@ -227,6 +241,8 @@ http://localhost:8000/
 ### Основные руководства
 
 - 📘 [Быстрый старт](docs/QUICKSTART.md) — начните здесь!
+- 🎬 [SMIL-анимация v2 для GitHub](docs/SMIL_ANIMATION.md) — **версия без JavaScript!**
+- 🔄 [Миграция animations.js → SMIL](docs/ANIMATIONS_TO_SMIL.md) — **адаптация эффектов**
 - 🔗 [URL параметры](docs/URL_PARAMS.md) — полный список параметров
 - 📅 [Переменные](docs/VARIABLES.md) — как использовать $DATE и $RELDATE
 - 📖 [Примеры относительного времени](docs/EXAMPLES_RELATIVE_TIME.md)
