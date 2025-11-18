@@ -7,6 +7,8 @@ const PORT = process.env.PORT || 3000;
 
 // cod
 app.use(logger('dev'));
+// Статические файлы из client (css, js и другие ресурсы)
+app.use(express.static('client'));
 // Статические файлы для HTML страниц из client/pages
 app.use(express.static('client/pages', {
   extensions: ['html']

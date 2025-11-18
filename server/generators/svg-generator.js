@@ -17,6 +17,51 @@ function escapeXml(str) {
 }
 
 /**
+ * Конвертирует hexa цвет (8 символов) в rgba формат
+ * @param {string} hexa - цвет в формате #RRGGBBAA или RRGGBBAA
+ * @returns {string} цвет в формате rgba(r, g, b, a)
+ */
+function hexaToRgba(hexa) {
+  // Убираем # если есть
+  const hex = hexa.replace('#', '');
+  
+  if (hex.length !== 8) {
+    return hexa; // Возвращаем как есть, если не hexa формат
+  }
+  
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+  const a = parseInt(hex.substr(6, 2), 16) / 255;
+  
+  return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
+}
+
+/**
+ * Обрабатывает background цвет для SVG
+ * @param {string} background - цвет фона (transparent, hex, hexa)
+ * @returns {{fill: string, style: string}} объект с fill и style атрибутами
+ */
+function processBackground(background) {
+  if (background === 'transparent') {
+    return { fill: 'none', style: '' };
+  }
+  
+  // Убираем # для проверки длины
+  const hexWithoutHash = background.startsWith('#') ? background.substr(1) : background;
+  
+  // Если это hexa формат (8 символов), используем style с background-color
+  if (hexWithoutHash.length === 8) {
+    const hexaColor = background.startsWith('#') ? background : '#' + background;
+    return { fill: 'none', style: `style="background-color: ${hexaColor};"` };
+  }
+  
+  // Для обычного hex формата используем fill
+  const hexColor = background.startsWith('#') ? background : '#' + background;
+  return { fill: hexColor, style: '' };
+}
+
+/**
  * Парсит значение letterSpacing в пиксели
  * @param {string|number} letterSpacing - значение letter-spacing ('normal', '10px', '0.1em', или число)
  * @param {number} fontSize - размер шрифта (для конвертации em в px)
@@ -75,6 +120,228 @@ function computeTextX(text, fontSize, horizontalAlign, width, paddingX, letterSp
 }
 
 /**
+ * Вычисляет временные метки для fade эффекта стирания
+ * @param {number} printDuration - длительность печати
+ * @param {number} delayAfterBlockPrint - задержка после печати
+ * @param {number} eraseDuration - длительность стирания
+ * @param {number} delayAfterErase - задержка после стирания
+ * @param {number} totalDuration - общая длительность
+ * @returns {{start: number, end: number}} временные метки начала и конца fade
+ */
+function computeFadeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration) {
+  const start = (printDuration + delayAfterBlockPrint) / totalDuration;
+  const end = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+  return { start, end };
+}
+
+/**
+ * Обработчик режима стирания 'fade' для режима замены
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function handleFadeEraseReplacingMode(config) {
+  const {
+    startX, y, textWidth, printDuration, delayAfterBlockPrint,
+    eraseDuration, delayAfterErase, totalDuration
+  } = config;
+  
+  const printEnd = printDuration / totalDuration;
+  const fadeTimes = computeFadeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration);
+  
+  return {
+    useFadeErase: true,
+    fadeEraseStart: fadeTimes.start,
+    fadeEraseEnd: fadeTimes.end,
+    keyTimes: `0;${printEnd};${fadeTimes.start};${fadeTimes.end};1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`
+  };
+}
+
+/**
+ * Обработчик режима стирания 'line' для режима замены
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function handleLineEraseReplacingMode(config) {
+  const {
+    startX, y, textWidth, printDuration, delayAfterBlockPrint,
+    eraseDuration, delayAfterErase, totalDuration
+  } = config;
+  
+  const printEnd = printDuration / totalDuration;
+  const fadeTimes = computeFadeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration);
+  
+  return {
+    useFadeErase: false,
+    fadeEraseStart: 0,
+    fadeEraseEnd: 0,
+    keyTimes: `0;${printEnd};${fadeTimes.start};${fadeTimes.end};1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`
+  };
+}
+
+/**
+ * Обработчик режима стирания 'line' для многострочного режима
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function handleLineEraseMultiLineMode(config) {
+  const {
+    startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd
+  } = config;
+  
+  return {
+    useFadeErase: false,
+    fadeEraseStart: 0,
+    fadeEraseEnd: 0,
+    keyTimes: `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`
+  };
+}
+
+/**
+ * Обработчик режима стирания 'block-line' для многострочного режима
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function handleBlockLineEraseMultiLineMode(config) {
+  const {
+    startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd
+  } = config;
+  
+  return {
+    useFadeErase: false,
+    fadeEraseStart: 0,
+    fadeEraseEnd: 0,
+    keyTimes: `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`
+  };
+}
+
+/**
+ * Обработчик режима стирания 'none' для многострочного режима
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function handleNoneEraseMultiLineMode(config) {
+  const {
+    startX, y, textWidth, printStart, printEnd
+  } = config;
+  
+  return {
+    useFadeErase: false,
+    fadeEraseStart: 0,
+    fadeEraseEnd: 0,
+    keyTimes: `0;${printStart};${printEnd};0.99;1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`
+  };
+}
+
+/**
+ * Обработчик режима стирания 'fade' для многострочного режима
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function handleFadeEraseMultiLineMode(config) {
+  const {
+    startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd
+  } = config;
+  
+  return {
+    useFadeErase: true,
+    fadeEraseStart: eraseStart,
+    fadeEraseEnd: eraseEnd,
+    keyTimes: `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`
+  };
+}
+
+/**
+ * Обработчик режима стирания 'fade' для одной строки
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function handleFadeEraseSingleLineMode(config) {
+  const {
+    startX, y, textWidth, printDuration, delayAfterBlockPrint,
+    eraseDuration, delayAfterErase, totalDuration
+  } = config;
+  
+  const printEnd = printDuration / totalDuration;
+  const fadeTimes = computeFadeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration);
+  
+  return {
+    useFadeErase: true,
+    fadeEraseStart: fadeTimes.start,
+    fadeEraseEnd: fadeTimes.end,
+    keyTimes: `0;${printEnd};${fadeTimes.start};${fadeTimes.end};1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`
+  };
+}
+
+/**
+ * Применяет параметры анимации стирания для режима замены
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function applyEraseModeReplacingMode(config) {
+  const { eraseMode = 'line' } = config;
+  
+  if (eraseMode === 'fade') {
+    return handleFadeEraseReplacingMode(config);
+  }
+  
+  return handleLineEraseReplacingMode(config);
+}
+
+/**
+ * Применяет параметры анимации стирания для многострочного режима
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function applyEraseModeMultiLineMode(config) {
+  const { eraseMode = 'none' } = config;
+  
+  const handlers = {
+    'line': handleLineEraseMultiLineMode,
+    'block-line': handleBlockLineEraseMultiLineMode,
+    'none': handleNoneEraseMultiLineMode,
+    'fade': handleFadeEraseMultiLineMode
+  };
+  
+  const handler = handlers[eraseMode] || handlers['block-line'];
+  return handler(config);
+}
+
+/**
+ * Применяет параметры анимации стирания для одной строки
+ * @param {Object} config - конфигурация анимации
+ * @returns {Object} параметры анимации
+ */
+function applyEraseModeSingleLineMode(config) {
+  const { eraseMode = 'line' } = config;
+  
+  if (eraseMode === 'fade') {
+    return handleFadeEraseSingleLineMode(config);
+  }
+  
+  // Для других режимов используется стандартная логика без fade
+  const {
+    startX, y, textWidth, printDuration, totalDuration
+  } = config;
+  
+  const printEnd = printDuration / totalDuration;
+  
+  return {
+    useFadeErase: false,
+    fadeEraseStart: 0,
+    fadeEraseEnd: 0,
+    keyTimes: `0;${printEnd};1;1`,
+    pathValues: `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`
+  };
+}
+
+/**
  * Генерирует SVG код с SMIL анимацией печатающегося текста
  * @param {Object} params - параметры генерации
  * @returns {string} SVG код
@@ -98,8 +365,11 @@ export function generateSVG(params) {
   // Добавляем # к цветам если нужно
   const color = params.color === 'transparent' ? params.color : 
     (params.color.startsWith('#') ? params.color : '#' + params.color);
-  const background = params.background === 'transparent' ? params.background : 
+  
+  // Обрабатываем background (может быть transparent, hex или hexa)
+  const backgroundValue = params.background === 'transparent' ? params.background : 
     (params.background.startsWith('#') ? params.background : '#' + params.background);
+  const background = processBackground(backgroundValue);
   
   // Вычисляем startY для вертикального выравнивания
   const totalTextHeight = params.multiLine 
@@ -162,29 +432,21 @@ export function generateSVG(params) {
     
     if (isReplacingMode) {
       // Режим замены: все строки имеют одинаковую структуру
-      const eraseMode = params.eraseMode || 'line';
-      
       if (repeat) {
         // При repeat=true: все строки стираются, цикл повторяется бесконечно
         totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
         
-        // Вычисляем моменты времени в долях от общей длительности
-        const printEnd = printDuration / totalDuration;
-        fadeEraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
-        fadeEraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+        const eraseConfig = {
+          startX, y, textWidth, printDuration, delayAfterBlockPrint,
+          eraseDuration, delayAfterErase, totalDuration, eraseMode: params.eraseMode
+        };
         
-        if (eraseMode === 'fade') {
-          useFadeErase = true;
-          // keyTimes: начало, конец печати, начало стирания, конец стирания, конец
-          keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
-          // pathValues: путь остается на полной ширине для fade эффекта
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
-        } else {
-          // keyTimes: начало, конец печати, начало стирания, конец стирания, конец
-          keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
-          // pathValues: начальная точка (0), полная длина (печать), полная длина (пауза), 0 (стирание), 0 (пауза после стирания)
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
-        }
+        const eraseResult = applyEraseModeReplacingMode(eraseConfig);
+        useFadeErase = eraseResult.useFadeErase;
+        fadeEraseStart = eraseResult.fadeEraseStart;
+        fadeEraseEnd = eraseResult.fadeEraseEnd;
+        keyTimes = eraseResult.keyTimes;
+        pathValues = eraseResult.pathValues;
         
         // Начало анимации: первая строка начинается с 0s и после завершения последней строки
         // Остальные строки начинаются после завершения предыдущей
@@ -199,18 +461,17 @@ export function generateSVG(params) {
           // Не последняя строка: печать -> пауза -> стирание -> пауза после стирания
           totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
           
-          const printEnd = printDuration / totalDuration;
-          fadeEraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
-          fadeEraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+          const eraseConfig = {
+            startX, y, textWidth, printDuration, delayAfterBlockPrint,
+            eraseDuration, delayAfterErase, totalDuration, eraseMode: params.eraseMode
+          };
           
-          if (eraseMode === 'fade') {
-            useFadeErase = true;
-            keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
-            pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
-          } else {
-            keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
-            pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
-          }
+          const eraseResult = applyEraseModeReplacingMode(eraseConfig);
+          useFadeErase = eraseResult.useFadeErase;
+          fadeEraseStart = eraseResult.fadeEraseStart;
+          fadeEraseEnd = eraseResult.fadeEraseEnd;
+          keyTimes = eraseResult.keyTimes;
+          pathValues = eraseResult.pathValues;
           
           begin = i === 0 ? '0s' : `d${i - 1}.end`;
         } else {
@@ -238,6 +499,8 @@ export function generateSVG(params) {
         const totalPrintTime = lines.length * (printDuration + delayAfterBlockPrint);
         const eraseMode = params.eraseMode || 'none';
         
+        let printStart, printEnd, eraseStart, eraseEnd;
+        
         if (eraseMode === 'line') {
           // Стирание построчно, начиная с последней строки
           // Вычисляем время начала стирания для каждой строки (начиная с последней)
@@ -260,63 +523,32 @@ export function generateSVG(params) {
           // Общая длительность цикла: печать всех + стирание всех + паузы между стиранием + пауза после стирания последней
           totalDuration = totalPrintTime + totalEraseDuration + totalErasePauses + delayAfterErase;
           
-          const printStart = timeBeforeThisLine / totalDuration;
-          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
-          const eraseStart = eraseStartTime / totalDuration;
-          const eraseEnd = (eraseStartTime + thisEraseDuration) / totalDuration;
-          
-          keyTimes = `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
-        } else if (eraseMode === 'block-line') {
-          // Стирание всех строк одновременно (блоком)
-          const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
-          totalDuration = totalPrintTime + totalEraseDuration + delayAfterErase;
-          
-          const printStart = timeBeforeThisLine / totalDuration;
-          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
-          const eraseStart = (totalPrintTime) / totalDuration;
-          const eraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
-          
-          keyTimes = `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
-        } else if (eraseMode === 'none') {
-          // Без анимации стирания - текст просто исчезает мгновенно
-          // Общая длительность: время печати всех строк + небольшая пауза перед новым циклом
-          totalDuration = totalPrintTime + delayAfterErase;
-          
-          const printStart = timeBeforeThisLine / totalDuration;
-          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
-          
-          // keyTimes: задержка -> печать -> остается -> мгновенное исчезновение
-          keyTimes = `0;${printStart};${printEnd};0.99;1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`;
-        } else if (eraseMode === 'fade') {
-          // Стирание с эффектом затухания (fade) - все строки одновременно
-          useFadeErase = true;
-          const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
-          totalDuration = totalPrintTime + totalEraseDuration + delayAfterErase;
-          
-          const printStart = timeBeforeThisLine / totalDuration;
-          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
-          fadeEraseStart = (totalPrintTime) / totalDuration;
-          fadeEraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
-          
-          // Путь остается на полной ширине для fade эффекта
-          keyTimes = `0;${printStart};${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+          printStart = timeBeforeThisLine / totalDuration;
+          printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+          eraseStart = eraseStartTime / totalDuration;
+          eraseEnd = (eraseStartTime + thisEraseDuration) / totalDuration;
         } else {
-          // По умолчанию используем 'block-line' (стирание всех строк одновременно)
+          // Для остальных режимов вычисляем общие параметры
           const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
           totalDuration = totalPrintTime + totalEraseDuration + delayAfterErase;
           
-          const printStart = timeBeforeThisLine / totalDuration;
-          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
-          const eraseStart = (totalPrintTime) / totalDuration;
-          const eraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
-          
-          keyTimes = `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+          printStart = timeBeforeThisLine / totalDuration;
+          printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+          eraseStart = (totalPrintTime) / totalDuration;
+          eraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
         }
+        
+        const eraseConfig = {
+          startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd,
+          eraseMode: params.eraseMode
+        };
+        
+        const eraseResult = applyEraseModeMultiLineMode(eraseConfig);
+        useFadeErase = eraseResult.useFadeErase;
+        fadeEraseStart = eraseResult.fadeEraseStart;
+        fadeEraseEnd = eraseResult.fadeEraseEnd;
+        keyTimes = eraseResult.keyTimes;
+        pathValues = eraseResult.pathValues;
         
         // Все строки начинаются одновременно, цикл повторяется после завершения последней
         begin = i === 0 ? `0s;d${lastLineIndex}.end` : `0s;d${lastLineIndex}.end`;
@@ -338,27 +570,21 @@ export function generateSVG(params) {
       }
     } else {
       // Одна строка: печать -> пауза
-      const eraseMode = params.eraseMode || 'line';
-      
       if (repeat) {
         // Если repeat = true: печать -> пауза -> стирание для повторения
-        if (eraseMode === 'fade') {
-          useFadeErase = true;
-          totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
-          
-          const printEnd = printDuration / totalDuration;
-          fadeEraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
-          fadeEraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
-          
-          keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
-        } else {
-          // Мгновенный возврат к началу для повторения
-          totalDuration = printDuration + delayAfterBlockPrint;
-          const printEnd = printDuration / totalDuration;
-          keyTimes = `0;${printEnd};1;1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`;
-        }
+        totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
+        
+        const eraseConfig = {
+          startX, y, textWidth, printDuration, delayAfterBlockPrint,
+          eraseDuration, delayAfterErase, totalDuration, eraseMode: params.eraseMode
+        };
+        
+        const eraseResult = applyEraseModeSingleLineMode(eraseConfig);
+        useFadeErase = eraseResult.useFadeErase;
+        fadeEraseStart = eraseResult.fadeEraseStart;
+        fadeEraseEnd = eraseResult.fadeEraseEnd;
+        keyTimes = eraseResult.keyTimes;
+        pathValues = eraseResult.pathValues;
       } else {
         // Если repeat = false: печать -> пауза -> остается на месте (без возврата)
         totalDuration = printDuration + delayAfterBlockPrint;
@@ -416,8 +642,8 @@ export function generateSVG(params) {
   // Генерируем SVG с SMIL анимацией
   const svg = `<svg xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
-    width="${params.width}" height="${params.height}" viewBox="0 0 ${params.width} ${params.height}">
-  <rect width="${params.width}" height="${params.height}" fill="${background}"/>
+    width="${params.width}" height="${params.height}" viewBox="0 0 ${params.width} ${params.height}" ${background.style}>
+  <rect width="${params.width}" height="${params.height}" fill="${background.fill}"/>
   
   <g id="text-container">${pathsAndTexts}
   </g>
