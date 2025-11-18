@@ -156,22 +156,35 @@ export function generateSVG(params) {
     const lastLineIndex = lines.length - 1;
     
     let pathValues, keyTimes, totalDuration, begin;
+    let useFadeErase = false; // Флаг для fade режима стирания
+    let fadeEraseStart = 0; // Начало fade анимации (в долях от общей длительности)
+    let fadeEraseEnd = 0; // Конец fade анимации (в долях от общей длительности)
     
     if (isReplacingMode) {
       // Режим замены: все строки имеют одинаковую структуру
+      const eraseMode = params.eraseMode || 'line';
+      
       if (repeat) {
         // При repeat=true: все строки стираются, цикл повторяется бесконечно
         totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
         
         // Вычисляем моменты времени в долях от общей длительности
         const printEnd = printDuration / totalDuration;
-        const eraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
-        const eraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+        fadeEraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
+        fadeEraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
         
-        // keyTimes: начало, конец печати, начало стирания, конец стирания, конец
-        keyTimes = `0;${printEnd};${eraseStart};${eraseEnd};1`;
-        // pathValues: начальная точка (0), полная длина (печать), полная длина (пауза), 0 (стирание), 0 (пауза после стирания)
-        pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+        if (eraseMode === 'fade') {
+          useFadeErase = true;
+          // keyTimes: начало, конец печати, начало стирания, конец стирания, конец
+          keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
+          // pathValues: путь остается на полной ширине для fade эффекта
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+        } else {
+          // keyTimes: начало, конец печати, начало стирания, конец стирания, конец
+          keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
+          // pathValues: начальная точка (0), полная длина (печать), полная длина (пауза), 0 (стирание), 0 (пауза после стирания)
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+        }
         
         // Начало анимации: первая строка начинается с 0s и после завершения последней строки
         // Остальные строки начинаются после завершения предыдущей
@@ -187,11 +200,17 @@ export function generateSVG(params) {
           totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
           
           const printEnd = printDuration / totalDuration;
-          const eraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
-          const eraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+          fadeEraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
+          fadeEraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
           
-          keyTimes = `0;${printEnd};${eraseStart};${eraseEnd};1`;
-          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+          if (eraseMode === 'fade') {
+            useFadeErase = true;
+            keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
+            pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+          } else {
+            keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
+            pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+          }
           
           begin = i === 0 ? '0s' : `d${i - 1}.end`;
         } else {
@@ -271,6 +290,20 @@ export function generateSVG(params) {
           // keyTimes: задержка -> печать -> остается -> мгновенное исчезновение
           keyTimes = `0;${printStart};${printEnd};0.99;1`;
           pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`;
+        } else if (eraseMode === 'fade') {
+          // Стирание с эффектом затухания (fade) - все строки одновременно
+          useFadeErase = true;
+          const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
+          totalDuration = totalPrintTime + totalEraseDuration + delayAfterErase;
+          
+          const printStart = timeBeforeThisLine / totalDuration;
+          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+          fadeEraseStart = (totalPrintTime) / totalDuration;
+          fadeEraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
+          
+          // Путь остается на полной ширине для fade эффекта
+          keyTimes = `0;${printStart};${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
         } else {
           // По умолчанию используем 'block-line' (стирание всех строк одновременно)
           const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
@@ -305,16 +338,31 @@ export function generateSVG(params) {
       }
     } else {
       // Одна строка: печать -> пауза
-      totalDuration = printDuration + delayAfterBlockPrint;
-      
-      const printEnd = printDuration / totalDuration;
+      const eraseMode = params.eraseMode || 'line';
       
       if (repeat) {
-        // Если repeat = true: печать -> пауза -> возврат к началу для повторения
-        keyTimes = `0;${printEnd};1;1`;
-        pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`;
+        // Если repeat = true: печать -> пауза -> стирание для повторения
+        if (eraseMode === 'fade') {
+          useFadeErase = true;
+          totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
+          
+          const printEnd = printDuration / totalDuration;
+          fadeEraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
+          fadeEraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+          
+          keyTimes = `0;${printEnd};${fadeEraseStart};${fadeEraseEnd};1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+        } else {
+          // Мгновенный возврат к началу для повторения
+          totalDuration = printDuration + delayAfterBlockPrint;
+          const printEnd = printDuration / totalDuration;
+          keyTimes = `0;${printEnd};1;1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`;
+        }
       } else {
         // Если repeat = false: печать -> пауза -> остается на месте (без возврата)
+        totalDuration = printDuration + delayAfterBlockPrint;
+        const printEnd = printDuration / totalDuration;
         keyTimes = `0;${printEnd};1`;
         pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
       }
@@ -339,6 +387,18 @@ export function generateSVG(params) {
     }
     // При repeat=true все используют remove для зацикливания
     
+    // Генерируем анимацию opacity для fade эффекта
+    let opacityAnimation = '';
+    if (useFadeErase) {
+      const opacityId = `opacity${i}`;
+      const opacityKeyTimes = `0;${fadeEraseStart};${fadeEraseEnd};1`;
+      const opacityValues = '1;1;0;0'; // Полная непрозрачность до начала стирания, затем затухание до 0
+      opacityAnimation = `
+      <animate id="${opacityId}" attributeName="opacity" begin="${begin}"
+        dur="${totalDuration}ms" fill="${fillValue}"
+        values="${opacityValues}" keyTimes="${opacityKeyTimes}" />`;
+    }
+    
     pathsAndTexts += `
     <path id="${pathId}">
       <animate id="${animateId}" attributeName="d" begin="${begin}"
@@ -346,7 +406,7 @@ export function generateSVG(params) {
         values="${pathValues}" keyTimes="${keyTimes}" />
     </path>
     <text font-family="${params.fontFamily || 'monospace'}" fill="${color}" font-size="${params.fontSize}" font-weight="${params.fontWeight || 800}"
-      dominant-baseline="auto" x="0%" text-anchor="start" letter-spacing="${letterSpacingValue}">
+      dominant-baseline="auto" x="0%" text-anchor="start" letter-spacing="${letterSpacingValue}"${useFadeErase ? ' opacity="1"' : ''}>${opacityAnimation}
       <textPath xlink:href="#${pathId}">
         ${escapeXml(line)}
       </textPath>

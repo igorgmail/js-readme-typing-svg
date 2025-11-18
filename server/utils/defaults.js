@@ -32,11 +32,11 @@ export const DEFAULT_PARAMS = {
   paddingX: 16,
   paddingY: 20,
 
-  multiLine: true,
-  eraseMode: 'none',
+  multiLine: false,
+  eraseMode: 'fade', // none | line | block-line | fade
 
-  typingMode: 'start', // start | middle | end
-  showCaret: true
+  //typingMode: 'default', // default | expand
+  // showCaret: true
 };
 
 /**
