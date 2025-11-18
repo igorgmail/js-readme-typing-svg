@@ -11,26 +11,31 @@ export const DEFAULT_PARAMS = {
   background: 'transparent',
   fontSize: 16,
   fontWeight: 800,
+  fontFamily: 'monospace',
   lineHeight: 1.35,
+  letterSpacing: 10,
 
   width: 800,
   height: 200,
 
-  printSpeed: 80,
+  // printSpeed - общая длительность анимации печати строки в миллисекундах (duration)
+  printSpeed: 1000,
   eraseSpeed: 50,
 
   delayAfterBlockPrint: 800,
   delayAfterErase: 500,
 
   repeat: false,
+  verticalAlign: 'top',
+  horizontalAlign: 'left',
 
   paddingX: 16,
   paddingY: 20,
-  verticalAlign: 'top',
-  horizontalAlign: 'left',
-  multiLine: false,
-  typingMode: 'expand',
-  eraseMode: 'line',
+
+  multiLine: true,
+  eraseMode: 'none',
+
+  typingMode: 'start', // start | middle | end
   showCaret: true
 };
 

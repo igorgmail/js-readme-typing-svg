@@ -17,14 +17,43 @@ function escapeXml(str) {
 }
 
 /**
+ * Парсит значение letterSpacing в пиксели
+ * @param {string|number} letterSpacing - значение letter-spacing ('normal', '10px', '0.1em', или число)
+ * @param {number} fontSize - размер шрифта (для конвертации em в px)
+ * @returns {number} значение в пикселях
+ */
+function parseLetterSpacing(letterSpacing, fontSize) {
+  if (typeof letterSpacing === 'number') {
+    return letterSpacing;
+  }
+  if (letterSpacing === 'normal' || !letterSpacing) {
+    return 0;
+  }
+  // Парсим строковые значения типа '10px', '0.1em'
+  const str = String(letterSpacing).trim();
+  if (str.endsWith('px')) {
+    return parseFloat(str) || 0;
+  }
+  if (str.endsWith('em')) {
+    return (parseFloat(str) || 0) * fontSize;
+  }
+  // Пытаемся распарсить как число
+  const num = parseFloat(str);
+  return isNaN(num) ? 0 : num;
+}
+
+/**
  * Вычисляет приблизительную ширину текста
  * @param {string} text - текст
  * @param {number} fontSize - размер шрифта
+ * @param {string|number} letterSpacing - расстояние между символами
  * @returns {number} ширина текста
  */
-function computeTextWidth(text, fontSize) {
+function computeTextWidth(text, fontSize, letterSpacing) {
   const charWidth = fontSize * 0.6; // примерная ширина символа в monospace
-  return text.length * charWidth;
+  const spacing = parseLetterSpacing(letterSpacing, fontSize);
+  // Ширина = сумма ширин символов + расстояние между символами * (количество символов - 1)
+  return text.length * charWidth + (text.length > 0 ? (text.length - 1) * spacing : 0);
 }
 
 /**
@@ -34,10 +63,11 @@ function computeTextWidth(text, fontSize) {
  * @param {string} horizontalAlign - выравнивание (left, center, right)
  * @param {number} width - ширина SVG
  * @param {number} paddingX - горизонтальный отступ
+ * @param {string|number} letterSpacing - расстояние между символами
  * @returns {number} позиция X
  */
-function computeTextX(text, fontSize, horizontalAlign, width, paddingX) {
-  const textWidth = computeTextWidth(text, fontSize);
+function computeTextX(text, fontSize, horizontalAlign, width, paddingX, letterSpacing) {
+  const textWidth = computeTextWidth(text, fontSize, letterSpacing);
   
   if (horizontalAlign === 'left') return paddingX;
   if (horizontalAlign === 'right') return width - paddingX - textWidth;
@@ -84,7 +114,8 @@ export function generateSVG(params) {
   }
   
   // Параметры анимации
-  const printSpeed = params.printSpeed || 80;
+  // printSpeed - общая длительность анимации печати строки в миллисекундах (duration)
+  const printSpeed = params.printSpeed || 5000;
   const eraseSpeed = params.eraseSpeed || 50;
   const delayAfterBlockPrint = params.delayAfterBlockPrint || 800;
   const delayAfterErase = params.delayAfterErase || 500;
@@ -104,11 +135,17 @@ export function generateSVG(params) {
     // Для режима замены все строки на одной Y координате
     // Для многострочного режима - каждая строка на своей позиции
     const y = isReplacingMode ? startY : startY + i * params.fontSize * params.lineHeight;
-    const textWidth = computeTextWidth(line, params.fontSize);
-    const startX = computeTextX(line, params.fontSize, params.horizontalAlign, params.width, params.paddingX);
+    const letterSpacing = params.letterSpacing || 'normal';
+    // Форматируем letterSpacing для SVG: если число - добавляем 'px', иначе оставляем как есть
+    const letterSpacingValue = typeof letterSpacing === 'number' 
+      ? `${letterSpacing}px` 
+      : (letterSpacing || 'normal');
+    const textWidth = computeTextWidth(line, params.fontSize, letterSpacing);
+    const startX = computeTextX(line, params.fontSize, params.horizontalAlign, params.width, params.paddingX, letterSpacing);
     
     // Длительность анимации печати и стирания
-    const printDuration = line.length * printSpeed;
+    // printSpeed теперь это общая длительность анимации строки (duration в мс)
+    const printDuration = printSpeed;
     const eraseDuration = line.length * eraseSpeed;
     
     const pathId = `path${i}`;
@@ -169,8 +206,105 @@ export function generateSVG(params) {
           begin = i === 0 ? '0s' : `d${i - 1}.end`;
         }
       }
+    } else if (params.multiLine) {
+      // Многострочный режим: строки печатаются последовательно, стирание только после всех строк
+      const isLastLineMulti = i === lines.length - 1;
+      const lastLineIndex = lines.length - 1;
+      
+      // Вычисляем время начала печати этой строки (сумма длительностей всех предыдущих строк)
+      const timeBeforeThisLine = i * (printDuration + delayAfterBlockPrint);
+      
+      if (repeat) {
+        // При repeat=true: все строки печатаются, затем стираются (в зависимости от eraseMode)
+        const totalPrintTime = lines.length * (printDuration + delayAfterBlockPrint);
+        const eraseMode = params.eraseMode || 'none';
+        
+        if (eraseMode === 'line') {
+          // Стирание построчно, начиная с последней строки
+          // Вычисляем время начала стирания для каждой строки (начиная с последней)
+          
+          // Время начала стирания этой строки = время печати всех + время стирания всех предыдущих (в обратном порядке)
+          let eraseStartTime = totalPrintTime;
+          // Проходим по всем строкам после текущей (в обратном порядке, начиная с последней)
+          for (let j = lastLineIndex; j > i; j--) {
+            eraseStartTime += lines[j].length * eraseSpeed;
+            // Добавляем паузу после стирания каждой строки (пауза есть между всеми строками)
+            eraseStartTime += delayAfterErase;
+          }
+          
+          // Длительность стирания этой строки
+          const thisEraseDuration = line.length * eraseSpeed;
+          const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
+          // Паузы между стиранием строк (количество пауз = количество строк - 1)
+          const totalErasePauses = (lines.length - 1) * delayAfterErase;
+          
+          // Общая длительность цикла: печать всех + стирание всех + паузы между стиранием + пауза после стирания последней
+          totalDuration = totalPrintTime + totalEraseDuration + totalErasePauses + delayAfterErase;
+          
+          const printStart = timeBeforeThisLine / totalDuration;
+          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+          const eraseStart = eraseStartTime / totalDuration;
+          const eraseEnd = (eraseStartTime + thisEraseDuration) / totalDuration;
+          
+          keyTimes = `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+        } else if (eraseMode === 'block-line') {
+          // Стирание всех строк одновременно (блоком)
+          const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
+          totalDuration = totalPrintTime + totalEraseDuration + delayAfterErase;
+          
+          const printStart = timeBeforeThisLine / totalDuration;
+          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+          const eraseStart = (totalPrintTime) / totalDuration;
+          const eraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
+          
+          keyTimes = `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+        } else if (eraseMode === 'none') {
+          // Без анимации стирания - текст просто исчезает мгновенно
+          // Общая длительность: время печати всех строк + небольшая пауза перед новым циклом
+          totalDuration = totalPrintTime + delayAfterErase;
+          
+          const printStart = timeBeforeThisLine / totalDuration;
+          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+          
+          // keyTimes: задержка -> печать -> остается -> мгновенное исчезновение
+          keyTimes = `0;${printStart};${printEnd};0.99;1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0`;
+        } else {
+          // По умолчанию используем 'block-line' (стирание всех строк одновременно)
+          const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
+          totalDuration = totalPrintTime + totalEraseDuration + delayAfterErase;
+          
+          const printStart = timeBeforeThisLine / totalDuration;
+          const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+          const eraseStart = (totalPrintTime) / totalDuration;
+          const eraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
+          
+          keyTimes = `0;${printStart};${printEnd};${eraseStart};${eraseEnd};1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth} ; m${startX},${y} h0 ; m${startX},${y} h0`;
+        }
+        
+        // Все строки начинаются одновременно, цикл повторяется после завершения последней
+        begin = i === 0 ? `0s;d${lastLineIndex}.end` : `0s;d${lastLineIndex}.end`;
+      } else {
+        // При repeat=false: все строки печатаются последовательно и остаются на месте (без стирания)
+        // Общая длительность: время печати всех строк
+        const totalPrintTime = lines.length * (printDuration + delayAfterBlockPrint);
+        totalDuration = totalPrintTime;
+        
+        const printStart = timeBeforeThisLine / totalDuration;
+        const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
+        
+        // keyTimes: задержка -> печать -> остается на месте
+        keyTimes = `0;${printStart};${printEnd};1`;
+        pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+        
+        // Все строки начинаются одновременно
+        begin = '0s';
+      }
     } else {
-      // Многострочный режим или одна строка: печать -> пауза
+      // Одна строка: печать -> пауза
       totalDuration = printDuration + delayAfterBlockPrint;
       
       const printEnd = printDuration / totalDuration;
@@ -185,27 +319,25 @@ export function generateSVG(params) {
         pathValues = `m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
       }
       
-      // Для многострочного режима - последовательно друг за другом
-      if (params.multiLine) {
-        begin = i === 0 ? '0s' : `d${i - 1}.end`;
-        // Если это последняя строка в многострочном режиме и repeat = true, зацикливаем
-        if (repeat && i === lines.length - 1) {
-          begin = `${begin};d0.end`;
-        }
-      } else {
-        // Одна строка - повторяем только если repeat = true
-        begin = repeat ? `0s;${animateId}.end` : '0s';
-      }
+      // Одна строка - повторяем только если repeat = true
+      begin = repeat ? `0s;${animateId}.end` : '0s';
     }
     
-    // Определяем fill атрибут: для последней строки без repeat - freeze (остается на месте), иначе - remove
-    // При repeat=true все строки используют remove для зацикливания
-    const isLastLineNoRepeat = !repeat && (
-      (isReplacingMode && isLastLine) || 
-      (params.multiLine && i === lines.length - 1) ||
-      (!isReplacingMode && !params.multiLine)
-    );
-    const fillValue = isLastLineNoRepeat ? 'freeze' : 'remove';
+    // Определяем fill атрибут
+    let fillValue = 'remove';
+    if (!repeat) {
+      if (isReplacingMode && isLastLine) {
+        // Режим замены, последняя строка без repeat - остается
+        fillValue = 'freeze';
+      } else if (params.multiLine) {
+        // Многострочный режим без repeat - строки остаются на месте (без стирания)
+        fillValue = 'freeze';
+      } else if (!isReplacingMode && !params.multiLine) {
+        // Одна строка без repeat - остается
+        fillValue = 'freeze';
+      }
+    }
+    // При repeat=true все используют remove для зацикливания
     
     pathsAndTexts += `
     <path id="${pathId}">
@@ -213,8 +345,8 @@ export function generateSVG(params) {
         dur="${totalDuration}ms" fill="${fillValue}"
         values="${pathValues}" keyTimes="${keyTimes}" />
     </path>
-    <text font-family="monospace" fill="${color}" font-size="${params.fontSize}" font-weight="${params.fontWeight || 800}"
-      dominant-baseline="auto" x="0%" text-anchor="start" letter-spacing="normal">
+    <text font-family="${params.fontFamily || 'monospace'}" fill="${color}" font-size="${params.fontSize}" font-weight="${params.fontWeight || 800}"
+      dominant-baseline="auto" x="0%" text-anchor="start" letter-spacing="${letterSpacingValue}">
       <textPath xlink:href="#${pathId}">
         ${escapeXml(line)}
       </textPath>

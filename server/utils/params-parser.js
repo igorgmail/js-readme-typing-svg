@@ -91,9 +91,12 @@ export function parseQueryParams(query) {
     
     // Визуальные параметры
     fontSize: 'fontSize',
-    font: 'fontSize', // алиас
+    font: 'fontSize', // алиас для fontSize
     fontWeight: 'fontWeight',
+    fontFamily: 'fontFamily',
     lineHeight: 'lineHeight',
+    letterSpacing: 'letterSpacing',
+
     color: 'color',
     background: 'background',
     
@@ -113,7 +116,6 @@ export function parseQueryParams(query) {
     // Режимы
     typingMode: 'typingMode',
     eraseMode: 'eraseMode',
-    multiLine: 'multiLine',
     multiline: 'multiLine', // алиас
     showCaret: 'showCaret',
     repeat: 'repeat'
