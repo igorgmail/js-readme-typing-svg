@@ -17,24 +17,34 @@ function escapeXml(str) {
 }
 
 /**
- * Конвертирует hexa цвет (8 символов) в rgba формат
- * @param {string} hexa - цвет в формате #RRGGBBAA или RRGGBBAA
- * @returns {string} цвет в формате rgba(r, g, b, a)
+ * Валидирует и санитизирует значение font-family для использования в SVG
+ * @param {string} fontFamily - значение font-family от пользователя
+ * @returns {string} валидное значение font-family для SVG атрибута
  */
-function hexaToRgba(hexa) {
-  // Убираем # если есть
-  const hex = hexa.replace('#', '');
-  
-  if (hex.length !== 8) {
-    return hexa; // Возвращаем как есть, если не hexa формат
+function validateAndSanitizeFontFamily(fontFamily) {
+  if (!fontFamily || typeof fontFamily !== 'string') {
+    return 'monospace';
   }
   
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  const a = parseInt(hex.substr(6, 2), 16) / 255;
+  const trimmed = fontFamily.trim();
+  if (!trimmed) {
+    return 'monospace';
+  }
   
-  return `rgba(${r}, ${g}, ${b}, ${a.toFixed(2)})`;
+  // Проверяем на наличие опасных символов, которые могут сломать XML
+  // Разрешаем: буквы, цифры, пробелы, запятые, дефисы, кавычки (одинарные и двойные)
+  // Запрещаем: < > & (должны быть экранированы)
+  if (/[<>&]/.test(trimmed)) {
+    return 'monospace';
+  }
+  
+  // Экранируем кавычки для безопасного использования в XML атрибуте
+  // В XML атрибуте, обернутом в двойные кавычки, нужно экранировать двойные кавычки
+  const sanitized = trimmed
+    .replace(/"/g, '&quot;')  // Экранируем двойные кавычки
+    .replace(/'/g, '&apos;'); // Экранируем одинарные кавычки (на всякий случай)
+  
+  return sanitized;
 }
 
 /**
@@ -366,16 +376,6 @@ export function generateSVG(params) {
   const multiLine = params.multiLine === true || params.multiLine === 'true' || params.multiLine === '1';
   const repeat = params.repeat === true || params.repeat === 'true' || params.repeat === '1';
   
-  // Отладка: проверяем параметры
-  console.log('generateSVG params:', {
-    multiLine: params.multiLine,
-    multiLineBool: multiLine,
-    repeat: params.repeat,
-    repeatBool: repeat,
-    linesCount: lines.length,
-    eraseMode: params.eraseMode
-  });
-  
   // Добавляем # к цветам если нужно
   const color = params.color === 'transparent' ? params.color : 
     (params.color.startsWith('#') ? params.color : '#' + params.color);
@@ -501,7 +501,6 @@ export function generateSVG(params) {
       }
     } else if (multiLine) {
       // Многострочный режим: строки печатаются последовательно, стирание только после всех строк
-      const isLastLineMulti = i === lines.length - 1;
       const lastLineIndex = lines.length - 1;
       
       // Вычисляем время начала печати этой строки (сумма длительностей всех предыдущих строк)
@@ -653,13 +652,16 @@ export function generateSVG(params) {
         values="${opacityValues}" keyTimes="${opacityKeyTimes}" />`;
     }
     
+    // Валидируем и санитизируем font-family перед использованием
+    const safeFontFamily = validateAndSanitizeFontFamily(params.fontFamily);
+    
     pathsAndTexts += `
     <path id="${pathId}">
       <animate id="${animateId}" attributeName="d" begin="${begin}"
         dur="${totalDuration}ms" fill="${fillValue}"
         values="${pathValues}" keyTimes="${keyTimes}" />
     </path>
-    <text font-family="${params.fontFamily || 'monospace'}" fill="${color}" font-size="${params.fontSize}" font-weight="${params.fontWeight || 800}"
+    <text font-family="${safeFontFamily}" fill="${color}" font-size="${params.fontSize}" font-weight="${params.fontWeight || 800}"
       dominant-baseline="auto" x="0%" text-anchor="start" letter-spacing="${letterSpacingValue}"${useFadeErase ? ' opacity="1"' : ''}>${opacityAnimation}
       <textPath xlink:href="#${pathId}">
         ${escapeXml(line)}
