@@ -568,16 +568,30 @@ export function generateSVG(params) {
         begin = i === 0 ? `0s;d${lastLineIndex}.end` : `0s;d${lastLineIndex}.end`;
       } else {
         // При repeat=false: все строки печатаются последовательно и остаются на месте (без стирания)
-        // Общая длительность: время печати всех строк
-        const totalPrintTime = lines.length * (printDuration + delayAfterBlockPrint);
+        // Общая длительность: время печати всех строк + задержки между ними
+        // Каждая строка имеет одинаковую dur (общую длительность), задержка через keyTimes
+        const totalPrintTime = lines.length * printDuration + (lines.length - 1) * delayAfterBlockPrint;
         totalDuration = totalPrintTime;
+        
+        // Время начала печати этой строки (та же формула, что и для repeat=true)
+        // Первая строка (i=0): 0
+        // Вторая строка (i=1): printDuration + delayAfterBlockPrint
+        // Третья строка (i=2): 2 * (printDuration + delayAfterBlockPrint)
+        const timeBeforeThisLine = i * (printDuration + delayAfterBlockPrint);
         
         const printStart = timeBeforeThisLine / totalDuration;
         const printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
         
-        // keyTimes: задержка -> печать -> остается на месте
-        keyTimes = `0;${printStart};${printEnd};1`;
-        pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+        // keyTimes: задержка до начала печати -> печать -> остается на месте
+        // Для первой строки: 0 -> сразу печать -> остается
+        // Для последующих: 0 -> задержка -> печать -> остается
+        if (i === 0) {
+          keyTimes = `0;0;${printEnd};1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+        } else {
+          keyTimes = `0;${printStart};${printEnd};1`;
+          pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
+        }
         
         // В многострочном режиме строки начинаются одновременно, задержка через keyTimes
         begin = '0s';
