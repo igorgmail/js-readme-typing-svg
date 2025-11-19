@@ -145,7 +145,7 @@
 
         <div class="generator-actions">
           <button type="button" class="generator-actions__button generator-actions__button--primary" data-js-action="generate">Генерировать URL</button>
-          <button type="button" class="generator-actions__button generator-actions__button--secondary" data-js-action="copy">Копировать URL</button>
+          <button type="button" class="generator-actions__button generator-actions__button--secondary" data-js-action="reset">Сбросить</button>
         </div>
       </form>
     </section>
@@ -154,17 +154,41 @@
       <h2 class="generator-page__panel-title">📋 Результат</h2>
       
       <div class="code-container">
-        <span class="generator-output__label">Сгенерированный URL</span>
+        <div class="code-container__header">
+          <span class="generator-output__label">Сгенерированный URL</span>
+          <span class="code-container__copy js-copy-btn">
+            <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M15 20H5V7c0-.55-.45-1-1-1s-1 .45-1 1v13c0 1.1.9 2 2 2h10c.55 0 1-.45 1-1s-.45-1-1-1m5-4V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2m-2 0H9V4h9z">
+              </path>
+            </svg>
+          </span>
+        </div>
         <pre><code data-js="url-output">Заполните форму и нажмите «Генерировать URL»</code></pre>
       </div>
 
       <div class="code-container">
-        <span class="generator-output__label">Markdown</span>
+        <div class="code-container__header">
+          <span class="generator-output__label">Markdown</span>
+          <span class="code-container__copy js-copy-btn">
+            <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M15 20H5V7c0-.55-.45-1-1-1s-1 .45-1 1v13c0 1.1.9 2 2 2h10c.55 0 1-.45 1-1s-.45-1-1-1m5-4V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2m-2 0H9V4h9z">
+              </path>
+            </svg>
+          </span>
+        </div>
         <pre><code data-js="markdown-output"></code></pre>
       </div>
 
       <div class="code-container">
-        <span class="generator-output__label">HTML</span>
+        <div class="code-container__header">
+          <span class="generator-output__label">HTML</span>
+          <span class="code-container__copy js-copy-btn">
+            <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M15 20H5V7c0-.55-.45-1-1-1s-1 .45-1 1v13c0 1.1.9 2 2 2h10c.55 0 1-.45 1-1s-.45-1-1-1m5-4V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2m-2 0H9V4h9z">
+              </path>
+            </svg>
+          </span>
+        </div>
         <pre><code data-js="html-output"></code></pre>
       </div>
 

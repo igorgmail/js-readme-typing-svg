@@ -48,8 +48,11 @@ class GeneratorPage {
 			.querySelector('[data-js-action="generate"]')
 			.addEventListener('click', () => this.generate());
 		document
-			.querySelector('[data-js-action="copy"]')
-			.addEventListener('click', () => this.copy());
+			.querySelector('[data-js-action="reset"]')
+			.addEventListener('click', () => this.reset());
+			document
+			.querySelectorAll('.js-copy-btn')
+			.forEach(btn => btn.addEventListener('click', () => this.copy(btn)));
 	}
 
 	collectParams() {
@@ -162,7 +165,15 @@ class GeneratorPage {
 		this.preview.innerHTML = `<img src="${fullURL}" alt="SVG Preview" />`;
 	}
 
-	copy() {
+	copy(btn) {
+		const text = btn.closest('.code-container').querySelector('code').textContent;
+		navigator.clipboard.writeText(text).then(() => {
+			btn.classList.add('copied');
+			setTimeout(() => btn.classList.remove('copied'), 1000);
+		});
+	}
+	
+	reset() {
 		if (!this.generatedURL) {
 			window.alert('⚠️ Сначала сгенерируйте URL');
 			return;
