@@ -21,6 +21,7 @@ class GeneratorPage {
 			'height',
 			'print-speed',
 			'delay-after-print',
+			'erase-speed',
 			'horizontal-align',
 			'vertical-align',
 			'multiline',
@@ -114,6 +115,7 @@ class GeneratorPage {
 		params.append('height', this.controls.height.value);
 		params.append('printSpeed', this.controls['print-speed'].value);
 		params.append('delayAfterBlockPrint', this.controls['delay-after-print'].value);
+		params.append('eraseSpeed', this.controls['erase-speed'].value);
 		
 		// Обработка выравнивания из select (true/false -> center/middle)
 		const horizontalAlign = this.controls['horizontal-align'].value;

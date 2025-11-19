@@ -55,6 +55,8 @@
           <input class="generator-form__input" type="number" id="letterSpacing" data-js="letter-spacing" value="10" min="0" step="1">
         </div>
 
+        <hr class="generator-form__hr">
+
         <div class="generator-form__row">
           <label class="generator-form__label" for="printSpeed">Duration (ms per line)</label>
           <input class="generator-form__input" type="number" id="printSpeed" data-js="print-speed" value="1000" min="100" max="10000" step="50">
@@ -65,6 +67,16 @@
           <input class="generator-form__input" type="number" id="delayAfterBlockPrint" data-js="delay-after-print" value="800" min="0" max="5000" step="50">
         </div>
 
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="eraseSpeed">
+            Erase speed (ms per char)
+            <span class="generator-form__label-help" title="Скорость стирания текста в миллисекундах на символ">?</span>
+          </label>
+          <input class="generator-form__input" type="number" id="eraseSpeed" data-js="erase-speed" value="50" min="10" max="500" step="10">
+        </div>
+
+        <hr class="generator-form__hr">
+        
         <div class="generator-form__row">
           <label class="generator-form__label" for="color">Font color</label>
           <div class="generator-form__color-group">
@@ -79,6 +91,8 @@
           </div>
         </div>
 
+        <hr class="generator-form__hr">
+        
         <div class="generator-form__row">
           <label class="generator-form__label" for="horizontalAlign">Horizontally Centered</label>
           <select class="generator-form__select" id="horizontalAlign" data-js="horizontal-align">
