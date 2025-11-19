@@ -68,8 +68,7 @@
         <div class="generator-form__row">
           <label class="generator-form__label" for="color">Font color</label>
           <div class="generator-form__color-group">
-            <input class="generator-form__color-input" type="text" id="color" data-js="color" data-jscolor='{"format":"hex","value":"000000"}' value="#000000">
-            <input class="generator-form__color-input" type="text" data-js="color-hex" value="#000000" readonly>
+            <input class="generator-form__color-input" type="text" id="color" data-js="color" data-jscolor='{"format":"hexa","value":"000000FF","alphaChannel":true}' value="#000000FF">
           </div>
         </div>
 
@@ -99,8 +98,8 @@
         <div class="generator-form__row">
           <label class="generator-form__label" for="multiline">Multiline</label>
           <select class="generator-form__select" id="multiline" data-js="multiline">
-            <option value="true" selected>Each sentence on a new line</option>
-            <option value="false">All on one line</option>
+            <option value="false" selected>false</option>
+            <option value="true">true</option>
           </select>
         </div>
 

@@ -362,6 +362,20 @@ export function generateSVG(params) {
     lines.push('Add ?lines=Your+text+here');
   }
   
+  // Приводим multiLine и repeat к boolean на случай, если пришли строки
+  const multiLine = params.multiLine === true || params.multiLine === 'true' || params.multiLine === '1';
+  const repeat = params.repeat === true || params.repeat === 'true' || params.repeat === '1';
+  
+  // Отладка: проверяем параметры
+  console.log('generateSVG params:', {
+    multiLine: params.multiLine,
+    multiLineBool: multiLine,
+    repeat: params.repeat,
+    repeatBool: repeat,
+    linesCount: lines.length,
+    eraseMode: params.eraseMode
+  });
+  
   // Добавляем # к цветам если нужно
   const color = params.color === 'transparent' ? params.color : 
     (params.color.startsWith('#') ? params.color : '#' + params.color);
@@ -372,7 +386,7 @@ export function generateSVG(params) {
   const background = processBackground(backgroundValue);
   
   // Вычисляем startY для вертикального выравнивания
-  const totalTextHeight = params.multiLine 
+  const totalTextHeight = multiLine 
     ? lines.length * params.fontSize * params.lineHeight 
     : params.fontSize;
   
@@ -389,7 +403,6 @@ export function generateSVG(params) {
   const eraseSpeed = params.eraseSpeed || 50;
   const delayAfterBlockPrint = params.delayAfterBlockPrint || 800;
   const delayAfterErase = params.delayAfterErase || 500;
-  const repeat = params.repeat === true || params.repeat === 'true';
   
   // Генерируем пути и текстовые элементы с анимацией
   let pathsAndTexts = '';
@@ -397,7 +410,7 @@ export function generateSVG(params) {
   // Определяем, как обрабатывать строки
   // Если multiLine = false и строк несколько - заменяем друг друга на том же месте
   // Если multiLine = true - выводим друг под другом
-  const isReplacingMode = !params.multiLine && lines.length > 1;
+  const isReplacingMode = !multiLine && lines.length > 1;
   
   lines.forEach((line, i) => {
     if (!line) return;
@@ -486,7 +499,7 @@ export function generateSVG(params) {
           begin = i === 0 ? '0s' : `d${i - 1}.end`;
         }
       }
-    } else if (params.multiLine) {
+    } else if (multiLine) {
       // Многострочный режим: строки печатаются последовательно, стирание только после всех строк
       const isLastLineMulti = i === lines.length - 1;
       const lastLineIndex = lines.length - 1;
@@ -550,7 +563,8 @@ export function generateSVG(params) {
         keyTimes = eraseResult.keyTimes;
         pathValues = eraseResult.pathValues;
         
-        // Все строки начинаются одновременно, цикл повторяется после завершения последней
+        // В многострочном режиме строки начинаются одновременно, задержка через keyTimes
+        // Цикл повторяется после завершения последней строки
         begin = i === 0 ? `0s;d${lastLineIndex}.end` : `0s;d${lastLineIndex}.end`;
       } else {
         // При repeat=false: все строки печатаются последовательно и остаются на месте (без стирания)
@@ -565,7 +579,7 @@ export function generateSVG(params) {
         keyTimes = `0;${printStart};${printEnd};1`;
         pathValues = `m${startX},${y} h0 ; m${startX},${y} h0 ; m${startX},${y} h${textWidth} ; m${startX},${y} h${textWidth}`;
         
-        // Все строки начинаются одновременно
+        // В многострочном режиме строки начинаются одновременно, задержка через keyTimes
         begin = '0s';
       }
     } else {
@@ -603,10 +617,10 @@ export function generateSVG(params) {
       if (isReplacingMode && isLastLine) {
         // Режим замены, последняя строка без repeat - остается
         fillValue = 'freeze';
-      } else if (params.multiLine) {
+      } else if (multiLine) {
         // Многострочный режим без repeat - строки остаются на месте (без стирания)
         fillValue = 'freeze';
-      } else if (!isReplacingMode && !params.multiLine) {
+      } else if (!isReplacingMode && !multiLine) {
         // Одна строка без repeat - остается
         fillValue = 'freeze';
       }

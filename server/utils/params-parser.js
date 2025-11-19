@@ -116,7 +116,7 @@ export function parseQueryParams(query) {
     // Режимы
     typingMode: 'typingMode',
     eraseMode: 'eraseMode',
-    multiline: 'multiLine', // алиас
+    multiLine: 'multiLine',
     showCaret: 'showCaret',
     repeat: 'repeat'
   };
@@ -125,6 +125,10 @@ export function parseQueryParams(query) {
   for (const [urlKey, optionKey] of Object.entries(paramMapping)) {
     if (query[urlKey] !== undefined && optionKey !== null) {
       const value = convertParamType(optionKey, query[urlKey]);
+      // Отладка для multiLine
+      // if (optionKey === 'multiLine') {
+      //   console.log(`parseQueryParams - urlKey: ${urlKey}, query[urlKey]: ${query[urlKey]}, value: ${value}`);
+      // }
       if (value !== undefined) {
         options[optionKey] = value;
       }

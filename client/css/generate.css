@@ -162,8 +162,9 @@ body {
 }
 
 .generator-form__color-input[data-jscolor] {
-	flex: 0 0 120px;
 	min-width: 120px;
+	width: 100%;
+
 }
 
 .generator-form__dimensions {

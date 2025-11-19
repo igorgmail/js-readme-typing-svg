@@ -16,7 +16,6 @@ class GeneratorPage {
 			'font-weight',
 			'letter-spacing',
 			'color',
-			'color-hex',
 			'background',
 			'width',
 			'height',
@@ -49,27 +48,6 @@ class GeneratorPage {
 		document
 			.querySelector('[data-js-action="copy"]')
 			.addEventListener('click', () => this.copy());
-		
-		// Инициализация jscolor после загрузки DOM
-		jscolor.ready(() => {
-			// Синхронизация цветового пикера с hex полем
-			if (this.controls.color.jscolor) {
-				this.controls.color.jscolor.onInput = () => this.syncColorHex('color');
-			}
-			
-			// Инициализация hex поля для цвета
-			this.syncColorHex('color');
-		});
-	}
-
-	syncColorHex(type) {
-		const colorPicker = this.controls[type];
-		const hexInput = this.controls[`${type}-hex`];
-		if (colorPicker && hexInput && colorPicker.jscolor) {
-			// Для color используем hex формат
-			const color = colorPicker.jscolor.toString('hex');
-			hexInput.value = color;
-		}
 	}
 
 	collectParams() {
@@ -87,10 +65,28 @@ class GeneratorPage {
 		params.append('fontFamily', this.controls['font-family'].value.trim() || 'monospace');
 		params.append('fontWeight', this.controls['font-weight'].value);
 		params.append('letterSpacing', this.controls['letter-spacing'].value);
-		// Получаем цвет из jscolor
-		const colorValue = this.controls.color.jscolor 
-			? this.controls.color.jscolor.toString('hex').replace('#', '')
-			: this.controls.color.value.replace('#', '');
+		
+		// Получаем цвет из jscolor с поддержкой альфа-канала
+		let colorValue = '000000';
+		if (this.controls.color.jscolor) {
+			const colorHexa = this.controls.color.jscolor.toString('hexa');
+			// Убираем # и проверяем альфа-канал
+			const hexaValue = colorHexa.replace('#', '');
+			// Если альфа = 00 (полностью прозрачный), используем transparent
+			if (hexaValue.length === 8 && hexaValue.substr(6, 2).toUpperCase() === '00') {
+				colorValue = 'transparent';
+			} else if (hexaValue.length === 8 && hexaValue.substr(6, 2).toUpperCase() === 'FF') {
+				// Если альфа = FF (непрозрачный), используем только RGB
+				colorValue = hexaValue.substr(0, 6);
+			} else if (hexaValue.length === 8) {
+				// Используем полный hexa формат с альфа-каналом
+				colorValue = hexaValue;
+			} else {
+				colorValue = hexaValue;
+			}
+		} else {
+			colorValue = this.controls.color.value.replace('#', '');
+		}
 		params.append('color', colorValue);
 
 		// Получаем background из jscolor
