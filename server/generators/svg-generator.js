@@ -2,7 +2,7 @@
  * Генератор SVG с SMIL анимацией эффекта печатающегося текста
  */
 
-import { parseLines } from '../../shared/variables.js';
+import { parseLines } from '../utils/variables.js';
 
 /**
  * Экранирование спецсимволов для XML/SVG

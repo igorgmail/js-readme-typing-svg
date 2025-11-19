@@ -65,6 +65,9 @@ body {
 		grid-column: span 2;
 	}
 }
+.generator-page__panel--result {
+	height: fit-content;
+}
 
 .generator-form__row {
 	display: grid;
