@@ -289,3 +289,45 @@ body {
 		gap: 6px;
 	}
 }
+
+.code-container {
+  background: #f7f7f7;
+  padding: 16px;
+  border-radius: 8px;
+  color: #eee;
+  font-family: monospace;
+  font-size: 14px;
+  margin-bottom: 16px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.code-container .generator-output__label {
+  color: #1d1d1d;
+  margin-bottom: 8px;
+}
+
+.code-container pre {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.code-container code {
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  color: #333; 
+}
+
+.token-key { color: #8959a8; }
+.token-value { color: #CE9178; }
+.token-tag { color: #4EC9B0; }
+.token-attr { color: #C586C0; }
+.token-url { color: #9CDCFE; }

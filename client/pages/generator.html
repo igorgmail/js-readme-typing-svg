@@ -27,8 +27,8 @@
       <form class="generator-form" novalidate>
 
         <div class="generator-form__col">
-          <label class="generator-form__label" for="lines">Ваша Текст</label>
-          <textarea class="generator-form__textarea" id="lines" data-js="lines">Add ?lines=Your+text+here</textarea>
+          <label class="generator-form__label" for="lines">Ваш Текст</label>
+          <textarea class="generator-form__textarea" id="lines" data-js="lines">Одна строка или несколько</textarea>
         </div>
 
         <hr class="generator-form__hr">
@@ -152,22 +152,27 @@
 
     <section class="generator-page__panel generator-page__panel--result">
       <h2 class="generator-page__panel-title">📋 Результат</h2>
-      <div class="generator-output__box">
+      
+      <div class="code-container">
         <span class="generator-output__label">Сгенерированный URL</span>
-        <div class="generator-output__field" data-js="url-output">Заполните форму и нажмите «Генерировать URL»</div>
+        <pre><code data-js="url-output">Заполните форму и нажмите «Генерировать URL»</code></pre>
       </div>
-      <div class="generator-output__box">
+
+      <div class="code-container">
         <span class="generator-output__label">Markdown</span>
-        <textarea class="generator-output__field generator-output__textarea" data-js="markdown-output" readonly></textarea>
+        <pre><code data-js="markdown-output"></code></pre>
       </div>
-      <div class="generator-output__box">
+
+      <div class="code-container">
         <span class="generator-output__label">HTML</span>
-        <textarea class="generator-output__field generator-output__textarea" data-js="html-output" readonly></textarea>
+        <pre><code data-js="html-output"></code></pre>
       </div>
+
     </section>
   </div>
 
   <script src="../js/jscolor.min.js"></script>
+  <script src="../js/highlight.js"></script>
   <script src="../js/generatePage.js" type="module"></script>
 </body>
 </html>

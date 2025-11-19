@@ -138,9 +138,27 @@ class GeneratorPage {
 		const fullURL = `${this.baseURL}?${params.toString()}`;
 		this.generatedURL = fullURL;
 
-		this.outputs.url.textContent = fullURL;
-		this.outputs.markdown.value = `![Typing SVG](${fullURL})`;
-		this.outputs.html.value = `<img src="${fullURL}" alt="Typing SVG" />`;
+		const markdownCode = `![Typing SVG](${fullURL})`;
+		const htmlCode = `<img src="${fullURL}" alt="Typing SVG" />`;
+
+		// Применяем подсветку синтаксиса для всех полей
+		if (typeof highlight === 'function') {
+			this.outputs.url.innerHTML = highlight(
+				fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			);
+			this.outputs.markdown.innerHTML = highlight(
+				markdownCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			);
+			this.outputs.html.innerHTML = highlight(
+				htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			);
+		} else {
+			// Fallback если функция highlight недоступна
+			this.outputs.url.textContent = fullURL;
+			this.outputs.markdown.textContent = markdownCode;
+			this.outputs.html.textContent = htmlCode;
+		}
+		
 		this.preview.innerHTML = `<img src="${fullURL}" alt="SVG Preview" />`;
 	}
 
