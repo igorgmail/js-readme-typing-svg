@@ -53,6 +53,9 @@ class GeneratorPage {
 			document
 			.querySelectorAll('.js-copy-btn')
 			.forEach(btn => btn.addEventListener('click', () => this.copy(btn)));
+		document
+			.querySelectorAll('[pin-name]')
+			.forEach(btn => btn.addEventListener('click', () => this.pin(btn)));
 	}
 
 	collectParams() {
@@ -163,6 +166,17 @@ class GeneratorPage {
 		}
 		
 		this.preview.innerHTML = `<img src="${fullURL}" alt="SVG Preview" />`;
+	}
+
+	pin(btn) {
+		const pinStatus = btn.closest('[pin-status]').getAttribute('pin-status');
+		if (pinStatus === 'on') {
+			btn.closest('[pin-status]').setAttribute('pin-status', 'off');
+			btn.closest('.js-preview').classList.remove('pin');
+		} else {
+			btn.closest('[pin-status]').setAttribute('pin-status', 'on');
+			btn.closest('.js-preview').classList.add('pin');
+		}
 	}
 
 	copy(btn) {

@@ -14,9 +14,44 @@
 
   <div class="generator-page__grid">
   
-    <section class="generator-page__panel generator-page__panel--preview">
+    <section class="generator-page__panel generator-page__panel--preview js-preview">
+      <div class="generator-page__panel-header">  
+        <h2 class="generator-page__panel-title">👁️ Превью</h2>
 
-      <h2 class="generator-page__panel-title">👁️ Превью</h2>
+        <div class="panel-title__wrap" pin-status="off">
+          <div class="panel-title__icon panel-title__icon--pin" pin-name="pin">
+            <svg stroke="currentColor" 
+              fill="none" stroke-width="2" 
+              viewBox="0 0 24 24" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              height="1em" 
+              width="1em" 
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 17v5"></path>
+              <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path>
+            </svg>
+          </div>
+          <div class="panel-title__icon panel-title__icon--pin-off" pin-name="pin-off">
+            <svg 
+              stroke="#ea4444" 
+              fill="#ea4444" 
+              stroke-width="2" 
+              viewBox="0 0 24 24" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              height="1em" 
+              width="1em" 
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 17v5"></path>
+              <path d="M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89"></path>
+              <path d="m2 2 20 20"></path>
+              <path d="M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
       <div class="generator-preview" data-js="preview">
         <em>Превью будет доступно после генерации URL</em>
       </div>
