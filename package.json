@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "nodemon server/index.js"
+    "dev": "nodemon server/index.js",
+    "check:defaults": "node scripts/check-defaults-sync.js"
   },
   "keywords": [
     "svg",

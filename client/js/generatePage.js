@@ -1,6 +1,9 @@
+import { DEFAULT_PARAMS } from './defaults.js';
+
 class GeneratorPage {
 	constructor() {
 		this.baseURL = `${window.location.origin}/svg`;
+		this.defaults = DEFAULT_PARAMS;
 		this.controls = this.initControls();
 		this.outputs = this.initOutputs();
 		this.preview = document.querySelector('[data-js="preview"]');
@@ -50,7 +53,10 @@ class GeneratorPage {
 		document
 			.querySelector('[data-js-action="reset"]')
 			.addEventListener('click', () => this.reset());
-			document
+		document
+			.querySelector('[data-js-action="copy"]')
+			?.addEventListener('click', () => this.copyURL());
+		document
 			.querySelectorAll('.js-copy-btn')
 			.forEach(btn => btn.addEventListener('click', () => this.copy(btn)));
 		document
@@ -186,8 +192,8 @@ class GeneratorPage {
 			setTimeout(() => btn.classList.remove('copied'), 1000);
 		});
 	}
-	
-	reset() {
+
+	copyURL() {
 		if (!this.generatedURL) {
 			window.alert('⚠️ Сначала сгенерируйте URL');
 			return;
@@ -197,6 +203,49 @@ class GeneratorPage {
 			.writeText(this.generatedURL)
 			.then(() => window.alert('✅ URL скопирован в буфер обмена!'))
 			.catch((error) => window.alert('❌ Ошибка копирования: ' + error));
+	}
+	
+	reset() {
+		// Сбрасываем все поля формы к дефолтным значениям
+		this.controls.lines.value = this.defaults.lines;
+		this.controls['font-size'].value = this.defaults.fontSize;
+		this.controls['font-family'].value = this.defaults.fontFamily;
+		this.controls['font-weight'].value = this.defaults.fontWeight;
+		this.controls['letter-spacing'].value = this.defaults.letterSpacing;
+		
+		// Сброс цветов через jscolor
+		if (this.controls.color.jscolor) {
+			this.controls.color.jscolor.fromString(this.defaults.color);
+		} else {
+			this.controls.color.value = `#${this.defaults.color}`;
+		}
+		
+		if (this.controls.background.jscolor) {
+			// Для transparent устанавливаем прозрачный цвет (альфа = 0)
+			if (this.defaults.background === 'transparent') {
+				this.controls.background.jscolor.fromString('00000000');
+			} else {
+				this.controls.background.jscolor.fromString(this.defaults.background);
+			}
+		} else {
+			this.controls.background.value = this.defaults.background === 'transparent' 
+				? 'transparent' 
+				: `#${this.defaults.background}`;
+		}
+		
+		this.controls.width.value = this.defaults.width;
+		this.controls.height.value = this.defaults.height;
+		this.controls['print-speed'].value = this.defaults.printSpeed;
+		this.controls['delay-after-print'].value = this.defaults.delayAfterBlockPrint;
+		this.controls['erase-speed'].value = this.defaults.eraseSpeed;
+		this.controls['erase-mode'].value = this.defaults.eraseMode;
+		this.controls['horizontal-align'].value = this.defaults.horizontalAlign;
+		this.controls['vertical-align'].value = this.defaults.verticalAlign;
+		this.controls.multiline.value = this.defaults.multiLine.toString();
+		this.controls.repeat.value = this.defaults.repeat.toString();
+		
+		// Автоматически генерируем SVG с дефолтными параметрами
+		this.generate();
 	}
 }
 
