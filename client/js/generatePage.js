@@ -221,11 +221,15 @@ class GeneratorPage {
 		}
 		
 		if (this.controls.background.jscolor) {
-			// Для transparent устанавливаем прозрачный цвет (альфа = 0)
+			// Для transparent устанавливаем непрозрачный черный цвет (альфа = FF)
+			// чтобы ползунок прозрачности был в положении непрозрачный
 			if (this.defaults.background === 'transparent') {
-				this.controls.background.jscolor.fromString('00000000');
+				this.controls.background.jscolor.fromString('000000FF');
 			} else {
-				this.controls.background.jscolor.fromString(this.defaults.background);
+				// Если значение не hexa формат, добавляем альфа-канал FF
+				const bgValue = this.defaults.background;
+				const hexaValue = bgValue.length === 6 ? bgValue + 'FF' : bgValue;
+				this.controls.background.jscolor.fromString(hexaValue);
 			}
 		} else {
 			this.controls.background.value = this.defaults.background === 'transparent' 
