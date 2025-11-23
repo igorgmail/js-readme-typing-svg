@@ -243,9 +243,13 @@ class GeneratorPage {
 		this.controls['vertical-align'].value = this.defaults.verticalAlign;
 		this.controls.multiline.value = this.defaults.multiLine.toString();
 		this.controls.repeat.value = this.defaults.repeat.toString();
-		
+
 		// Автоматически генерируем SVG с дефолтными параметрами
 		this.generate();
+
+		document.querySelectorAll('[data-code-output]').forEach(output => {
+			output.innerText = '';
+		});
 	}
 }
 
