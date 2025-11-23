@@ -8,6 +8,9 @@ class GeneratorPage {
 		this.outputs = this.initOutputs();
 		this.preview = document.querySelector('[data-js="preview"]');
 		this.generatedURL = '';
+		this.autoUpdateEnabled = false;
+		this.autoUpdateTimeout = null;
+		this.fieldHandlers = [];
 		this.bindEvents();
 	}
 
@@ -62,6 +65,13 @@ class GeneratorPage {
 		document
 			.querySelectorAll('[pin-name]')
 			.forEach(btn => btn.addEventListener('click', () => this.pin(btn)));
+		
+		const autoUpdateToggle = document.querySelector('[data-js="auto-update"]');
+		if (autoUpdateToggle) {
+			autoUpdateToggle.addEventListener('change', (e) => {
+				this.setAutoUpdate(e.target.checked);
+			});
+		}
 	}
 
 	collectParams() {
@@ -254,6 +264,79 @@ class GeneratorPage {
 		document.querySelectorAll('[data-code-output]').forEach(output => {
 			output.innerText = '';
 		});
+	}
+
+	setAutoUpdate(enabled) {
+		this.autoUpdateEnabled = enabled;
+		
+		if (enabled) {
+			this.enableAutoUpdate();
+		} else {
+			this.disableAutoUpdate();
+		}
+	}
+
+	enableAutoUpdate() {
+		// Очищаем предыдущие обработчики
+		this.disableAutoUpdate();
+
+		// Функция для debounce генерации
+		const debouncedGenerate = () => {
+			if (this.autoUpdateTimeout) {
+				clearTimeout(this.autoUpdateTimeout);
+			}
+			this.autoUpdateTimeout = setTimeout(() => {
+				this.generate();
+			}, 300);
+		};
+
+		// Добавляем обработчики для обычных полей
+		const standardFields = [
+			'lines', 'font-size', 'font-family', 'font-weight', 'letter-spacing',
+			'width', 'height', 'print-speed', 'delay-after-print', 'erase-speed',
+			'erase-mode', 'horizontal-align', 'vertical-align', 'multiline', 'repeat'
+		];
+
+		standardFields.forEach(fieldName => {
+			const control = this.controls[fieldName];
+			if (control) {
+				const eventType = control.tagName === 'TEXTAREA' ? 'input' : 'change';
+				const handler = () => debouncedGenerate();
+				control.addEventListener(eventType, handler);
+				this.fieldHandlers.push({ element: control, event: eventType, handler });
+			}
+		});
+
+		// Обработчики для цветовых полей через jscolor
+		if (this.controls.color.jscolor) {
+			const colorHandler = () => debouncedGenerate();
+			this.controls.color.jscolor.onChange = colorHandler;
+			this.fieldHandlers.push({ element: this.controls.color, type: 'jscolor', handler: colorHandler });
+		}
+
+		if (this.controls.background.jscolor) {
+			const backgroundHandler = () => debouncedGenerate();
+			this.controls.background.jscolor.onChange = backgroundHandler;
+			this.fieldHandlers.push({ element: this.controls.background, type: 'jscolor', handler: backgroundHandler });
+		}
+	}
+
+	disableAutoUpdate() {
+		// Удаляем все обработчики
+		this.fieldHandlers.forEach(({ element, event, handler, type }) => {
+			if (type === 'jscolor') {
+				element.jscolor.onChange = null;
+			} else {
+				element.removeEventListener(event, handler);
+			}
+		});
+		this.fieldHandlers = [];
+
+		// Очищаем таймер
+		if (this.autoUpdateTimeout) {
+			clearTimeout(this.autoUpdateTimeout);
+			this.autoUpdateTimeout = null;
+		}
 	}
 }
 

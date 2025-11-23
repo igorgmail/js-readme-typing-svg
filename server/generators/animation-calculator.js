@@ -36,7 +36,7 @@ function calculateReplacingModeLineAnimation(config) {
   const {
     line, index, lastLineIndex, startX, y, textWidth,
     printDuration, eraseDuration, delayAfterBlockPrint, delayAfterErase,
-    repeat, eraseMode
+    repeat, eraseMode, fontSize, letterSpacing, eraseSpeed
   } = config;
   
   const isLastLine = index === lastLineIndex;
@@ -50,7 +50,7 @@ function calculateReplacingModeLineAnimation(config) {
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayAfterBlockPrint,
-      eraseDuration, delayAfterErase, totalDuration
+      eraseDuration, delayAfterErase, totalDuration, line, fontSize, letterSpacing, eraseSpeed
     };
     
     const eraseResult = eraseModeInstance.calculateReplacingMode(eraseConfig);
@@ -65,7 +65,7 @@ function calculateReplacingModeLineAnimation(config) {
       
       const eraseConfig = {
         startX, y, textWidth, printDuration, delayAfterBlockPrint,
-        eraseDuration, delayAfterErase, totalDuration
+        eraseDuration, delayAfterErase, totalDuration, line, fontSize, letterSpacing, eraseSpeed
       };
       
       const eraseResult = eraseModeInstance.calculateReplacingMode(eraseConfig);
@@ -112,7 +112,7 @@ function calculateMultiLineModeLineAnimation(config) {
   const {
     line, index, lines, startX, y, textWidth,
     printDuration, eraseSpeed, delayAfterBlockPrint, delayAfterErase,
-    repeat, eraseMode
+    repeat, eraseMode, fontSize, letterSpacing
   } = config;
   
   const lastLineIndex = lines.length - 1;
@@ -155,7 +155,8 @@ function calculateMultiLineModeLineAnimation(config) {
     }
     
     const eraseConfig = {
-      startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd
+      startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd,
+      line, fontSize, letterSpacing, eraseSpeed, totalDuration
     };
     
     const eraseResult = eraseModeInstance.calculateMultiLineMode(eraseConfig);
@@ -207,7 +208,8 @@ function calculateMultiLineModeLineAnimation(config) {
 function calculateSingleLineModeAnimation(config) {
   const {
     startX, y, textWidth, printDuration, eraseDuration,
-    delayAfterBlockPrint, delayAfterErase, repeat, eraseMode
+    delayAfterBlockPrint, delayAfterErase, repeat, eraseMode,
+    line, fontSize, letterSpacing, eraseSpeed
   } = config;
   
   const eraseModeInstance = getEraseMode(eraseMode);
@@ -219,7 +221,7 @@ function calculateSingleLineModeAnimation(config) {
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayAfterBlockPrint,
-      eraseDuration, delayAfterErase, totalDuration
+      eraseDuration, delayAfterErase, totalDuration, line, fontSize, letterSpacing, eraseSpeed
     };
     
     const eraseResult = eraseModeInstance.calculateSingleLineMode(eraseConfig);
@@ -293,18 +295,19 @@ export function calculateLinesAnimation(params, lines, startY) {
       animationParams = calculateReplacingModeLineAnimation({
         line, index, lastLineIndex, startX, y, textWidth,
         printDuration, eraseDuration, delayAfterBlockPrint, delayAfterErase,
-        repeat, eraseMode
+        repeat, eraseMode, fontSize, letterSpacing, eraseSpeed
       });
     } else if (multiLine) {
       animationParams = calculateMultiLineModeLineAnimation({
         line, index, lines, startX, y, textWidth,
         printDuration, eraseSpeed, delayAfterBlockPrint, delayAfterErase,
-        repeat, eraseMode
+        repeat, eraseMode, fontSize, letterSpacing
       });
     } else {
       animationParams = calculateSingleLineModeAnimation({
         startX, y, textWidth, printDuration, eraseDuration,
-        delayAfterBlockPrint, delayAfterErase, repeat, eraseMode
+        delayAfterBlockPrint, delayAfterErase, repeat, eraseMode,
+        line, fontSize, letterSpacing, eraseSpeed
       });
     }
     
