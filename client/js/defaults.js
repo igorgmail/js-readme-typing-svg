@@ -30,7 +30,7 @@ export const DEFAULT_PARAMS = {
   horizontalAlign: 'left',
 
   multiLine: false,
-  eraseMode: 'line', // none | line | block-line | fade
+  eraseMode: 'line', // none | line | fade
   cursorStyle: 'none' // none | straight | underlined | block
 };
 

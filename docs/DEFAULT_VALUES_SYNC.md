@@ -48,7 +48,7 @@ export const DEFAULT_PARAMS = {
   // Режимы
   multiLine: false,
   repeat: false,
-  eraseMode: 'line'  // none | line | block-line | fade
+  eraseMode: 'line'  // none | line | fade
 };
 ```
 

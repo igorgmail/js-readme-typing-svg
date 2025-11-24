@@ -15,7 +15,6 @@ server/generators/
 │   ├── EraseMode.js          # Базовый класс
 │   ├── FadeEraseMode.js      # Режим fade
 │   ├── LineEraseMode.js      # Режим line
-│   ├── BlockLineEraseMode.js # Режим block-line
 │   ├── NoneEraseMode.js      # Режим none
 │   └── index.js              # Фабрика режимов
 └── print-modes/              # Стратегии печати текста (будущее)

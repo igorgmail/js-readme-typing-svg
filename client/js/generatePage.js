@@ -12,6 +12,8 @@ class GeneratorPage {
 		this.autoUpdateTimeout = null;
 		this.fieldHandlers = [];
 		this.bindEvents();
+		this.setAutoUpdate(true);
+		this.generate();
 	}
 
 	initControls() {
@@ -61,18 +63,8 @@ class GeneratorPage {
 			.querySelector('[data-js-action="copy"]')
 			?.addEventListener('click', () => this.copyURL());
 		document
-			.querySelectorAll('.js-copy-btn')
-			.forEach(btn => btn.addEventListener('click', () => this.copy(btn)));
-		document
 			.querySelectorAll('[pin-name]')
 			.forEach(btn => btn.addEventListener('click', () => this.pin(btn)));
-		
-		const autoUpdateToggle = document.querySelector('[data-js="auto-update"]');
-		if (autoUpdateToggle) {
-			autoUpdateToggle.addEventListener('change', (e) => {
-				this.setAutoUpdate(e.target.checked);
-			});
-		}
 	}
 
 	collectParams() {
@@ -195,14 +187,6 @@ class GeneratorPage {
 			btn.closest('[pin-status]').setAttribute('pin-status', 'on');
 			btn.closest('.js-preview').classList.add('pin');
 		}
-	}
-
-	copy(btn) {
-		const text = btn.closest('.code-container').querySelector('code').textContent;
-		navigator.clipboard.writeText(text).then(() => {
-			btn.classList.add('copied');
-			setTimeout(() => btn.classList.remove('copied'), 1000);
-		});
 	}
 
 	copyURL() {
