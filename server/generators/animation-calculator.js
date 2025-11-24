@@ -4,6 +4,7 @@
 
 import { computeTextWidth, computeTextX, formatLetterSpacingForSVG } from './utils/text-utils.js';
 import { getEraseMode } from './erase-modes/index.js';
+import { isCursorAllowed, shouldHideCursorWhenFinished } from './cursor-modes/index.js';
 
 /**
  * Вычисляет стартовую позицию Y для вертикального выравнивания
@@ -72,6 +73,8 @@ function calculateReplacingModeLineAnimation(config) {
       ({ useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues } = eraseResult);
       
       begin = index === 0 ? '0s' : `d${index - 1}.end`;
+      cursorPrintStart = printStart;
+      cursorPrintEnd = printEnd;
     } else {
       // Последняя строка: печать -> пауза -> остается на месте
       totalDuration = printDuration + delayAfterBlockPrint;
@@ -119,6 +122,12 @@ function calculateMultiLineModeLineAnimation(config) {
   const timeBeforeThisLine = index * (printDuration + delayAfterBlockPrint);
   
   let totalDuration, begin, keyTimes, pathValues, useFadeErase, fadeEraseStart, fadeEraseEnd;
+  // Глобальные значения начала/конца печати строки (0–1 относительно totalDuration)
+  let cursorPrintStart;
+  let cursorPrintEnd;
+  // Границы стирания строки (0–1 относительно totalDuration) — только для eraseMode='line'
+  let cursorEraseStart;
+  let cursorEraseEnd;
   
   if (repeat) {
     const totalPrintTime = lines.length * (printDuration + delayAfterBlockPrint);
@@ -144,6 +153,11 @@ function calculateMultiLineModeLineAnimation(config) {
       printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
       eraseStart = eraseStartTime / totalDuration;
       eraseEnd = (eraseStartTime + thisEraseDuration) / totalDuration;
+
+      cursorPrintStart = printStart;
+      cursorPrintEnd = printEnd;
+      cursorEraseStart = eraseStart;
+      cursorEraseEnd = eraseEnd;
     } else {
       const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * eraseSpeed, 0);
       totalDuration = totalPrintTime + totalEraseDuration + delayAfterErase;
@@ -152,6 +166,9 @@ function calculateMultiLineModeLineAnimation(config) {
       printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
       eraseStart = totalPrintTime / totalDuration;
       eraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
+
+      cursorPrintStart = printStart;
+      cursorPrintEnd = printEnd;
     }
     
     const eraseConfig = {
@@ -184,6 +201,8 @@ function calculateMultiLineModeLineAnimation(config) {
     }
     
     begin = '0s';
+    cursorPrintStart = printStart;
+    cursorPrintEnd = printEnd;
   }
   
   const fillValue = repeat ? 'remove' : 'freeze';
@@ -196,7 +215,12 @@ function calculateMultiLineModeLineAnimation(config) {
     useFadeErase,
     fadeEraseStart,
     fadeEraseEnd,
-    fillValue
+    fillValue,
+    // Дополнительные данные для курсора в multiline режиме
+    printStart: cursorPrintStart,
+    printEnd: cursorPrintEnd,
+    eraseStart: cursorEraseStart,
+    eraseEnd: cursorEraseEnd
   };
 }
 
@@ -267,8 +291,10 @@ export function calculateLinesAnimation(params, lines, startY) {
     multiLine, repeat, eraseMode,
     printSpeed, eraseSpeed, delayAfterBlockPrint, delayAfterErase,
     fontSize, lineHeight, horizontalAlign, width, paddingX, letterSpacing,
-    fontFamily, color, fontWeight
+    fontFamily, color, fontWeight, cursorStyle,
   } = params;
+  const cursorEnabledForParams = isCursorAllowed(params);
+  const hideCursorOnFinish = shouldHideCursorWhenFinished(params);
   
   const isReplacingMode = !multiLine && lines.length > 1;
   const lastLineIndex = lines.length - 1;
@@ -310,7 +336,40 @@ export function calculateLinesAnimation(params, lines, startY) {
         line, fontSize, letterSpacing, eraseSpeed
       });
     }
-    
+
+    // Конфигурация анимации курсора — строим на основе pathValues/keyTimes
+    let cursorKeyTimes;
+    let cursorValues;
+    let cursorFillValue;
+
+    if (cursorEnabledForParams && cursorStyle && cursorStyle !== 'none' && animationParams.pathValues && animationParams.keyTimes) {
+      const pathSegments = String(animationParams.pathValues)
+        .split(';')
+        .map((segment) => segment.trim())
+        .filter(Boolean);
+      const keyTimesParts = String(animationParams.keyTimes)
+        .split(';')
+        .map((value) => value.trim())
+        .filter(Boolean);
+
+      if (pathSegments.length === keyTimesParts.length) {
+        const cursorPositions = pathSegments.map((segment) => {
+          const match = segment.match(/h(-?\d+(\.\d+)?)/i);
+          const length = match ? parseFloat(match[1]) : 0;
+          const safeLength = Number.isNaN(length) ? 0 : length;
+          return startX + safeLength;
+        });
+
+        cursorKeyTimes = keyTimesParts.join(';');
+        cursorValues = cursorPositions.join(';');
+
+        cursorFillValue = animationParams.fillValue;
+        if (hideCursorOnFinish) {
+          cursorFillValue = 'remove';
+        }
+      }
+    }
+
     // Формируем итоговый объект с параметрами для рендера
     return {
       index,
@@ -322,6 +381,17 @@ export function calculateLinesAnimation(params, lines, startY) {
       fontSize,
       fontWeight,
       letterSpacingValue: formatLetterSpacingForSVG(letterSpacing),
+      // Флаг режима для последующей сборки курсора
+      multiLine,
+      isReplacingMode,
+      // Геометрия строки (нужна для позиционирования курсора)
+      startX,
+      y,
+      // Параметры курсора (если они рассчитаны)
+      cursorStyle: cursorStyle || 'none',
+      cursorKeyTimes,
+      cursorValues,
+      cursorFillValue,
       ...animationParams
     };
   }).filter(Boolean);
