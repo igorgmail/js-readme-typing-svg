@@ -118,6 +118,15 @@ function generatePerLineCursor(linesData) {
 
   const animateXParts = [];
   const animateYParts = [];
+  let hideOpacityAnimation = '';
+
+  // Определяем, нужно ли скрывать курсор по завершении всей анимации
+  // hideWhenFinished сейчас настроен как { repeat: false } и реализован через cursorFillValue === 'remove'
+  // при исходном fillValue !== 'remove'
+  const hideOnFinish =
+    sampleLine.cursorFillValue === 'remove' &&
+    typeof sampleLine.fillValue !== 'undefined' &&
+    sampleLine.fillValue !== 'remove';
 
   linesData.forEach((lineData) => {
     const {
@@ -156,6 +165,28 @@ function generatePerLineCursor(linesData) {
     return '';
   }
 
+  // Если нужно скрыть курсор после завершения всех строк — вешаем
+  // отдельную анимацию opacity, которая срабатывает после последней строки
+  if (hideOnFinish) {
+    const lastLineWithCursor = [...linesData]
+      .reverse()
+      .find(
+        (lineData) =>
+          lineData &&
+          lineData.cursorValues &&
+          lineData.cursorKeyTimes &&
+          typeof lineData.y === 'number' &&
+          lineData.animateId,
+      );
+
+    if (lastLineWithCursor) {
+      hideOpacityAnimation = `
+      <animate attributeName="opacity" begin="${lastLineWithCursor.animateId}.end"
+        dur="1ms" fill="freeze"
+        values="1;0" keyTimes="0;1" />`;
+    }
+  }
+
   // Общие визуальные параметры берем из примера строки
   const { color, fontSize, fontWeight } = sampleLine;
 
@@ -164,6 +195,7 @@ function generatePerLineCursor(linesData) {
       dominant-baseline="auto" text-anchor="start">
       ${animateXParts.join('')}
       ${animateYParts.join('')}
+      ${hideOpacityAnimation}
       ${safeCursorIcon}
     </text>`;
 }
@@ -184,6 +216,8 @@ function generateMultiLineCursor(linesData) {
       typeof lineData.y === 'number' &&
       typeof lineData.printStart === 'number' &&
       typeof lineData.printEnd === 'number' &&
+      typeof lineData.startX === 'number' &&
+      typeof lineData.textWidth === 'number' &&
       lineData.totalDuration,
   );
 
@@ -199,70 +233,144 @@ function generateMultiLineCursor(linesData) {
 
   const safeCursorIcon = escapeXml(cursorInfo.icon || '|');
   const totalDuration = sampleLine.totalDuration;
+  const beginValue = sampleLine.begin || '0s';
+  const fill = sampleLine.cursorFillValue || sampleLine.fillValue || 'remove';
 
-  const elements = multiLines
-    .map((lineData) => {
-      const {
-        cursorValues,
-        cursorKeyTimes,
-        cursorFillValue,
-        begin,
-        totalDuration: lineTotalDuration,
-        y,
-        fillValue,
-        color,
-        fontSize,
-        fontWeight,
-        printStart,
-        printEnd,
-        eraseStart,
-        eraseEnd,
-      } = lineData;
+  /**
+   * Собираем интервалы активности курсора:
+   * - печать строки [printStart, printEnd]
+   * - стирание строки [eraseStart, eraseEnd] (если есть)
+   * На основе этих интервалов строим единый трек x/y/opacity.
+   */
+  const intervals = [];
 
-      if (
-        !cursorValues ||
-        !cursorKeyTimes ||
-        !lineTotalDuration ||
-        typeof y !== 'number' ||
-        typeof printStart !== 'number' ||
-        typeof printEnd !== 'number'
-      ) {
-        return '';
-      }
+  multiLines.forEach((lineData, index) => {
+    const { printStart, printEnd, eraseStart, eraseEnd } = lineData;
 
-      const fill = cursorFillValue || fillValue || 'remove';
-      const beginValue = begin || '0s';
+    if (typeof printStart === 'number' && typeof printEnd === 'number' && printEnd > printStart) {
+      intervals.push({
+        start: printStart,
+        end: printEnd,
+        lineIndex: index,
+        type: 'print',
+      });
+    }
 
-      // Делаем курсор видимым:
-      // - во время печати строки [printStart, printEnd]
-      // - и, если есть, во время стирания [eraseStart, eraseEnd] для eraseMode='line'
-      let opacityKeyTimes;
-      let opacityValues;
+    if (typeof eraseStart === 'number' && typeof eraseEnd === 'number' && eraseEnd > eraseStart) {
+      intervals.push({
+        start: eraseStart,
+        end: eraseEnd,
+        lineIndex: index,
+        type: 'erase',
+      });
+    }
+  });
 
-      if (typeof eraseStart === 'number' && typeof eraseEnd === 'number') {
-        opacityKeyTimes = `0;${printStart};${printStart};${printEnd};${printEnd};${eraseStart};${eraseStart};${eraseEnd};${eraseEnd};1`;
-        opacityValues = '0;0;1;1;0;0;1;1;0;0';
-      } else {
-        opacityKeyTimes = `0;${printStart};${printStart};${printEnd};${printEnd};1`;
-        opacityValues = '0;0;1;1;0;0';
-      }
+  if (intervals.length === 0) {
+    return '';
+  }
 
-      return `
-    <text fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}"
-      dominant-baseline="auto" text-anchor="start" y="${y}">
+  intervals.sort((a, b) => {
+    if (a.start === b.start) {
+      return a.end - b.end;
+    }
+    return a.start - b.start;
+  });
+
+  const hasEraseIntervals = intervals.some((interval) => interval.type === 'erase');
+  const printIntervals = intervals.filter((interval) => interval.type === 'print');
+  const lastPrintInterval = printIntervals[printIntervals.length - 1] || null;
+
+  const keyTimes = [];
+  const xValues = [];
+  const yValues = [];
+  const opacityValues = [];
+
+  let lastTime = 0;
+  let lastX = multiLines[0].startX;
+  let lastY = multiLines[0].y;
+  let lastOpacity = 0;
+
+  function pushPoint(time, x, y, opacity) {
+    const clampedTime = Math.max(0, Math.min(1, time));
+
+    keyTimes.push(String(clampedTime));
+    xValues.push(String(x));
+    yValues.push(String(y));
+    opacityValues.push(String(opacity));
+
+    lastTime = clampedTime;
+    lastX = x;
+    lastY = y;
+    lastOpacity = opacity;
+  }
+
+  // Стартовая точка: до первой активности курсора он невидим
+  pushPoint(0, lastX, lastY, 0);
+
+  intervals.forEach((interval) => {
+    const lineData = multiLines[interval.lineIndex];
+    const lineStartX = lineData.startX;
+    const lineEndX = lineData.startX + lineData.textWidth;
+    const lineY = lineData.y;
+    const isPrintInterval = interval.type === 'print';
+    const isEraseInterval = interval.type === 'erase';
+    const isLastPrintInterval = isPrintInterval && lastPrintInterval === interval;
+
+    const beforeX = isPrintInterval ? lineStartX : lineEndX;
+    const afterX = isPrintInterval ? lineEndX : lineStartX;
+
+    // Если есть "дырка" между предыдущим концом и началом интервала —
+    // явно фиксируем, что курсор в этот период невидим.
+    if (interval.start > lastTime) {
+      // Держим курсор в конце предыдущей строки видимым
+      // до момента старта следующего интервала
+      pushPoint(interval.start, lastX, lastY, lastOpacity);
+    }
+
+    // В начале интервала сначала "телепортируем" курсор в новую точку
+    // пока он невидим, а затем включаем его в этой же позиции.
+    pushPoint(interval.start, beforeX, lineY, 0);
+    pushPoint(interval.start, beforeX, lineY, 1);
+
+    // Момент окончания активности интервала:
+    // - для печати промежуточных строк курсор остаётся видимым в конце строки;
+    // - для последней печати без этапа стирания (repeat=false) курсор гасим в конце;
+    // - для любого этапа стирания курсор гасим в конце.
+    if (isEraseInterval) {
+      pushPoint(interval.end, afterX, lineY, 1);
+      pushPoint(interval.end, afterX, lineY, 0);
+    } else if (isLastPrintInterval && !hasEraseIntervals) {
+      // repeat=false: последняя строка, после неё нет стирания — курсор убираем
+      pushPoint(interval.end, afterX, lineY, 1);
+      pushPoint(interval.end, afterX, lineY, 0);
+    } else {
+      // Обычный случай печати строки: оставляем курсор видимым в конце строки
+      pushPoint(interval.end, afterX, lineY, 1);
+    }
+  });
+
+  // Гарантируем наличие точки в конце шкалы времени
+  if (lastTime < 1) {
+    pushPoint(1, lastX, lastY, lastOpacity);
+  }
+
+  const { color, fontSize, fontWeight } = sampleLine;
+
+  return `
+    <text id="typing-cursor" fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}"
+      dominant-baseline="auto" text-anchor="start">
       <animate attributeName="x" begin="${beginValue}"
-        dur="${lineTotalDuration}ms" fill="${fill}"
-        values="${cursorValues}" keyTimes="${cursorKeyTimes}" />
+        dur="${totalDuration}ms" fill="${fill}"
+        values="${xValues.join(';')}" keyTimes="${keyTimes.join(';')}" />
+      <animate attributeName="y" begin="${beginValue}"
+        dur="${totalDuration}ms" fill="${fill}"
+        values="${yValues.join(';')}" keyTimes="${keyTimes.join(';')}" />
       <animate attributeName="opacity" begin="${beginValue}"
-        dur="${lineTotalDuration}ms" fill="remove"
-        values="${opacityValues}" keyTimes="${opacityKeyTimes}" />
+        dur="${totalDuration}ms" fill="freeze"
+        values="${opacityValues.join(';')}" keyTimes="${keyTimes.join(';')}" />
       ${safeCursorIcon}
     </text>`;
-    })
-    .filter(Boolean)
-    .join('');
-
-  return elements;
 }
 
 /**

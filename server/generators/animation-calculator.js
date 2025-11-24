@@ -374,6 +374,10 @@ export function calculateLinesAnimation(params, lines, startY) {
       pathId,
       animateId,
       line,
+      // Геометрия строки
+      startX,
+      y,
+      textWidth,
       fontFamily,
       color,
       fontSize,
@@ -382,9 +386,6 @@ export function calculateLinesAnimation(params, lines, startY) {
       // Флаг режима для последующей сборки курсора
       multiLine,
       isReplacingMode,
-      // Геометрия строки (нужна для позиционирования курсора)
-      startX,
-      y,
       // Параметры курсора (если они рассчитаны)
       cursorStyle: cursorStyle || 'none',
       cursorKeyTimes,

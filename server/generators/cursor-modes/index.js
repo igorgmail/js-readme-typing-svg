@@ -42,7 +42,7 @@ export const CURSOR_OPTIONS = {
  */
 const hideWhenFinished = [
   {
-    repeat: true,
+    repeat: false,
   },
 ];
 
