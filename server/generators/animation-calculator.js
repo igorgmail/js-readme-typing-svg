@@ -48,6 +48,8 @@ function calculateReplacingModeLineAnimation(config) {
   if (repeat) {
     // При repeat=true: все строки стираются, цикл повторяется бесконечно
     totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
+    const cyclePause = delayAfterBlockPrint > 0 ? delayAfterBlockPrint : 0;
+    const repeatSuffix = cyclePause > 0 ? `+${cyclePause}ms` : '';
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayAfterBlockPrint,
@@ -57,8 +59,14 @@ function calculateReplacingModeLineAnimation(config) {
     const eraseResult = eraseModeInstance.calculateReplacingMode(eraseConfig);
     ({ useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues } = eraseResult);
     
-    // Начало анимации: первая строка начинается с 0s и после завершения последней строки
-    begin = index === 0 ? `0s;d${lastLineIndex}.end` : `d${index - 1}.end`;
+    // Начало анимации:
+    // - первый цикл: 0s
+    // - последующие циклы: после завершения последней строки + пауза между циклами
+    if (index === 0) {
+      begin = repeatSuffix ? `0s;d${lastLineIndex}.end${repeatSuffix}` : `0s;d${lastLineIndex}.end`;
+    } else {
+      begin = `d${index - 1}.end`;
+    }
   } else {
     // При repeat=false: не последняя строка стирается, последняя остается
     if (!isLastLine) {
@@ -177,7 +185,11 @@ function calculateMultiLineModeLineAnimation(config) {
     const eraseResult = eraseModeInstance.calculateMultiLineMode(eraseConfig);
     ({ useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues } = eraseResult);
     
-    begin = `0s;d${lastLineIndex}.end`;
+    // Для repeat=true добавляем паузу между циклами после завершения последней строки
+    const cyclePause = delayAfterBlockPrint > 0 ? delayAfterBlockPrint : 0;
+    const repeatSuffix = cyclePause > 0 ? `+${cyclePause}ms` : '';
+    const baseBegin = `0s;d${lastLineIndex}.end`;
+    begin = repeatSuffix ? `${baseBegin}${repeatSuffix}` : baseBegin;
   } else {
     // При repeat=false: строки печатаются и остаются на месте
     const totalPrintTime = lines.length * printDuration + (lines.length - 1) * delayAfterBlockPrint;
@@ -240,6 +252,8 @@ function calculateSingleLineModeAnimation(config) {
   
   if (repeat) {
     totalDuration = printDuration + delayAfterBlockPrint + eraseDuration + delayAfterErase;
+    const cyclePause = delayAfterBlockPrint > 0 ? delayAfterBlockPrint : 0;
+    const repeatSuffix = cyclePause > 0 ? `+${cyclePause}ms` : '';
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayAfterBlockPrint,
@@ -249,7 +263,8 @@ function calculateSingleLineModeAnimation(config) {
     const eraseResult = eraseModeInstance.calculateSingleLineMode(eraseConfig);
     ({ useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues } = eraseResult);
     
-    begin = '0s;d0.end';
+    // Повторяем цикл с дополнительной паузой между циклами
+    begin = repeatSuffix ? `0s;d0.end${repeatSuffix}` : '0s;d0.end';
   } else {
     totalDuration = printDuration + delayAfterBlockPrint;
     const printEnd = printDuration / totalDuration;
