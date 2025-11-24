@@ -62,8 +62,8 @@
       <form class="generator-form" novalidate>
 
         <div class="generator-form__col">
-          <label class="generator-form__label" for="lines">Ваш Текст</label>
-          <textarea class="generator-form__textarea" id="lines" data-js="lines">Одна строка или несколько</textarea>
+          <label class="generator-form__label" for="lines">Your text</label>
+          <textarea class="generator-form__textarea" id="lines" data-js="lines">Your text here</textarea>
         </div>
 
         <hr class="generator-form__hr">
@@ -116,6 +116,16 @@
             <option value="line" selected>line</option>
             <option value="block-line">block-line</option>
             <option value="fade">fade</option>
+          </select>
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="cursorStyle">Cursor style</label>
+          <select class="generator-form__select" id="cursorStyle" data-js="cursor-style">
+            <option value="none" selected>none</option>
+            <option value="straight">straight</option>
+            <option value="underlined">underlined</option>
+            <option value="block">block</option>
           </select>
         </div>
 

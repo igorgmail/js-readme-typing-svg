@@ -382,6 +382,7 @@ body {
 	width: 100%;
 	overflow: hidden;
 	box-sizing: border-box;
+	user-select: none;
 }
 
 .generator-preview img {

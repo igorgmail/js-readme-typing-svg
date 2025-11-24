@@ -116,6 +116,7 @@ export function parseQueryParams(query) {
     // Режимы
     typingMode: 'typingMode',
     eraseMode: 'eraseMode',
+    cursorStyle: 'cursorStyle',
     multiLine: 'multiLine',
     showCaret: 'showCaret',
     repeat: 'repeat'

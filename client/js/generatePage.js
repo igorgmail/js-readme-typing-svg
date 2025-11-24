@@ -29,6 +29,7 @@ class GeneratorPage {
 			'delay-after-print',
 			'erase-speed',
 			'erase-mode',
+			'cursor-style',
 			'horizontal-align',
 			'vertical-align',
 			'multiline',
@@ -140,6 +141,7 @@ class GeneratorPage {
 		params.append('delayAfterBlockPrint', this.controls['delay-after-print'].value);
 		params.append('eraseSpeed', this.controls['erase-speed'].value);
 		params.append('eraseMode', this.controls['erase-mode'].value);
+		params.append('cursorStyle', this.controls['cursor-style'].value);
 		
 		// Обработка выравнивания из select (true/false -> center/middle)
 		const horizontalAlign = this.controls['horizontal-align'].value;
@@ -253,6 +255,7 @@ class GeneratorPage {
 		this.controls['delay-after-print'].value = this.defaults.delayAfterBlockPrint;
 		this.controls['erase-speed'].value = this.defaults.eraseSpeed;
 		this.controls['erase-mode'].value = this.defaults.eraseMode;
+		this.controls['cursor-style'].value = this.defaults.cursorStyle;
 		this.controls['horizontal-align'].value = this.defaults.horizontalAlign;
 		this.controls['vertical-align'].value = this.defaults.verticalAlign;
 		this.controls.multiline.value = this.defaults.multiLine.toString();
@@ -294,7 +297,7 @@ class GeneratorPage {
 		const standardFields = [
 			'lines', 'font-size', 'font-family', 'font-weight', 'letter-spacing',
 			'width', 'height', 'print-speed', 'delay-after-print', 'erase-speed',
-			'erase-mode', 'horizontal-align', 'vertical-align', 'multiline', 'repeat'
+			'erase-mode', 'cursor-style', 'horizontal-align', 'vertical-align', 'multiline', 'repeat'
 		];
 
 		standardFields.forEach(fieldName => {

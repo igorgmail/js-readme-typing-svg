@@ -38,6 +38,7 @@ export const DEFAULT_PARAMS = {
 
   multiLine: false,
   eraseMode: 'line', // none | line | block-line | fade
+  cursorStyle: 'none', // none | straight | underlined | block
 
   //typingMode: 'default', // default | expand
   // showCaret: true
