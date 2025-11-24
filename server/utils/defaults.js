@@ -10,7 +10,7 @@ export const DEFAULT_PARAMS = {
   // lines может быть строкой или массивом
   // Если строка - будет распарсена в params-parser
   // Если массив - используется как есть
-  lines: 'Add ?lines=Your+text+here',
+  lines: 'Your text here',
   color: '000000',
   background: 'transparent',
   fontSize: 16,

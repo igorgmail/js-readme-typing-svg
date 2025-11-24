@@ -234,7 +234,7 @@ class GeneratorPage {
 			// Для transparent устанавливаем непрозрачный черный цвет (альфа = FF)
 			// чтобы ползунок прозрачности был в положении непрозрачный
 			if (this.defaults.background === 'transparent') {
-				this.controls.background.jscolor.fromString('000000FF');
+				this.controls.background.jscolor.fromString('#FFFFFFFF');
 			} else {
 				// Если значение не hexa формат, добавляем альфа-канал FF
 				const bgValue = this.defaults.background;

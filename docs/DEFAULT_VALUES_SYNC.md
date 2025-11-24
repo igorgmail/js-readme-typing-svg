@@ -16,7 +16,7 @@
 ```javascript
 export const DEFAULT_PARAMS = {
   // Текст
-  lines: 'Add ?lines=Your+text+here',
+  lines: 'Your text here',
   
   // Шрифт
   fontSize: 16,
@@ -142,7 +142,7 @@ node scripts/check-defaults-sync.js
 ```
 🔍 Проверка синхронизации дефолтных значений
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ lines: "Add ?lines=Your+text+here"
+✅ lines: "Your text here"
 ✅ color: "000000"
 ✅ background: "transparent"
 ...

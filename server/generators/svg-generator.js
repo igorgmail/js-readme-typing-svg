@@ -29,7 +29,7 @@ export function generateSVG(params) {
   const lines = parseLines(rawLines);
   
   if (lines.length === 0) {
-    lines.push('Add ?lines=Your+text+here');
+    lines.push('Your+text+here');
   }
   
   // Нормализация параметров

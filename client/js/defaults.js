@@ -7,7 +7,7 @@
  */
 
 export const DEFAULT_PARAMS = {
-  lines: 'Add ?lines=Your+text+here',
+  lines: 'Your text here',
   color: '000000',
   background: 'transparent',
   fontSize: 16,
