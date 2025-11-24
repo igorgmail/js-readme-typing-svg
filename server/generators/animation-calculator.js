@@ -73,8 +73,6 @@ function calculateReplacingModeLineAnimation(config) {
       ({ useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues } = eraseResult);
       
       begin = index === 0 ? '0s' : `d${index - 1}.end`;
-      cursorPrintStart = printStart;
-      cursorPrintEnd = printEnd;
     } else {
       // Последняя строка: печать -> пауза -> остается на месте
       totalDuration = printDuration + delayAfterBlockPrint;
