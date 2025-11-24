@@ -383,7 +383,16 @@ export function calculateLinesAnimation(params, lines, startY) {
         cursorKeyTimes = keyTimesParts.join(';');
         cursorValues = cursorPositions.join(';');
 
+        // Базовое значение fill для курсора берём из анимации строки
         cursorFillValue = animationParams.fillValue;
+
+        // В repeat-режиме курсор не должен "откатываться" в (0,0) в паузах между циклами,
+        // поэтому фиксируем последнюю позицию (freeze), чтобы избежать скачка.
+        if (repeat) {
+          cursorFillValue = 'freeze';
+        }
+
+        // Для конечного состояния (repeat=false) при необходимости явно скрываем курсор
         if (hideCursorOnFinish) {
           cursorFillValue = 'remove';
         }
