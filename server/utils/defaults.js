@@ -22,7 +22,7 @@ export const DEFAULT_PARAMS = {
   width: 800,
   height: 200,
 
-  // printSpeed - общая длительность анимации печати строки в миллисекундах (duration)
+  // printSpeed - общая длительность печати всех строк в миллисекундах (duration)
   printSpeed: 1000,
   eraseSpeed: 50,
 

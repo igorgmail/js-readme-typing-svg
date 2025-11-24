@@ -294,6 +294,13 @@ export function calculateLinesAnimation(params, lines, startY) {
   const cursorEnabledForParams = isCursorAllowed(params);
   const hideCursorOnFinish = shouldHideCursorWhenFinished(params);
   
+  // printSpeed теперь интерпретируем как общую длительность печати всех строк.
+  // Чтобы сохранить относительные временные соотношения и упростить логику,
+  // печать одной строки занимает долю от общего времени пропорционально количеству строк.
+  // При одной строке поведение остаётся прежним.
+  const linesCount = Array.isArray(lines) ? lines.length : 0;
+  const perLinePrintDuration = linesCount > 0 ? printSpeed / linesCount : printSpeed;
+  
   const isReplacingMode = !multiLine && lines.length > 1;
   const lastLineIndex = lines.length - 1;
   
@@ -306,7 +313,7 @@ export function calculateLinesAnimation(params, lines, startY) {
     const startX = computeTextX(line, fontSize, horizontalAlign, width, paddingX, letterSpacing);
     
     // Параметры анимации
-    const printDuration = printSpeed;
+    const printDuration = perLinePrintDuration;
     const eraseDuration = line.length * eraseSpeed;
     
     const pathId = `path${index}`;
