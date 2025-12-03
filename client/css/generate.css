@@ -244,6 +244,7 @@ body {
 .generator-form__toggle {
 	display: flex;
 	align-items: center;
+	justify-self: end;
 	gap: 8px;
 	font-size: 13px;
 	color: #333;
@@ -533,3 +534,35 @@ body {
 .token-tag { color: #4EC9B0; }
 .token-attr { color: #C586C0; }
 .token-url { color: #9CDCFE; }
+
+/* Loading */
+
+.loader {
+	position: relative;
+}
+
+.loader>img {
+	filter: blur(1px);
+	opacity: 0.5;
+}
+
+.loader::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 20;
+  width:12px;
+  height:12px;
+  background: #0a5fa7;
+  border-radius: 50%;
+  box-shadow: 20px 0 #0a5fa722,-20px 0 #0a5fa7;
+  animation:d5 1s infinite linear alternate;
+}
+
+@keyframes d5 {
+    0% {box-shadow: 20px 0 #0a5fa7,-20px 0 #0a5fa722;background: #0a5fa7}
+    33%{box-shadow: 20px 0 #0a5fa7,-20px 0 #0a5fa722;background: #0a5fa722}
+    66%{box-shadow: 20px 0 #0a5fa722,-20px 0 #0a5fa7;background: #0a5fa722}
+}
