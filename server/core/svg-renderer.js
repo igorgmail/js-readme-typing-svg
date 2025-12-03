@@ -4,6 +4,7 @@
 
 import { escapeXml, validateAndSanitizeFontFamily } from '../utils/text-utils.js';
 import { getCursorInfo } from '../effects/cursor/index.js';
+import { parseStyleSegments, hasStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
  * Генерирует секцию <defs> с опциональными стилями шрифта.
@@ -46,6 +47,40 @@ function generateOpacityAnimation(config) {
 }
 
 /**
+ * Генерирует контент для textPath - либо простой текст, либо tspan элементы с разными цветами
+ * @param {string} line - текст строки
+ * @param {string} defaultColor - цвет по умолчанию
+ * @returns {string} содержимое для textPath
+ */
+function generateTextPathContent(line, defaultColor) {
+  // Проверяем наличие маркеров стилей
+  if (!hasStyleMarkers(line)) {
+    return escapeXml(line);
+  }
+  
+  // Парсим строку на сегменты с разными стилями
+  const segments = parseStyleSegments(line, defaultColor);
+  
+  // Если только один сегмент - возвращаем как обычно
+  if (segments.length === 1) {
+    return escapeXml(segments[0].text);
+  }
+  
+  // Генерируем tspan для каждого сегмента
+  return segments.map(segment => {
+    const escapedText = escapeXml(segment.text);
+    
+    // Если цвет сегмента совпадает с дефолтным, не добавляем атрибут fill
+    if (segment.color === defaultColor) {
+      return escapedText;
+    }
+    
+    // Иначе оборачиваем в tspan с нужным цветом
+    return `<tspan fill="${segment.color}">${escapedText}</tspan>`;
+  }).join('');
+}
+
+/**
  * Генерирует текстовый элемент с анимацией
  * @param {Object} lineData - данные для генерации текстового элемента
  * @returns {string} SVG код текстового элемента
@@ -78,6 +113,9 @@ function generateTextElement(lineData) {
     : '';
   
   const opacityAttr = useFadeErase ? ' opacity="1"' : '';
+  
+  // Генерируем контент с поддержкой цветовых сегментов
+  const textContent = generateTextPathContent(line, color);
 
   return `
     <path id="${pathId}">
@@ -88,7 +126,7 @@ function generateTextElement(lineData) {
     <text font-family="${safeFontFamily}" fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}"
       dominant-baseline="auto" x="0%" text-anchor="start" letter-spacing="${letterSpacingValue}"${opacityAttr}>${opacityAnimation}
       <textPath xlink:href="#${pathId}">
-        ${escapeXml(line)}
+        ${textContent}
       </textPath>
     </text>`;
 }

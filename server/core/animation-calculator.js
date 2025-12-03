@@ -5,6 +5,7 @@
 import { computeTextWidth, computeTextX, formatLetterSpacingForSVG } from '../utils/text-utils.js';
 import { getEraseMode } from '../effects/erase/index.js';
 import { isCursorAllowed, shouldHideCursorWhenFinished } from '../effects/cursor/index.js';
+import { stripStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
  * Вычисляет стартовую позицию Y для вертикального выравнивания
@@ -322,17 +323,21 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
   return lines.map((line, index) => {
     if (!line) return null;
     
+    // Удаляем маркеры стилей для расчета ширины и длительности
+    // Оригинальная строка (с маркерами) будет использована при рендеринге
+    const cleanLine = stripStyleMarkers(line);
+    
     // Вычисляем позицию строки
     const y = isReplacingMode ? startY : startY + index * fontSize * lineHeight;
-    const textWidth = computeTextWidth(line, fontSize, letterSpacing, fontFamily, parsedFont);
-    const startX = computeTextX(line, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont);
+    const textWidth = computeTextWidth(cleanLine, fontSize, letterSpacing, fontFamily, parsedFont);
+    const startX = computeTextX(cleanLine, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont);
     
     // Параметры анимации
     // printSpeed и eraseSpeed - символов в секунду, вычисляем миллисекунды на символ
     const msPerCharPrint = 1000 / printSpeed;
     const msPerCharErase = 1000 / eraseSpeed;
-    const printDuration = line.length * msPerCharPrint;
-    const eraseDuration = line.length * msPerCharErase;
+    const printDuration = cleanLine.length * msPerCharPrint;
+    const eraseDuration = cleanLine.length * msPerCharErase;
     
     const pathId = `path${index}`;
     const animateId = `d${index}`;
@@ -342,13 +347,13 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
     // Выбираем режим вычисления в зависимости от типа анимации
     if (isReplacingMode) {
       animationParams = calculateReplacingModeLineAnimation({
-        line, index, lastLineIndex, startX, y, textWidth,
+        line: cleanLine, index, lastLineIndex, startX, y, textWidth,
         printDuration, eraseDuration, delayAfterBlockPrint, delayAfterErase,
         repeat, eraseMode, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
       });
     } else if (multiLine) {
       animationParams = calculateMultiLineModeLineAnimation({
-        line, index, lines, startX, y, textWidth,
+        line: cleanLine, index, lines, startX, y, textWidth,
         printDuration, eraseSpeed, delayAfterBlockPrint, delayAfterErase,
         repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont
       });
@@ -356,7 +361,7 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
       animationParams = calculateSingleLineModeAnimation({
         startX, y, textWidth, printDuration, eraseDuration,
         delayAfterBlockPrint, delayAfterErase, repeat, eraseMode,
-        line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+        line: cleanLine, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
       });
     }
 
