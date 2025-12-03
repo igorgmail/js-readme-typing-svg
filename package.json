@@ -19,7 +19,7 @@
   "author": "igorford1@gmail.com",
   "license": "MIT",
   "engines": {
-    "node": ">=17.0.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "opentype.js": "^1.3.4"
