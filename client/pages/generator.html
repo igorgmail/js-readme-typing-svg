@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG Typing Animation URL Generator</title>
+  <link rel="stylesheet" href="../css/generate.css">
+</head>
+<body class="generator-page">
+  <header class="generator-page__header">
+    <h1 class="generator-page__title">🎨 SVG Typing Animation URL Generator</h1>
+    <p class="generator-page__subtitle">Настройте параметры генератора и получите готовый URL / Markdown / HTML</p>
+  </header>
+
+  <div class="generator-page__grid">
+  
+    <section class="generator-page__panel generator-page__panel--preview js-preview pin"  pin-status="on">
+      <div class="generator-page__panel-header">  
+        <h2 class="generator-page__panel-title">👁️ Превью</h2>
+
+        <div class="panel-title__wrap">
+          <div class="panel-title__icon panel-title__icon--pin" pin-name="pin">
+            <svg stroke="currentColor" 
+              fill="none" stroke-width="2" 
+              viewBox="0 0 24 24" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              height="1em" 
+              width="1em" 
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 17v5"></path>
+              <path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"></path>
+            </svg>
+          </div>
+          <div class="panel-title__icon panel-title__icon--pin-off" pin-name="pin-off">
+            <svg 
+              stroke="#ea4444" 
+              fill="#ea4444" 
+              stroke-width="2" 
+              viewBox="0 0 24 24" 
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              height="1em" 
+              width="1em" 
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 17v5"></path>
+              <path d="M15 9.34V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H7.89"></path>
+              <path d="m2 2 20 20"></path>
+              <path d="M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h11"></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="generator-preview" data-js="preview">
+        <em>Превью будет доступно после генерации URL</em>
+      </div>
+    </section>
+
+    <section class="generator-page__panel generator-page__panel--form">
+      <h2 class="generator-page__panel-title">⚙️ Настройки</h2>
+      <form class="generator-form" novalidate>
+
+        <div class="generator-form__col">
+          <label class="generator-form__label" for="lines">Your text</label>
+          <textarea class="generator-form__textarea" id="lines" data-js="lines">Your text here</textarea>
+        </div>
+
+        <hr class="generator-form__hr">
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="fontFamily">Font</label>
+          <input class="generator-form__input" type="text" id="fontFamily" data-js="font-family" value="monospace" placeholder="monospace">
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="fontWeight">Font weight</label>
+          <input class="generator-form__input" type="number" id="fontWeight" data-js="font-weight" value="800" min="100" max="900" step="100">
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="fontSize">Font size</label>
+          <input class="generator-form__input" type="number" id="fontSize" data-js="font-size" value="16" min="8" max="120">
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="letterSpacing">
+            Letter spacing
+            <span class="generator-form__label-help" title="Интервал между символами в пикселях">?</span>
+          </label>
+          <input class="generator-form__input" type="number" id="letterSpacing" data-js="letter-spacing" value="10" min="0" step="1">
+        </div>
+
+        <hr class="generator-form__hr">
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="printSpeed">Duration (ms, all lines)</label>
+          <input class="generator-form__input" type="number" id="printSpeed" data-js="print-speed" value="1000" min="100" max="10000" step="50">
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="delayAfterBlockPrint">Pause between loops (ms, repeat only)</label>
+          <input class="generator-form__input" type="number" id="delayAfterBlockPrint" data-js="delay-after-print" value="800" min="0" max="5000" step="50">
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="eraseSpeed">
+            Erase speed (ms per char)
+            <span class="generator-form__label-help" title="Скорость стирания текста в миллисекундах на символ">?</span>
+          </label>
+          <input class="generator-form__input" type="number" id="eraseSpeed" data-js="erase-speed" value="50" min="10" max="500" step="10">
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="eraseMode">Erase mode</label>
+          <select class="generator-form__select" id="eraseMode" data-js="erase-mode">
+            <option value="line" selected>line</option>
+            <option value="fade">fade</option>
+          </select>
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="cursorStyle">Cursor style</label>
+          <select class="generator-form__select" id="cursorStyle" data-js="cursor-style">
+            <option value="none" selected>none</option>
+            <option value="straight">straight</option>
+            <option value="underlined">underlined</option>
+            <option value="block">block</option>
+            <option value="emoji">emoji</option>
+          </select>
+        </div>
+
+        <hr class="generator-form__hr">
+        
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="color">Font color</label>
+          <div class="generator-form__color-group">
+            <input class="generator-form__color-input" type="text" id="color" data-js="color" data-jscolor='{"format":"hexa","value":"000000FF","alphaChannel":true}' value="#000000FF">
+          </div>
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="background">Background color</label>
+          <div class="generator-form__color-group">
+            <input class="generator-form__color-input" type="text" id="background" data-js="background" data-jscolor='{"format":"hexa","value":"ffffffFF","alphaChannel":true}' value="#ffffffFF">
+          </div>
+        </div>
+
+        <hr class="generator-form__hr">
+        
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="horizontalAlign">Horizontally Centered</label>
+          <select class="generator-form__select" id="horizontalAlign" data-js="horizontal-align">
+            <option value="left">false</option>
+            <option value="center">true</option>
+          </select>
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="verticalAlign">Vertically Centered</label>
+          <select class="generator-form__select" id="verticalAlign" data-js="vertical-align">
+            <option value="top">false</option>
+            <option value="middle">true</option>
+          </select>
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="multiline">Multiline</label>
+          <select class="generator-form__select" id="multiline" data-js="multiline">
+            <option value="false" selected>false</option>
+            <option value="true">true</option>
+          </select>
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label" for="repeat">Repeat</label>
+          <select class="generator-form__select" id="repeat" data-js="repeat">
+            <option value="false">false</option>
+            <option value="true" selected>true</option>
+          </select>
+        </div>
+
+        <div class="generator-form__row">
+          <label class="generator-form__label">Width × Height</label>
+          <div class="generator-form__dimensions">
+            <input class="generator-form__input" type="number" id="width" data-js="width" value="800" min="100" max="2000">
+            <span class="generator-form__dimensions-separator">×</span>
+            <input class="generator-form__input" type="number" id="height" data-js="height" value="200" min="60" max="1000">
+          </div>
+        </div>
+
+        <div class="generator-actions">
+          <div class="generator-actions__buttons">
+            <button type="button" class="generator-actions__button generator-actions__button--primary" data-js-action="generate">Генерировать URL</button>
+            <button type="button" class="generator-actions__button generator-actions__button--secondary" data-js-action="reset">Сбросить</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <section class="generator-page__panel generator-page__panel--result">
+      <h2 class="generator-page__panel-title">📋 Результат</h2>
+      
+      <div class="code-container">
+        <div class="code-container__header">
+          <span class="generator-output__label">Сгенерированный URL</span>
+          <span class="code-container__copy js-copy-btn">
+            <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M15 20H5V7c0-.55-.45-1-1-1s-1 .45-1 1v13c0 1.1.9 2 2 2h10c.55 0 1-.45 1-1s-.45-1-1-1m5-4V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2m-2 0H9V4h9z">
+              </path>
+            </svg>
+          </span>
+        </div>
+        <pre><code data-js="url-output" data-code-output></code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-container__header">
+          <span class="generator-output__label">Markdown</span>
+          <span class="code-container__copy js-copy-btn">
+            <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M15 20H5V7c0-.55-.45-1-1-1s-1 .45-1 1v13c0 1.1.9 2 2 2h10c.55 0 1-.45 1-1s-.45-1-1-1m5-4V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2m-2 0H9V4h9z">
+              </path>
+            </svg>
+          </span>
+        </div>
+        <pre><code data-js="markdown-output" data-code-output></code></pre>
+      </div>
+
+      <div class="code-container">
+        <div class="code-container__header">
+          <span class="generator-output__label">HTML</span>
+          <span class="code-container__copy js-copy-btn">
+            <svg focusable="false" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M15 20H5V7c0-.55-.45-1-1-1s-1 .45-1 1v13c0 1.1.9 2 2 2h10c.55 0 1-.45 1-1s-.45-1-1-1m5-4V4c0-1.1-.9-2-2-2H9c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2m-2 0H9V4h9z">
+              </path>
+            </svg>
+          </span>
+        </div>
+        <pre><code data-js="html-output" data-code-output></code></pre>
+      </div>
+
+    </section>
+  </div>
+
+  <script src="../js/jscolor.min.js"></script>
+  <script src="../js/highlight.js"></script>
+  <script src="../js/generatePage.js" type="module"></script>
+</body>
+</html>
+
