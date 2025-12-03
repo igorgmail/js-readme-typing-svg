@@ -16,15 +16,15 @@ app.use(express.static('client/pages', {
 
 // Роуты для прямого доступа к страницам
 app.get('/', (req, res) => {
-  res.sendFile('index.html', { root: 'client/pages' });
+  res.sendFile('index.html', { root: 'client' });
+});
+
+app.get('/generator', (req, res) => {
+  res.sendFile('generator.html', { root: 'client' });
 });
 
 app.get('/generator.html', (req, res) => {
-  res.sendFile('generator.html', { root: 'client/pages' });
-});
-
-app.get('/test-server.html', (req, res) => {
-  res.sendFile('test-server.html', { root: 'client/pages' });
+  res.sendFile('generator.html', { root: 'client' });
 });
 
 // Единственный эндпоинт для генерации SVG (без JavaScript)
@@ -32,9 +32,8 @@ app.get('/svg', handleSVG);
 
 app.listen(PORT, () => {
   console.log(`\n🚀 Server running at http://localhost:${PORT}\n`);
-  console.log(`📝 Generator:        http://localhost:${PORT}/generator.html`);
-  console.log(`🧪 Test:             http://localhost:${PORT}/test-server.html`);
-  console.log(`🎨 Demo:             http://localhost:${PORT}/index.html\n`);
+  console.log(`📝 Generator:        http://localhost:${PORT}/generator`);
+  console.log(`🎨 Demo:             http://localhost:${PORT}/\n`);
   
   console.log(`API Endpoint:`);
   console.log(`⚡ /svg              http://localhost:${PORT}/svg?lines=Hello+World\n`);

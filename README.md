@@ -55,8 +55,8 @@ npm run vercel:dev     # Vercel serverless (эмуляция продакшен�
 ```
 
 3. Откройте нужную страницу:
-   - **Генератор URL**: `http://localhost:3000/generator.html`
-   - **Демо**: `http://localhost:3000/index.html`
+   - **Генератор URL**: `http://localhost:3000/generator`
+   - **Демо**: `http://localhost:3000/`
 
 4. Используйте API эндпоинт:
 ```
