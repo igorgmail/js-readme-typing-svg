@@ -2,16 +2,15 @@
  * Роут для генерации SVG
  */
 
-import { generateSVG } from '../generators/svg-generator.js';
-import { parseQueryParams } from '../utils/params-parser.js';
-import { applyDefaults } from '../utils/defaults.js';
+import { generateSVG } from '../core/svg-generator.js';
+import { parseQueryParams } from '../config/params-parser.js';
+import { applyDefaults } from '../config/defaults.js';
 
 /**
  * Обработчик GET /svg
  * Генерирует SVG (без JavaScript)
- * TODO: Реализовать SMIL анимацию
  */
-export function handleSVG(req, res) {
+export async function handleSVG(req, res) {
   try {
     // Парсим query параметры
     const parsedParams = parseQueryParams(req.query);
@@ -24,8 +23,8 @@ export function handleSVG(req, res) {
     // console.log('handleSVG - parsedParams.multiLine:', parsedParams.multiLine);
     // console.log('handleSVG - params.multiLine:', params.multiLine);
     
-    // Генерируем SVG
-    const svg = generateSVG(params);
+    // Генерируем SVG (c возможной асинхронной загрузкой шрифтов)
+    const svg = await generateSVG(params);
     
     // Отправляем с правильным Content-Type
     res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');

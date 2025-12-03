@@ -36,8 +36,8 @@ export const DEFAULT_PARAMS = {
   paddingY: 20,       // только на сервере
   
   // Анимация
-  printSpeed: 1000,
-  eraseSpeed: 50,
+  printSpeed: 1, // символов в секунду
+  eraseSpeed: 10, // символов в секунду
   delayAfterBlockPrint: 800,
   delayAfterErase: 500,
   
@@ -151,6 +151,16 @@ node scripts/check-defaults-sync.js
 ```
 
 ## История изменений
+
+### 2025-12-02
+- ✅ Изменена логика параметров `printSpeed` и `eraseSpeed`: теперь это количество символов в секунду (characters per second)
+- ✅ Формула расчета: `duration = (line.length * 1000) / speed`
+- ✅ Обновлены комментарии в defaults.js на клиенте и сервере
+- ✅ Обновлена логика расчета в `animation-calculator.js` для всех режимов (single, replacing, multiline)
+- ✅ Обновлены UI labels в generator.html: "Print/Erase Speed (characters per second)"
+- ✅ Значения по умолчанию: printSpeed=1, eraseSpeed=10 символов в секунду
+- ✅ Диапазон значений в UI: 0.1 - 100 символов в секунду для обоих параметров
+- ✅ Курсор автоматически синхронизирован с новой логикой печати и стирания
 
 ### 2025-11-23
 - ✅ Исправлена синхронизация значения `lines` между клиентом и сервером

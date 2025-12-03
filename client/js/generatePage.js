@@ -1,6 +1,8 @@
-import { DEFAULT_PARAMS } from './defaults.js';
+import { DEFAULT_PARAMS } from './utils/defaults.js';
+import './utils/ColorPicker.js';
+import './utils/highlight.js';
 
-class GeneratorPage {
+export default class GeneratorPage {
 	constructor() {
 		this.baseURL = `${window.location.origin}/svg`;
 		this.defaults = DEFAULT_PARAMS;
@@ -11,9 +13,15 @@ class GeneratorPage {
 		this.autoUpdateEnabled = false;
 		this.autoUpdateTimeout = null;
 		this.fieldHandlers = [];
+		this.fetchController = null;
+		this.previewObjectURL = null;
+		
+		// Алиас для метода генерации, так как он используется в autoUpdate и handleReset
+		this.generate = this.handleGenerate.bind(this);
+		
 		this.bindEvents();
 		this.setAutoUpdate(true);
-		this.generate();
+		this.handleGenerate();
 	}
 
 	initControls() {
@@ -55,16 +63,16 @@ class GeneratorPage {
 	bindEvents() {
 		document
 			.querySelector('[data-js-action="generate"]')
-			.addEventListener('click', () => this.generate());
+			.addEventListener('click', () => this.handleGenerate());
 		document
 			.querySelector('[data-js-action="reset"]')
-			.addEventListener('click', () => this.reset());
+			.addEventListener('click', () => this.handleReset());
 		document
-			.querySelector('[data-js-action="copy"]')
-			?.addEventListener('click', () => this.copyURL());
+			.querySelectorAll('[data-js-action="copy"]')
+			.forEach(btn => btn.addEventListener('click', () => this.handleCopy(btn)));
 		document
 			.querySelectorAll('[pin-name]')
-			.forEach(btn => btn.addEventListener('click', () => this.pin(btn)));
+			.forEach(btn => btn.addEventListener('click', () => this.handlePin(btn)));
 	}
 
 	collectParams() {
@@ -79,7 +87,7 @@ class GeneratorPage {
 		}
 
 		params.append('fontSize', this.controls['font-size'].value);
-		params.append('fontFamily', this.controls['font-family'].value.trim() || 'monospace');
+		params.append('fontFamily', this.controls['font-family'].value.trim() || 'Roboto');
 		params.append('fontWeight', this.controls['font-weight'].value);
 		params.append('letterSpacing', this.controls['letter-spacing'].value);
 		
@@ -135,21 +143,27 @@ class GeneratorPage {
 		params.append('eraseMode', this.controls['erase-mode'].value);
 		params.append('cursorStyle', this.controls['cursor-style'].value);
 		
-		// Обработка выравнивания из select (true/false -> center/middle)
-		const horizontalAlign = this.controls['horizontal-align'].value;
+		// Обработка выравнивания из checkbox (checked -> center/middle, unchecked -> left/top)
+		const horizontalAlign = this.controls['horizontal-align'].checked ? 'center' : 'left';
 		params.append('horizontalAlign', horizontalAlign);
 		
-		const verticalAlign = this.controls['vertical-align'].value;
+		const verticalAlign = this.controls['vertical-align'].checked ? 'middle' : 'top';
 		params.append('verticalAlign', verticalAlign);
 		
-		// Обработка multiline и repeat из select
-		params.append('multiLine', this.controls.multiline.value === 'true' ? 'true' : 'false');
-		params.append('repeat', this.controls.repeat.value === 'true' ? 'true' : 'false');
+		// Обработка multiline и repeat из checkbox
+		params.append('multiLine', this.controls.multiline.checked ? 'true' : 'false');
+		params.append('repeat', this.controls.repeat.checked ? 'true' : 'false');
 
 		return params;
 	}
 
-	generate() {
+	/**
+	 * Генерирует URL для SVG, обновляет предпросмотр и блоки кода.
+	 * Считывает значения из элементов управления, формирует параметры URL,
+	 * создает HTML и Markdown код, и обновляет соответствующие элементы DOM.
+	 * Если доступна функция highlight, применяет подсветку синтаксиса.
+	 */
+	handleGenerate() {
 		const params = this.collectParams();
 		const fullURL = `${this.baseURL}?${params.toString()}`;
 		this.generatedURL = fullURL;
@@ -175,10 +189,59 @@ class GeneratorPage {
 			this.outputs.html.textContent = htmlCode;
 		}
 		
-		this.preview.innerHTML = `<img src="${fullURL}" alt="SVG Preview" />`;
+		this.updatePreview(fullURL);
 	}
 
-	pin(btn) {
+	/**
+	 * Загружает SVG изображение и обновляет превью с индикацией загрузки
+	 * @param {string} url 
+	 */
+	updatePreview(url) {
+		// Отменяем предыдущий запрос
+		if (this.fetchController) {
+			this.fetchController.abort();
+		}
+		this.fetchController = new AbortController();
+		const signal = this.fetchController.signal;
+
+		// Добавляем класс загрузки
+		this.preview.classList.add('loader');
+
+		fetch(url, { signal })
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`HTTP status: ${response.status}`);
+				}
+				return response.blob();
+			})
+			.then(blob => {
+				// Очищаем старый URL объекта
+				if (this.previewObjectURL) {
+					URL.revokeObjectURL(this.previewObjectURL);
+				}
+				this.previewObjectURL = URL.createObjectURL(blob);
+
+				const img = document.createElement('img');
+				img.alt = 'SVG Preview';
+				img.onload = () => {
+					// this.preview.classList.remove('loader');
+				};
+				img.src = this.previewObjectURL;
+
+				this.preview.innerHTML = '';
+				this.preview.appendChild(img);
+			})
+			.catch(error => {
+				if (error.name === 'AbortError') return;
+				this.preview.innerHTML = `<div class="error-message" style="color: #e06c75; padding: 1rem;">Ошибка загрузки: ${error.message}</div>`;
+			})
+			.finally(() => {
+				this.preview.classList.remove('loader');
+			});
+	}
+
+
+	handlePin(btn) {
 		const pinStatus = btn.closest('[pin-status]').getAttribute('pin-status');
 		if (pinStatus === 'on') {
 			btn.closest('[pin-status]').setAttribute('pin-status', 'off');
@@ -189,19 +252,15 @@ class GeneratorPage {
 		}
 	}
 
-	copyURL() {
-		if (!this.generatedURL) {
-			window.alert('⚠️ Сначала сгенерируйте URL');
-			return;
-		}
-
-		navigator.clipboard
-			.writeText(this.generatedURL)
-			.then(() => window.alert('✅ URL скопирован в буфер обмена!'))
-			.catch((error) => window.alert('❌ Ошибка копирования: ' + error));
+	handleCopy(btn) {
+		const text = btn.closest('.code-container').querySelector('code').textContent;
+		navigator.clipboard.writeText(text).then(() => {
+			btn.classList.add('copied');
+			setTimeout(() => btn.classList.remove('copied'), 1000);
+		});
 	}
 	
-	reset() {
+	handleReset() {
 		// Сбрасываем все поля формы к дефолтным значениям
 		this.controls.lines.value = this.defaults.lines;
 		this.controls['font-size'].value = this.defaults.fontSize;
@@ -240,19 +299,20 @@ class GeneratorPage {
 		this.controls['erase-speed'].value = this.defaults.eraseSpeed;
 		this.controls['erase-mode'].value = this.defaults.eraseMode;
 		this.controls['cursor-style'].value = this.defaults.cursorStyle;
-		this.controls['horizontal-align'].value = this.defaults.horizontalAlign;
-		this.controls['vertical-align'].value = this.defaults.verticalAlign;
-		this.controls.multiline.value = this.defaults.multiLine.toString();
-		this.controls.repeat.value = this.defaults.repeat.toString();
+		this.controls['horizontal-align'].checked = this.defaults.horizontalAlign === 'center';
+		this.controls['vertical-align'].checked = this.defaults.verticalAlign === 'middle';
+		this.controls.multiline.checked = this.defaults.multiLine;
+		this.controls.repeat.checked = this.defaults.repeat;
 
 		// Автоматически генерируем SVG с дефолтными параметрами
 		this.generate();
-
-		document.querySelectorAll('[data-code-output]').forEach(output => {
-			output.innerText = '';
-		});
 	}
 
+	
+	/**
+	 * Включает или отключает режим автоматического обновления SVG при изменении параметров.
+	 * @param {boolean} enabled - Если true, включает автообновление (вешает обработчики), иначе отключает.
+	 */
 	setAutoUpdate(enabled) {
 		this.autoUpdateEnabled = enabled;
 		
@@ -326,7 +386,3 @@ class GeneratorPage {
 		}
 	}
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-	new GeneratorPage();
-});

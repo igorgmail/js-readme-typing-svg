@@ -9,7 +9,7 @@ Thumbs.db
 
 # IDE
 .vscode/
-.cursor
+.cursor/
 .idea/
 *.swp
 *.swo

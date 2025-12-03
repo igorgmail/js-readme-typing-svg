@@ -22,9 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
       color: "#1A5975",
       background: "#81BECE",
       
-      // Скорости анимации в ms (дефолт: printSpeed=80, eraseSpeed=50)
-      printSpeed: 50,
-      eraseSpeed: 50,
+      // Скорости анимации (дефолт: printSpeed=1, eraseSpeed=10 - символов в секунду)
+      printSpeed: 20,
+      eraseSpeed: 20,
       delayAfterBlockPrint: 800, // дефолт: 800
       delayAfterErase: 500, // дефолт: 500
       
