@@ -1,5 +1,5 @@
 import { DEFAULT_PARAMS } from './utils/defaults.js';
-import './utils/ColorPicker.js';
+import './utils/colorPicker.js';
 import './utils/highlight.js';
 
 export default class GeneratorPage {
