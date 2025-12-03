@@ -7,12 +7,10 @@ const PORT = process.env.PORT || 3000;
 
 // cod
 app.use(logger('dev'));
-// Статические файлы из client (css, js и другие ресурсы)
+// Статические файлы: раздаем /client/* из папки client/
+app.use('/client', express.static('client'));
+// Корневые статические файлы (для обратной совместимости)
 app.use(express.static('client'));
-// Статические файлы для HTML страниц из client/pages
-app.use(express.static('client/pages', {
-  extensions: ['html']
-}));
 
 // Роуты для прямого доступа к страницам
 app.get('/', (req, res) => {
