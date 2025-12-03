@@ -25,6 +25,22 @@
 
 > 💡 **Новичок?** Читайте [QUICKSTART.md](QUICKSTART.md) для быстрого введения!
 
+### Деплой на Vercel (Рекомендуется)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/js-readme-typing-svg)
+
+1. Нажмите кнопку выше
+2. Авторизуйтесь в Vercel
+3. Получите готовый URL: `https://your-project.vercel.app`
+
+**Или через CLI:**
+```bash
+npm i -g vercel
+vercel
+```
+
+📖 **Подробная инструкция**: [docs/VERCEL_DEPLOYMENT.md](docs/VERCEL_DEPLOYMENT.md)
+
 ### Запуск локального сервера
 
 1. Установите зависимости:
@@ -34,7 +50,8 @@ npm install
 
 2. Запустите сервер:
 ```bash
-npm start
+npm start              # Express сервер (локальная разработка)
+npm run vercel:dev     # Vercel serverless (эмуляция продакшена)
 ```
 
 3. Откройте нужную страницу:
@@ -47,9 +64,9 @@ http://localhost:3000/svg?lines=Hello+World&fontSize=32&color=0077cc
 ```
 
 📖 **Документация**:
+- [🚀 Деплой на Vercel](docs/VERCEL_DEPLOYMENT.md) — serverless развертывание
 - [Запуск сервера](docs/SERVER_SETUP.md)
 - [Примеры использования API](docs/API_EXAMPLES.md)
-- [Деплой на продакшн](docs/DEPLOY.md)
 
 ### Использование через URL
 

@@ -56,6 +56,12 @@ temp/
 coverage/
 .nyc_output/
 
+# Vercel
+.vercel
+.vercel.json
+*.vercel.app
+
 # Misc
 *.bak
 *.orig
+test.svg

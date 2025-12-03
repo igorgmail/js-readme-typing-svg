@@ -1,0 +1,18 @@
+# Не загружаем на Vercel
+node_modules
+.git
+.gitignore
+*.log
+.env
+.env.local
+
+# Файлы разработки
+server/index.js
+init.js
+
+# Документация (опционально, можно убрать если нужна в проде)
+docs/*.md
+!docs/VERCEL_DEPLOYMENT.md
+
+# Утилиты генерации
+server/fonts/generate-google-fonts-base64.js
