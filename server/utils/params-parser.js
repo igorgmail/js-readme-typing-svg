@@ -33,8 +33,7 @@ function convertParamType(key, value) {
   const numberParams = [
     'printSpeed', 
     'eraseSpeed', 
-    'delayAfterBlockPrint', 
-    'delayAfterErase',
+    'delayBetweenLines',
     'fontSize',
     'fontWeight',
     'lineHeight',
@@ -85,9 +84,8 @@ export function parseQueryParams(query) {
     printSpeed: 'printSpeed',
     eraseSpeed: 'eraseSpeed',
     duration: 'printSpeed', // алиас
-    delayAfterBlockPrint: 'delayAfterBlockPrint',
-    delayAfterErase: 'delayAfterErase',
-    pause: 'delayAfterBlockPrint', // алиас
+    delayBetweenLines: 'delayBetweenLines',
+    pause: 'delayBetweenLines', // алиас
     
     // Визуальные параметры
     fontSize: 'fontSize',

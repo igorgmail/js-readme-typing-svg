@@ -41,8 +41,7 @@ export function generateSVG(params) {
       (params.color.startsWith('#') ? params.color : '#' + params.color),
     printSpeed: params.printSpeed || 5000,
     eraseSpeed: params.eraseSpeed || 50,
-    delayAfterBlockPrint: params.delayAfterBlockPrint || 800,
-    delayAfterErase: params.delayAfterErase || 500,
+    delayBetweenLines: params.delayBetweenLines || 800,
     letterSpacing: params.letterSpacing || 'normal'
   };
   

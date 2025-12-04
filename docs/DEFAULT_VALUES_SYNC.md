@@ -38,8 +38,7 @@ export const DEFAULT_PARAMS = {
   // Анимация
   printSpeed: 1, // символов в секунду
   eraseSpeed: 10, // символов в секунду
-  delayAfterBlockPrint: 800,
-  delayAfterErase: 500,
+  delayBetweenLines: 800, // задержка между строками
   
   // Выравнивание
   horizontalAlign: 'left',

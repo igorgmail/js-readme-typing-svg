@@ -25,8 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Скорости анимации (дефолт: printSpeed=1, eraseSpeed=10 - символов в секунду)
       printSpeed: 20,
       eraseSpeed: 20,
-      delayAfterBlockPrint: 800, // дефолт: 800
-      delayAfterErase: 500, // дефолт: 500
+      delayBetweenLines: 800, // дефолт: 800 - задержка между строками
       
       // Размеры (дефолт: fontSize=16, width=800, height=200)
       fontSize: 20,

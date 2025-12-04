@@ -153,8 +153,7 @@ createMultilineBlockTypingSVG({
 | **Скорости анимации (ms)** |
 | `printSpeed` | number | `1` | Скорость печати: количество символов в секунду (0.1-100) |
 | `eraseSpeed` | number | `10` | Скорость стирания: количество символов в секунду (0.1-100) |
-| `delayAfterBlockPrint` | number | `800` | Пауза после печати блока (0-5000) |
-| `delayAfterErase` | number | `500` | Пауза после стирания (0-5000) |
+| `delayBetweenLines` | number | `800` | Задержка между строками при печати/стирании (0-5000) |
 | **Размеры** |
 | `fontSize` | number | `16` | Размер шрифта в px |
 | `lineHeight` | number | `1.35` | Межстрочный интервал |
