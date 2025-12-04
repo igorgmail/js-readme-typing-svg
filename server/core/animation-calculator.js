@@ -6,6 +6,7 @@ import { computeTextWidth, computeTextX, formatLetterSpacingForSVG } from '../ut
 import { getEraseMode } from '../effects/erase/index.js';
 import { isCursorAllowed, shouldHideCursorWhenFinished } from '../effects/cursor/index.js';
 import { stripStyleMarkers } from '../processors/style-segments-parser.js';
+import { getCharacterWidths } from '../fonts/font-metrics.js';
 
 /**
  * Вычисляет стартовую позицию Y для вертикального выравнивания
@@ -27,6 +28,76 @@ export function calculateStartY(config) {
   }
   
   return startY;
+}
+
+/**
+ * Вычисляет детальные позиции курсора для печати текста (посимвольно)
+ * @param {Object} config - конфигурация
+ * @returns {Object} объект с массивами keyTimes и xPositions
+ */
+function calculatePrintCursorPositions(config) {
+  const { line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont } = config;
+  
+  if (!line || line.length === 0) {
+    return {
+      keyTimes: [printStart, printEnd],
+      xPositions: [startX, startX]
+    };
+  }
+  
+  // Получаем накопленные ширины для каждой позиции в тексте
+  const widths = getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
+  const chars = [...line];
+  
+  const keyTimes = [];
+  const xPositions = [];
+  
+  // Для каждого символа создаем ключевую точку
+  for (let i = 0; i <= chars.length; i++) {
+    const progress = chars.length > 0 ? i / chars.length : 0;
+    const time = printStart + (printEnd - printStart) * progress;
+    const x = startX + widths[i];
+    
+    keyTimes.push(time);
+    xPositions.push(x);
+  }
+  
+  return { keyTimes, xPositions };
+}
+
+/**
+ * Вычисляет детальные позиции курсора для стирания текста (посимвольно)
+ * @param {Object} config - конфигурация
+ * @returns {Object} объект с массивами keyTimes и xPositions
+ */
+function calculateEraseCursorPositions(config) {
+  const { line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont } = config;
+  
+  if (!line || line.length === 0) {
+    return {
+      keyTimes: [eraseStart, eraseEnd],
+      xPositions: [startX, startX]
+    };
+  }
+  
+  // Получаем накопленные ширины для каждой позиции в тексте
+  const widths = getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
+  const chars = [...line];
+  
+  const keyTimes = [];
+  const xPositions = [];
+  
+  // При стирании движемся от конца к началу
+  for (let i = chars.length; i >= 0; i--) {
+    const progress = chars.length > 0 ? (chars.length - i) / chars.length : 0;
+    const time = eraseStart + (eraseEnd - eraseStart) * progress;
+    const x = startX + widths[i];
+    
+    keyTimes.push(time);
+    xPositions.push(x);
+  }
+  
+  return { keyTimes, xPositions };
 }
 
 /**
@@ -54,7 +125,7 @@ function calculateReplacingModeLineAnimation(config) {
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayBetweenLines,
-      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed
+      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
     };
     
     const eraseResult = eraseModeInstance.calculateReplacingMode(eraseConfig);
@@ -75,7 +146,7 @@ function calculateReplacingModeLineAnimation(config) {
       
       const eraseConfig = {
         startX, y, textWidth, printDuration, delayBetweenLines,
-        eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed
+        eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
       };
       
       const eraseResult = eraseModeInstance.calculateReplacingMode(eraseConfig);
@@ -122,11 +193,22 @@ function calculateMultiLineModeLineAnimation(config) {
   const {
     line, index, lines, startX, y, textWidth,
     printDuration, eraseSpeed, delayBetweenLines,
-    repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont
+    repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont, printSpeed
   } = config;
   
-  const lastLineIndex = lines.length - 1;
-  const timeBeforeThisLine = index * (printDuration + delayBetweenLines);
+  // Очищаем все строки от маркеров стилей для корректного расчета длительности
+  const cleanLines = lines.map(l => stripStyleMarkers(l));
+  const lastLineIndex = cleanLines.length - 1;
+  
+  // Рассчитываем длительность печати каждой строки
+  const msPerCharPrint = 1000 / printSpeed;
+  const lineDurations = cleanLines.map(l => l.length * msPerCharPrint);
+  
+  // Вычисляем время начала текущей строки как сумму длительностей всех предыдущих строк + паузы
+  let timeBeforeThisLine = 0;
+  for (let i = 0; i < index; i++) {
+    timeBeforeThisLine += lineDurations[i] + delayBetweenLines;
+  }
   
   let totalDuration, begin, keyTimes, pathValues, useFadeErase, fadeEraseStart, fadeEraseEnd;
   // Глобальные значения начала/конца печати строки (0–1 относительно totalDuration)
@@ -135,9 +217,15 @@ function calculateMultiLineModeLineAnimation(config) {
   // Границы стирания строки (0–1 относительно totalDuration) — только для eraseMode='line'
   let cursorEraseStart;
   let cursorEraseEnd;
+  // Детальные позиции курсора для печати и стирания
+  let cursorPrintKeyTimes;
+  let cursorPrintXPositions;
+  let cursorEraseKeyTimes;
+  let cursorEraseXPositions;
   
   if (repeat) {
-    const totalPrintTime = lines.length * (printDuration + delayBetweenLines);
+    // Общее время печати всех строк = сумма длительностей всех строк + паузы между ними
+    const totalPrintTime = lineDurations.reduce((sum, dur) => sum + dur, 0) + (cleanLines.length - 1) * delayBetweenLines;
     const eraseModeInstance = getEraseMode(eraseMode);
     
     let printStart, printEnd, eraseStart, eraseEnd;
@@ -145,15 +233,17 @@ function calculateMultiLineModeLineAnimation(config) {
     if (eraseMode === 'line') {
       // Стирание построчно, начиная с последней строки
       const msPerCharErase = 1000 / eraseSpeed;
-      let eraseStartTime = totalPrintTime;
+      // После печати последней строки добавляем паузу перед началом стирания
+      let eraseStartTime = totalPrintTime + delayBetweenLines;
       for (let j = lastLineIndex; j > index; j--) {
-        eraseStartTime += lines[j].length * msPerCharErase;
+        eraseStartTime += cleanLines[j].length * msPerCharErase;
         eraseStartTime += delayBetweenLines;
       }
       
       const thisEraseDuration = line.length * msPerCharErase;
-      const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * msPerCharErase, 0);
-      const totalErasePauses = (lines.length - 1) * delayBetweenLines;
+      const totalEraseDuration = cleanLines.reduce((sum, l) => sum + l.length * msPerCharErase, 0);
+      // Паузы: перед началом стирания + между строками при стирании
+      const totalErasePauses = cleanLines.length * delayBetweenLines;
       
       totalDuration = totalPrintTime + totalEraseDuration + totalErasePauses;
       
@@ -166,23 +256,46 @@ function calculateMultiLineModeLineAnimation(config) {
       cursorPrintEnd = printEnd;
       cursorEraseStart = eraseStart;
       cursorEraseEnd = eraseEnd;
+      
+      // Рассчитываем детальные позиции курсора для печати
+      const printCursorData = calculatePrintCursorPositions({
+        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+      });
+      cursorPrintKeyTimes = printCursorData.keyTimes;
+      cursorPrintXPositions = printCursorData.xPositions;
+      
+      // Рассчитываем детальные позиции курсора для стирания
+      const eraseCursorData = calculateEraseCursorPositions({
+        line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont
+      });
+      cursorEraseKeyTimes = eraseCursorData.keyTimes;
+      cursorEraseXPositions = eraseCursorData.xPositions;
     } else {
       const msPerCharErase = 1000 / eraseSpeed;
-      const totalEraseDuration = lines.reduce((sum, l) => sum + l.length * msPerCharErase, 0);
-      totalDuration = totalPrintTime + totalEraseDuration + delayBetweenLines;
+      const totalEraseDuration = cleanLines.reduce((sum, l) => sum + l.length * msPerCharErase, 0);
+      // Пауза перед началом стирания + пауза после стирания
+      totalDuration = totalPrintTime + delayBetweenLines + totalEraseDuration + delayBetweenLines;
       
       printStart = timeBeforeThisLine / totalDuration;
       printEnd = (timeBeforeThisLine + printDuration) / totalDuration;
-      eraseStart = totalPrintTime / totalDuration;
-      eraseEnd = (totalPrintTime + totalEraseDuration) / totalDuration;
+      // Стирание начинается после паузы
+      eraseStart = (totalPrintTime + delayBetweenLines) / totalDuration;
+      eraseEnd = (totalPrintTime + delayBetweenLines + totalEraseDuration) / totalDuration;
 
       cursorPrintStart = printStart;
       cursorPrintEnd = printEnd;
+      
+      // Рассчитываем детальные позиции курсора для печати (для других режимов стирания курсор движется только при печати)
+      const printCursorData = calculatePrintCursorPositions({
+        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+      });
+      cursorPrintKeyTimes = printCursorData.keyTimes;
+      cursorPrintXPositions = printCursorData.xPositions;
     }
     
     const eraseConfig = {
       startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd,
-      line, fontSize, letterSpacing, eraseSpeed, totalDuration
+      line, fontSize, letterSpacing, eraseSpeed, totalDuration, fontFamily, parsedFont
     };
     
     const eraseResult = eraseModeInstance.calculateMultiLineMode(eraseConfig);
@@ -195,7 +308,8 @@ function calculateMultiLineModeLineAnimation(config) {
     begin = repeatSuffix ? `${baseBegin}${repeatSuffix}` : baseBegin;
   } else {
     // При repeat=false: строки печатаются и остаются на месте
-    const totalPrintTime = lines.length * printDuration + (lines.length - 1) * delayBetweenLines;
+    // Общее время печати всех строк = сумма длительностей всех строк + паузы между ними
+    const totalPrintTime = lineDurations.reduce((sum, dur) => sum + dur, 0) + (cleanLines.length - 1) * delayBetweenLines;
     totalDuration = totalPrintTime;
     
     const printStart = timeBeforeThisLine / totalDuration;
@@ -216,6 +330,13 @@ function calculateMultiLineModeLineAnimation(config) {
     begin = '0s';
     cursorPrintStart = printStart;
     cursorPrintEnd = printEnd;
+    
+    // Рассчитываем детальные позиции курсора для печати
+    const printCursorData = calculatePrintCursorPositions({
+      line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+    });
+    cursorPrintKeyTimes = printCursorData.keyTimes;
+    cursorPrintXPositions = printCursorData.xPositions;
   }
   
   const fillValue = repeat ? 'remove' : 'freeze';
@@ -233,7 +354,12 @@ function calculateMultiLineModeLineAnimation(config) {
     printStart: cursorPrintStart,
     printEnd: cursorPrintEnd,
     eraseStart: cursorEraseStart,
-    eraseEnd: cursorEraseEnd
+    eraseEnd: cursorEraseEnd,
+    // Детальные позиции курсора
+    cursorPrintKeyTimes,
+    cursorPrintXPositions,
+    cursorEraseKeyTimes,
+    cursorEraseXPositions
   };
 }
 
@@ -260,7 +386,7 @@ function calculateSingleLineModeAnimation(config) {
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayBetweenLines,
-      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed
+      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
     };
     
     const eraseResult = eraseModeInstance.calculateSingleLineMode(eraseConfig);
@@ -355,7 +481,7 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
       animationParams = calculateMultiLineModeLineAnimation({
         line: cleanLine, index, lines, startX, y, textWidth,
         printDuration, eraseSpeed, delayBetweenLines,
-        repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont
+        repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont, printSpeed
       });
     } else {
       animationParams = calculateSingleLineModeAnimation({
