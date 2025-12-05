@@ -7,9 +7,9 @@ import { getRemainingTextWidth } from '../../fonts/font-metrics.js';
 /**
  * Вычисляет временные метки для эффекта стирания
  */
-function computeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration) {
-  const start = (printDuration + delayAfterBlockPrint) / totalDuration;
-  const end = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+function computeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration) {
+  const start = (printDuration + delayBetweenLines) / totalDuration;
+  const end = (printDuration + delayBetweenLines + eraseDuration) / totalDuration;
   return { start, end };
 }
 
@@ -88,12 +88,12 @@ function generateCharByCharErase(config) {
 export class LineEraseMode extends EraseMode {
   calculateReplacingMode(config) {
     const {
-      startX, y, textWidth, printDuration, delayAfterBlockPrint,
-      eraseDuration, delayAfterErase, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+      startX, y, textWidth, printDuration, delayBetweenLines,
+      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
     } = config;
     
     const printEnd = printDuration / totalDuration;
-    const eraseTimes = computeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration);
+    const eraseTimes = computeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration);
     
     // Генерируем посимвольное стирание
     const eraseAnimation = generateCharByCharErase({
@@ -134,12 +134,12 @@ export class LineEraseMode extends EraseMode {
   calculateSingleLineMode(config) {
     const {
       startX, y, textWidth, printDuration, totalDuration,
-      line, fontSize, letterSpacing, eraseSpeed, eraseDuration, delayAfterBlockPrint, delayAfterErase, fontFamily, parsedFont
+      line, fontSize, letterSpacing, eraseSpeed, eraseDuration, delayBetweenLines, fontFamily, parsedFont
     } = config;
     
     const printEnd = printDuration / totalDuration;
-    const eraseStart = (printDuration + delayAfterBlockPrint) / totalDuration;
-    const eraseEnd = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+    const eraseStart = (printDuration + delayBetweenLines) / totalDuration;
+    const eraseEnd = (printDuration + delayBetweenLines + eraseDuration) / totalDuration;
     
     // Генерируем посимвольное стирание
     const eraseAnimation = generateCharByCharErase({

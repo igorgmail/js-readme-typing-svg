@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SVG Typing Animation URL Generator</title>
-  <link rel="stylesheet" href="../css/generate.css">
+
+  <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-title" content="SvgGenerate" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+
+  <link rel="stylesheet" href="/client/css/generate.css">
 </head>
 <body class="generator-page">
   <header class="generator-page__header">
@@ -106,8 +115,8 @@
         </div>
 
         <div class="generator-form__row">
-          <label class="generator-form__label" for="delayAfterBlockPrint">Pause between loops (ms, repeat only)</label>
-          <input class="generator-form__input" type="number" id="delayAfterBlockPrint" data-js="delay-after-print" value="800" min="0" max="5000" step="50">
+          <label class="generator-form__label" for="delayBetweenLines">Delay between lines (ms)</label>
+          <input class="generator-form__input" type="number" id="delayBetweenLines" data-js="delay-after-print" value="800" min="0" max="5000" step="50">
         </div>
 
         <div class="generator-form__row">
@@ -263,7 +272,7 @@
     </section>
   </div>
 
-  <script src="../js/index.js" type="module" defer></script>
+  <script src="/client/js/index.js" type="module" defer></script>
 </body>
 </html>
 

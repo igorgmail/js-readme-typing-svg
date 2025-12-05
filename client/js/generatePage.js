@@ -1,5 +1,5 @@
 import { DEFAULT_PARAMS } from './utils/defaults.js';
-import './utils/ColorPicker.js';
+import './utils/colorPicker.js';
 import './utils/highlight.js';
 
 export default class GeneratorPage {
@@ -138,7 +138,7 @@ export default class GeneratorPage {
 		params.append('width', this.controls.width.value);
 		params.append('height', this.controls.height.value);
 		params.append('printSpeed', this.controls['print-speed'].value);
-		params.append('delayAfterBlockPrint', this.controls['delay-after-print'].value);
+		params.append('delayBetweenLines', this.controls['delay-after-print'].value);
 		params.append('eraseSpeed', this.controls['erase-speed'].value);
 		params.append('eraseMode', this.controls['erase-mode'].value);
 		params.append('cursorStyle', this.controls['cursor-style'].value);
@@ -295,7 +295,7 @@ export default class GeneratorPage {
 		this.controls.width.value = this.defaults.width;
 		this.controls.height.value = this.defaults.height;
 		this.controls['print-speed'].value = this.defaults.printSpeed;
-		this.controls['delay-after-print'].value = this.defaults.delayAfterBlockPrint;
+		this.controls['delay-after-print'].value = this.defaults.delayBetweenLines;
 		this.controls['erase-speed'].value = this.defaults.eraseSpeed;
 		this.controls['erase-mode'].value = this.defaults.eraseMode;
 		this.controls['cursor-style'].value = this.defaults.cursorStyle;

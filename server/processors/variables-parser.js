@@ -4,6 +4,7 @@
 
 /**
  * Парсит параметры из строки формата {key: value, key2: value2}
+ * Поддерживает кавычки для значений с запятыми: text: "Hello, World"
  * @param {string} paramsStr - строка с параметрами
  * @returns {Object} объект с распарсенными параметрами
  */
@@ -12,14 +13,58 @@ function parseParams(paramsStr) {
   
   if (!paramsStr) return params;
   
-  // разбиваем по запятым и парсим пары key: value
-  const pairs = paramsStr.split(',').map(p => p.trim());
+  // Разбиваем по запятым, но игнорируем запятые внутри кавычек
+  const pairs = [];
+  let currentPair = '';
+  let inQuotes = false;
+  let quoteChar = '';
   
+  for (let i = 0; i < paramsStr.length; i++) {
+    const char = paramsStr[i];
+    
+    // Проверяем открытие/закрытие кавычек
+    if ((char === '"' || char === "'") && (i === 0 || paramsStr[i - 1] !== '\\')) {
+      if (!inQuotes) {
+        inQuotes = true;
+        quoteChar = char;
+      } else if (char === quoteChar) {
+        inQuotes = false;
+        quoteChar = '';
+      }
+    }
+    
+    // Если запятая вне кавычек - это разделитель пар
+    if (char === ',' && !inQuotes) {
+      if (currentPair.trim()) {
+        pairs.push(currentPair.trim());
+      }
+      currentPair = '';
+    } else {
+      currentPair += char;
+    }
+  }
+  
+  // Добавляем последнюю пару
+  if (currentPair.trim()) {
+    pairs.push(currentPair.trim());
+  }
+  
+  // Парсим каждую пару key: value
   pairs.forEach(pair => {
-    const [key, ...valueParts] = pair.split(':');
-    if (key && valueParts.length > 0) {
-      const value = valueParts.join(':').trim();
-      params[key.trim()] = value;
+    const colonIndex = pair.indexOf(':');
+    if (colonIndex === -1) return;
+    
+    const key = pair.substring(0, colonIndex).trim();
+    let value = pair.substring(colonIndex + 1).trim();
+    
+    // Убираем кавычки из значения
+    if ((value.startsWith('"') && value.endsWith('"')) || 
+        (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    
+    if (key) {
+      params[key] = value;
     }
   });
   
@@ -82,6 +127,56 @@ function processDateVariable(params) {
     console.error('DateTimeFormat error:', error);
     return date.toLocaleDateString(locale);
   }
+}
+
+/**
+ * Нормализует цвет в формат #RRGGBB или #RRGGBBAA
+ * @param {string} color - цвет в любом формате
+ * @returns {string} нормализованный цвет
+ */
+function normalizeColor(color) {
+  if (!color) return null;
+  
+  const trimmed = color.trim();
+  
+  // Если уже начинается с # - возвращаем как есть
+  if (trimmed.startsWith('#')) {
+    return trimmed;
+  }
+  
+  // Добавляем # если его нет
+  return '#' + trimmed;
+}
+
+/**
+ * Обрабатывает переменную $STYLE
+ * Генерирует специальный маркер для последующей обработки в svg-renderer
+ * @param {Object} params - параметры из фигурных скобок
+ * @returns {string} маркер стиля для последующей обработки
+ */
+function processStyleVariable(params) {
+  // Если есть параметр text - это inline стиль
+  if (params.text) {
+    const styles = {
+      color: params.color ? normalizeColor(params.color) : null,
+      background: params.background || params.bg || null,
+      fontSize: params.fontSize || params.size || null,
+      fontWeight: params.weight || params.fontWeight || null,
+      opacity: params.opacity || null,
+      italic: params.italic === 'true',
+      underline: params.underline === 'true',
+      strikethrough: params.strikethrough === 'true',
+      fontFamily: params.fontFamily || params.font || null
+    };
+    
+    // Создаем JSON-маркер который будет распознан при генерации SVG
+    // Используем специальные символы для избежания конфликтов
+    const styleMarker = `\x00STYLE_START\x00${JSON.stringify(styles)}\x00${params.text}\x00STYLE_END\x00`;
+    return styleMarker;
+  }
+  
+  // Если параметров нет - это может быть закрывающий тег (для будущего использования)
+  return '';
 }
 
 /**
@@ -154,6 +249,9 @@ export function parseVariables(str) {
       case 'RELATIVE_DATE':
       case 'RELDATE':
         return processRelativeDateVariable(params);
+      
+      case 'STYLE':
+        return processStyleVariable(params);
       
       // Здесь можно добавить другие переменные
       // case 'TIME':

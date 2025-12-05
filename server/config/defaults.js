@@ -26,8 +26,7 @@ export const DEFAULT_PARAMS = {
   printSpeed: 10,
   eraseSpeed: 10,
 
-  delayAfterBlockPrint: 800,
-  delayAfterErase: 500,
+  delayBetweenLines: 800,
 
   repeat: false,
   verticalAlign: 'top',

@@ -2,7 +2,12 @@ import GeneratorPage from "./generatePage.js";
 
 async function initGenPage() {
 	const locate = window.location.pathname;
-	if (!(locate === "/generator.html" || locate === "/generator")) return;
+	// Поддерживаем разные пути к странице генератора
+	const isGeneratorPage = locate === "/generator.html" || 
+	                        locate === "/generator" || 
+	                        locate === "/client/generator.html";
+	
+	if (!isGeneratorPage) return;
 
 	new GeneratorPage();
 }

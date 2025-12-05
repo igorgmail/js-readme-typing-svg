@@ -4,6 +4,7 @@
 
 import { escapeXml, validateAndSanitizeFontFamily } from '../utils/text-utils.js';
 import { getCursorInfo } from '../effects/cursor/index.js';
+import { parseStyleSegments, hasStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
  * Генерирует секцию <defs> с опциональными стилями шрифта.
@@ -46,6 +47,40 @@ function generateOpacityAnimation(config) {
 }
 
 /**
+ * Генерирует контент для textPath - либо простой текст, либо tspan элементы с разными цветами
+ * @param {string} line - текст строки
+ * @param {string} defaultColor - цвет по умолчанию
+ * @returns {string} содержимое для textPath
+ */
+function generateTextPathContent(line, defaultColor) {
+  // Проверяем наличие маркеров стилей
+  if (!hasStyleMarkers(line)) {
+    return escapeXml(line);
+  }
+  
+  // Парсим строку на сегменты с разными стилями
+  const segments = parseStyleSegments(line, defaultColor);
+  
+  // Если только один сегмент - возвращаем как обычно
+  if (segments.length === 1) {
+    return escapeXml(segments[0].text);
+  }
+  
+  // Генерируем tspan для каждого сегмента
+  return segments.map(segment => {
+    const escapedText = escapeXml(segment.text);
+    
+    // Если цвет сегмента совпадает с дефолтным, не добавляем атрибут fill
+    if (segment.color === defaultColor) {
+      return escapedText;
+    }
+    
+    // Иначе оборачиваем в tspan с нужным цветом
+    return `<tspan fill="${segment.color}">${escapedText}</tspan>`;
+  }).join('');
+}
+
+/**
  * Генерирует текстовый элемент с анимацией
  * @param {Object} lineData - данные для генерации текстового элемента
  * @returns {string} SVG код текстового элемента
@@ -78,6 +113,9 @@ function generateTextElement(lineData) {
     : '';
   
   const opacityAttr = useFadeErase ? ' opacity="1"' : '';
+  
+  // Генерируем контент с поддержкой цветовых сегментов
+  const textContent = generateTextPathContent(line, color);
 
   return `
     <path id="${pathId}">
@@ -88,7 +126,7 @@ function generateTextElement(lineData) {
     <text font-family="${safeFontFamily}" fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}"
       dominant-baseline="auto" x="0%" text-anchor="start" letter-spacing="${letterSpacingValue}"${opacityAttr}>${opacityAnimation}
       <textPath xlink:href="#${pathId}">
-        ${escapeXml(line)}
+        ${textContent}
       </textPath>
     </text>`;
 }
@@ -231,16 +269,15 @@ function generateMultiLineCursor(linesData) {
     (lineData) =>
       lineData &&
       lineData.multiLine &&
-      lineData.cursorValues &&
-      lineData.cursorKeyTimes &&
       lineData.cursorStyle &&
       lineData.cursorStyle !== 'none' &&
       typeof lineData.y === 'number' &&
       typeof lineData.printStart === 'number' &&
       typeof lineData.printEnd === 'number' &&
       typeof lineData.startX === 'number' &&
-      typeof lineData.textWidth === 'number' &&
-      lineData.totalDuration,
+      lineData.totalDuration &&
+      Array.isArray(lineData.cursorPrintKeyTimes) &&
+      Array.isArray(lineData.cursorPrintXPositions),
   );
 
   if (multiLines.length === 0) {
@@ -259,31 +296,57 @@ function generateMultiLineCursor(linesData) {
   const fill = sampleLine.cursorFillValue || sampleLine.fillValue || 'remove';
 
   /**
-   * Собираем интервалы активности курсора:
-   * - печать строки [printStart, printEnd]
-   * - стирание строки [eraseStart, eraseEnd] (если есть)
+   * Собираем интервалы активности курсора с детальными позициями:
+   * - печать строки [printStart, printEnd] с массивами keyTimes и xPositions
+   * - стирание строки [eraseStart, eraseEnd] с массивами keyTimes и xPositions (если есть)
    * На основе этих интервалов строим единый трек x/y/opacity.
    */
   const intervals = [];
 
   multiLines.forEach((lineData, index) => {
-    const { printStart, printEnd, eraseStart, eraseEnd } = lineData;
+    const { 
+      printStart, printEnd, eraseStart, eraseEnd,
+      cursorPrintKeyTimes, cursorPrintXPositions,
+      cursorEraseKeyTimes, cursorEraseXPositions
+    } = lineData;
 
-    if (typeof printStart === 'number' && typeof printEnd === 'number' && printEnd > printStart) {
+    // Добавляем интервал печати если есть детальные данные
+    if (
+      typeof printStart === 'number' && 
+      typeof printEnd === 'number' && 
+      printEnd > printStart &&
+      Array.isArray(cursorPrintKeyTimes) &&
+      Array.isArray(cursorPrintXPositions) &&
+      cursorPrintKeyTimes.length > 0 &&
+      cursorPrintKeyTimes.length === cursorPrintXPositions.length
+    ) {
       intervals.push({
         start: printStart,
         end: printEnd,
         lineIndex: index,
         type: 'print',
+        keyTimes: cursorPrintKeyTimes,
+        xPositions: cursorPrintXPositions,
       });
     }
 
-    if (typeof eraseStart === 'number' && typeof eraseEnd === 'number' && eraseEnd > eraseStart) {
+    // Добавляем интервал стирания если есть детальные данные
+    if (
+      typeof eraseStart === 'number' && 
+      typeof eraseEnd === 'number' && 
+      eraseEnd > eraseStart &&
+      Array.isArray(cursorEraseKeyTimes) &&
+      Array.isArray(cursorEraseXPositions) &&
+      cursorEraseKeyTimes.length > 0 &&
+      cursorEraseKeyTimes.length === cursorEraseXPositions.length
+    ) {
       intervals.push({
         start: eraseStart,
         end: eraseEnd,
         lineIndex: index,
         type: 'erase',
+        keyTimes: cursorEraseKeyTimes,
+        xPositions: cursorEraseXPositions,
       });
     }
   });
@@ -332,43 +395,52 @@ function generateMultiLineCursor(linesData) {
 
   intervals.forEach((interval) => {
     const lineData = multiLines[interval.lineIndex];
-    const lineStartX = lineData.startX;
-    const lineEndX = lineData.startX + lineData.textWidth;
     const lineY = lineData.y;
     const isPrintInterval = interval.type === 'print';
     const isEraseInterval = interval.type === 'erase';
     const isLastPrintInterval = isPrintInterval && lastPrintInterval === interval;
 
-    const beforeX = isPrintInterval ? lineStartX : lineEndX;
-    const afterX = isPrintInterval ? lineEndX : lineStartX;
+    // Используем детальные позиции из interval
+    const detailedKeyTimes = interval.keyTimes;
+    const detailedXPositions = interval.xPositions;
 
-    // Если есть "дырка" между предыдущим концом и началом интервала —
-    // явно фиксируем, что курсор в этот период невидим.
-    if (interval.start > lastTime) {
-      // Держим курсор в конце предыдущей строки видимым
-      // до момента старта следующего интервала
+    // Если есть "дырка" между предыдущим концом и началом интервала и курсор видим —
+    // явно фиксируем текущую позицию курсора до начала интервала
+    if (interval.start > lastTime && lastOpacity > 0) {
       pushPoint(interval.start, lastX, lastY, lastOpacity);
     }
 
-    // В начале интервала сначала "телепортируем" курсор в новую точку
-    // пока он невидим, а затем включаем его в этой же позиции.
-    pushPoint(interval.start, beforeX, lineY, 0);
-    pushPoint(interval.start, beforeX, lineY, 1);
+    // Телепортируем курсор в начальную позицию невидимым (если он еще не там)
+    if (detailedXPositions[0] !== lastX || lineY !== lastY || lastOpacity !== 0) {
+      pushPoint(detailedKeyTimes[0], detailedXPositions[0], lineY, 0);
+    }
+    
+    // Делаем курсор видимым в начальной позиции
+    // SVG поддерживает несколько точек с одинаковым keyTime для мгновенного изменения
+    pushPoint(detailedKeyTimes[0], detailedXPositions[0], lineY, 1);
 
-    // Момент окончания активности интервала:
-    // - для печати промежуточных строк курсор остаётся видимым в конце строки;
-    // - для последней печати без этапа стирания (repeat=false) курсор гасим в конце;
-    // - для любого этапа стирания курсор гасим в конце.
-    if (isEraseInterval) {
-      pushPoint(interval.end, afterX, lineY, 1);
-      pushPoint(interval.end, afterX, lineY, 0);
-    } else if (isLastPrintInterval && !hasEraseIntervals) {
-      // repeat=false: последняя строка, после неё нет стирания — курсор убираем
-      pushPoint(interval.end, afterX, lineY, 1);
-      pushPoint(interval.end, afterX, lineY, 0);
-    } else {
-      // Обычный случай печати строки: оставляем курсор видимым в конце строки
-      pushPoint(interval.end, afterX, lineY, 1);
+    // Добавляем все остальные точки из детального трека
+    for (let i = 1; i < detailedKeyTimes.length; i++) {
+      const time = detailedKeyTimes[i];
+      const x = detailedXPositions[i];
+      
+      // Последняя точка - особая обработка для стирания
+      const isLastPoint = i === detailedKeyTimes.length - 1;
+      
+      if (isLastPoint && isEraseInterval) {
+        // Для стирания: в последней точке курсор еще видим
+        pushPoint(time, x, lineY, 1);
+        // Затем гасим курсор - используем тот же keyTime для мгновенного изменения
+        pushPoint(time, x, lineY, 0);
+      } else if (isLastPoint && isLastPrintInterval && !hasEraseIntervals) {
+        // Для последней печати без стирания: курсор гаснет в конце
+        pushPoint(time, x, lineY, 1);
+        // Гасим курсор мгновенно
+        pushPoint(time, x, lineY, 0);
+      } else {
+        // Обычная точка - курсор видим
+        pushPoint(time, x, lineY, 1);
+      }
     }
   });
 

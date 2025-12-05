@@ -6,21 +6,21 @@ import { EraseMode } from './EraseMode.js';
 /**
  * Вычисляет временные метки для fade эффекта стирания
  */
-function computeFadeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration) {
-  const start = (printDuration + delayAfterBlockPrint) / totalDuration;
-  const end = (printDuration + delayAfterBlockPrint + eraseDuration) / totalDuration;
+function computeFadeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration) {
+  const start = (printDuration + delayBetweenLines) / totalDuration;
+  const end = (printDuration + delayBetweenLines + eraseDuration) / totalDuration;
   return { start, end };
 }
 
 export class FadeEraseMode extends EraseMode {
   calculateReplacingMode(config) {
     const {
-      startX, y, textWidth, printDuration, delayAfterBlockPrint,
-      eraseDuration, delayAfterErase, totalDuration
+      startX, y, textWidth, printDuration, delayBetweenLines,
+      eraseDuration, totalDuration
     } = config;
     
     const printEnd = printDuration / totalDuration;
-    const fadeTimes = computeFadeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration);
+    const fadeTimes = computeFadeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration);
     
     return {
       useFadeErase: true,
@@ -47,12 +47,12 @@ export class FadeEraseMode extends EraseMode {
   
   calculateSingleLineMode(config) {
     const {
-      startX, y, textWidth, printDuration, delayAfterBlockPrint,
-      eraseDuration, delayAfterErase, totalDuration
+      startX, y, textWidth, printDuration, delayBetweenLines,
+      eraseDuration, totalDuration
     } = config;
     
     const printEnd = printDuration / totalDuration;
-    const fadeTimes = computeFadeEraseTimes(printDuration, delayAfterBlockPrint, eraseDuration, delayAfterErase, totalDuration);
+    const fadeTimes = computeFadeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration);
     
     return {
       useFadeErase: true,

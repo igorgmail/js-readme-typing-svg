@@ -209,16 +209,15 @@ function generateMultiLineCursor(linesData) {
     (lineData) =>
       lineData &&
       lineData.multiLine &&
-      lineData.cursorValues &&
-      lineData.cursorKeyTimes &&
       lineData.cursorStyle &&
       lineData.cursorStyle !== 'none' &&
       typeof lineData.y === 'number' &&
       typeof lineData.printStart === 'number' &&
       typeof lineData.printEnd === 'number' &&
       typeof lineData.startX === 'number' &&
-      typeof lineData.textWidth === 'number' &&
-      lineData.totalDuration,
+      lineData.totalDuration &&
+      Array.isArray(lineData.cursorPrintKeyTimes) &&
+      Array.isArray(lineData.cursorPrintXPositions),
   );
 
   if (multiLines.length === 0) {
@@ -237,31 +236,57 @@ function generateMultiLineCursor(linesData) {
   const fill = sampleLine.cursorFillValue || sampleLine.fillValue || 'remove';
 
   /**
-   * Собираем интервалы активности курсора:
-   * - печать строки [printStart, printEnd]
-   * - стирание строки [eraseStart, eraseEnd] (если есть)
+   * Собираем интервалы активности курсора с детальными позициями:
+   * - печать строки [printStart, printEnd] с массивами keyTimes и xPositions
+   * - стирание строки [eraseStart, eraseEnd] с массивами keyTimes и xPositions (если есть)
    * На основе этих интервалов строим единый трек x/y/opacity.
    */
   const intervals = [];
 
   multiLines.forEach((lineData, index) => {
-    const { printStart, printEnd, eraseStart, eraseEnd } = lineData;
+    const { 
+      printStart, printEnd, eraseStart, eraseEnd,
+      cursorPrintKeyTimes, cursorPrintXPositions,
+      cursorEraseKeyTimes, cursorEraseXPositions
+    } = lineData;
 
-    if (typeof printStart === 'number' && typeof printEnd === 'number' && printEnd > printStart) {
+    // Добавляем интервал печати если есть детальные данные
+    if (
+      typeof printStart === 'number' && 
+      typeof printEnd === 'number' && 
+      printEnd > printStart &&
+      Array.isArray(cursorPrintKeyTimes) &&
+      Array.isArray(cursorPrintXPositions) &&
+      cursorPrintKeyTimes.length > 0 &&
+      cursorPrintKeyTimes.length === cursorPrintXPositions.length
+    ) {
       intervals.push({
         start: printStart,
         end: printEnd,
         lineIndex: index,
         type: 'print',
+        keyTimes: cursorPrintKeyTimes,
+        xPositions: cursorPrintXPositions,
       });
     }
 
-    if (typeof eraseStart === 'number' && typeof eraseEnd === 'number' && eraseEnd > eraseStart) {
+    // Добавляем интервал стирания если есть детальные данные
+    if (
+      typeof eraseStart === 'number' && 
+      typeof eraseEnd === 'number' && 
+      eraseEnd > eraseStart &&
+      Array.isArray(cursorEraseKeyTimes) &&
+      Array.isArray(cursorEraseXPositions) &&
+      cursorEraseKeyTimes.length > 0 &&
+      cursorEraseKeyTimes.length === cursorEraseXPositions.length
+    ) {
       intervals.push({
         start: eraseStart,
         end: eraseEnd,
         lineIndex: index,
         type: 'erase',
+        keyTimes: cursorEraseKeyTimes,
+        xPositions: cursorEraseXPositions,
       });
     }
   });
@@ -310,44 +335,46 @@ function generateMultiLineCursor(linesData) {
 
   intervals.forEach((interval) => {
     const lineData = multiLines[interval.lineIndex];
-    const lineStartX = lineData.startX;
-    const lineEndX = lineData.startX + lineData.textWidth;
     const lineY = lineData.y;
     const isPrintInterval = interval.type === 'print';
     const isEraseInterval = interval.type === 'erase';
     const isLastPrintInterval = isPrintInterval && lastPrintInterval === interval;
 
-    const beforeX = isPrintInterval ? lineStartX : lineEndX;
-    const afterX = isPrintInterval ? lineEndX : lineStartX;
+    // Используем детальные позиции из interval
+    const detailedKeyTimes = interval.keyTimes;
+    const detailedXPositions = interval.xPositions;
 
     // Если есть "дырка" между предыдущим концом и началом интервала —
-    // явно фиксируем, что курсор в этот период невидим.
+    // явно фиксируем текущую позицию курсора до начала интервала
     if (interval.start > lastTime) {
-      // Держим курсор в конце предыдущей строки видимым
-      // до момента старта следующего интервала
       pushPoint(interval.start, lastX, lastY, lastOpacity);
     }
 
-    // В начале интервала сначала "телепортируем" курсор в новую точку
-    // пока он невидим, а затем включаем его в этой же позиции.
-    pushPoint(interval.start, beforeX, lineY, 0);
-    pushPoint(interval.start, beforeX, lineY, 1);
+    // В начале интервала "телепортируем" курсор в начальную позицию невидимым
+    pushPoint(interval.start, detailedXPositions[0], lineY, 0);
+    
+    // Затем делаем курсор видимым в той же позиции
+    pushPoint(interval.start, detailedXPositions[0], lineY, 1);
 
-    // Момент окончания активности интервала:
-    // - для печати промежуточных строк курсор остаётся видимым в конце строки;
-    // - для последней печати без этапа стирания (repeat=false) курсор гасим в конце;
-    // - для любого этапа стирания курсор гасим в конце.
+    // Добавляем все промежуточные точки из детального трека (пропускаем первую, т.к. уже добавили)
+    for (let i = 1; i < detailedKeyTimes.length; i++) {
+      const time = detailedKeyTimes[i];
+      const x = detailedXPositions[i];
+      
+      pushPoint(time, x, lineY, 1);
+    }
+
+    // Обработка конца интервала:
+    // - для стирания: курсор гасим в конце
+    // - для последней печати без стирания (repeat=false): курсор гасим в конце
+    // - для обычной печати: курсор остается видимым
     if (isEraseInterval) {
-      pushPoint(interval.end, afterX, lineY, 1);
-      pushPoint(interval.end, afterX, lineY, 0);
+      pushPoint(interval.end, lastX, lineY, 0);
     } else if (isLastPrintInterval && !hasEraseIntervals) {
       // repeat=false: последняя строка, после неё нет стирания — курсор убираем
-      pushPoint(interval.end, afterX, lineY, 1);
-      pushPoint(interval.end, afterX, lineY, 0);
-    } else {
-      // Обычный случай печати строки: оставляем курсор видимым в конце строки
-      pushPoint(interval.end, afterX, lineY, 1);
+      pushPoint(interval.end, lastX, lineY, 0);
     }
+    // В остальных случаях курсор остаётся видимым (lastOpacity уже 1)
   });
 
   // Гарантируем наличие точки в конце шкалы времени
