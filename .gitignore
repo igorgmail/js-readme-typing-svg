@@ -44,6 +44,7 @@ out/
 *.tmp
 tmp/
 temp/
+TEST.md
 
 # Environment variables
 .env

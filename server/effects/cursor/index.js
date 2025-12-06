@@ -32,7 +32,8 @@ export const CURSOR_OPTIONS = {
     label: 'Custom',
     // Для custom пока оставляем SVG-иконку как строку.
     // В текущем генераторе она не используется напрямую.
-    icon: '<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 0L100 100H0L50 0Z" fill="currentColor" /></svg>',
+    icon: '👀',
+    // icon: '<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M50 0L100 100H0L50 0Z" fill="currentColor" /></svg>',
   },
 };
 
