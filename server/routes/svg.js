@@ -28,7 +28,9 @@ export async function handleSVG(req, res) {
     
     // Отправляем с правильным Content-Type
     res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.send(svg);
   } catch (error) {
     console.error('Error generating SVG:', error);
