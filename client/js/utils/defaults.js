@@ -1,19 +1,21 @@
 /**
- * Дефолтные значения параметров для генератора SVG
+ * Модуль для загрузки дефолтных значений с сервера
  * 
- * ⚠️ ВАЖНО: Эти значения должны быть синхронизированы с server/utils/defaults.js
- * При изменении дефолтов здесь - обязательно обновите их и на сервере!
- * Для проверки синхронизации используйте: npm run check:defaults
+ * Дефолты загружаются с API endpoint /api/defaults один раз при инициализации.
+ * Если API недоступен, используются захардкоженные fallback значения.
  */
 
-export const DEFAULT_PARAMS = {
+/**
+ * Fallback дефолты (используются если API недоступен)
+ * Синхронизированы с server/config/defaults.js
+ */
+const FALLBACK_DEFAULTS = {
   lines: 'Your text here',
   color: '000000',
   background: 'transparent',
   fontSize: 16,
-  fontWeight: 400,
-  fontFamily: 'monospace',
-  lineHeight: 1.35,
+  fontWeight: 700,
+  fontFamily: 'Roboto',
   letterSpacing: 0,
 
   width: 800,
@@ -34,3 +36,46 @@ export const DEFAULT_PARAMS = {
   cursorStyle: 'none' // none | straight | underlined | block
 };
 
+let cachedDefaults = null;
+
+/**
+ * Загружает дефолтные параметры с сервера
+ * @returns {Promise<Object>} дефолтные параметры
+ */
+export async function fetchDefaults() {
+  if (cachedDefaults) {
+    return cachedDefaults;
+  }
+
+  try {
+    const response = await fetch('/api/defaults', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      },
+      // Таймаут 3 секунды
+      signal: AbortSignal.timeout(3000)
+    });
+
+    if (!response.ok) {
+      console.warn('Failed to fetch defaults from API, using fallback');
+      cachedDefaults = FALLBACK_DEFAULTS;
+      return cachedDefaults;
+    }
+
+    const defaults = await response.json();
+    cachedDefaults = defaults;
+    console.log('✅ Defaults loaded from API');
+    return defaults;
+  } catch (error) {
+    console.warn('Error fetching defaults, using fallback:', error.message);
+    cachedDefaults = FALLBACK_DEFAULTS;
+    return cachedDefaults;
+  }
+}
+
+/**
+ * Синхронный доступ к дефолтам (возвращает fallback до загрузки)
+ * @deprecated Используйте fetchDefaults() для гарантированно актуальных данных
+ */
+export const DEFAULT_PARAMS = cachedDefaults || FALLBACK_DEFAULTS;

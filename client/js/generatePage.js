@@ -1,11 +1,11 @@
-import { DEFAULT_PARAMS } from './utils/defaults.js';
+import { fetchDefaults } from './utils/defaults.js';
 import './utils/colorPicker.js';
 import './utils/highlight.js';
 
 export default class GeneratorPage {
 	constructor() {
 		this.baseURL = `${window.location.origin}/svg`;
-		this.defaults = DEFAULT_PARAMS;
+		this.defaults = null; // Будут загружены асинхронно
 		this.controls = this.initControls();
 		this.outputs = this.initOutputs();
 		this.preview = document.querySelector('[data-js="preview"]');
@@ -19,6 +19,18 @@ export default class GeneratorPage {
 		// Алиас для метода генерации, так как он используется в autoUpdate и handleReset
 		this.generate = this.handleGenerate.bind(this);
 		
+		// Асинхронная инициализация
+		this.init();
+	}
+
+	async init() {
+		// Загружаем дефолты с сервера
+		this.defaults = await fetchDefaults();
+		
+		// Применяем дефолты к форме
+		this.applyDefaultsToForm();
+		
+		// Теперь можем инициализировать остальное
 		this.bindEvents();
 		this.setAutoUpdate(true);
 		this.handleGenerate();
@@ -260,8 +272,17 @@ export default class GeneratorPage {
 		});
 	}
 	
-	handleReset() {
-		// Сбрасываем все поля формы к дефолтным значениям
+	/**
+	 * Применяет дефолтные значения к полям формы
+	 */
+	applyDefaultsToForm() {
+		// Проверяем что дефолты загружены
+		if (!this.defaults) {
+			console.warn('Defaults not loaded yet');
+			return;
+		}
+
+		// Применяем все дефолтные значения к форме
 		this.controls.lines.value = this.defaults.lines;
 		this.controls['font-size'].value = this.defaults.fontSize;
 		this.controls['font-family'].value = this.defaults.fontFamily;
@@ -303,6 +324,11 @@ export default class GeneratorPage {
 		this.controls['vertical-align'].checked = this.defaults.verticalAlign === 'middle';
 		this.controls.multiline.checked = this.defaults.multiLine;
 		this.controls.repeat.checked = this.defaults.repeat;
+	}
+
+	handleReset() {
+		// Применяем дефолты к форме
+		this.applyDefaultsToForm();
 
 		// Автоматически генерируем SVG с дефолтными параметрами
 		this.generate();

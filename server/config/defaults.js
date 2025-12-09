@@ -1,9 +1,12 @@
 /**
  * Дефолтные значения параметров для генераторов SVG
  * 
- * ⚠️ ВАЖНО: Эти значения должны быть синхронизированы с client/js/defaults.js
- * При изменении дефолтов здесь - обязательно обновите их и на клиенте!
- * Для проверки синхронизации используйте: npm run check:defaults
+ * ⚠️ ЕДИНЫЙ ИСТОЧНИК ПРАВДЫ: Эти значения являются основными для всего приложения.
+ * Клиент получает дефолты через API endpoint /api/defaults
+ * 
+ * Server-only параметры (не отдаются клиенту):
+ * - paddingX, paddingY - используются только в серверных вычислениях
+ * - lineHeight - используется только в серверных вычислениях
  */
 
 export const DEFAULT_PARAMS = {
@@ -63,5 +66,14 @@ export function applyDefaults(params) {
   }
   
   return result;
+}
+
+/**
+ * Возвращает дефолтные параметры для клиента (без server-only полей)
+ * @returns {Object} параметры для клиента
+ */
+export function getClientDefaults() {
+  const { paddingX, paddingY, lineHeight, ...clientParams } = DEFAULT_PARAMS;
+  return clientParams;
 }
 
