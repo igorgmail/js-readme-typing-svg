@@ -1,0 +1,10 @@
+/* Bungee Tint Font - Local */
+@font-face {
+  font-family: 'Bungee Tint';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/bungee-tint-v3-latin-regular.woff2') format('woff2'),
+       url('../fonts/bungee-tint-v3-latin-regular.woff') format('woff');
+}
+

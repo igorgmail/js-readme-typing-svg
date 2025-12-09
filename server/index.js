@@ -1,5 +1,6 @@
 import express from 'express';
 import { handleSVG } from './routes/svg.js';
+import { handleDefaults } from './routes/defaults.js';
 import logger from'morgan';
 
 const app = express();
@@ -25,15 +26,18 @@ app.get('/generator.html', (req, res) => {
   res.sendFile('generator.html', { root: 'client' });
 });
 
-// Единственный эндпоинт для генерации SVG (без JavaScript)
+// API endpoints
 app.get('/svg', handleSVG);
+app.get('/defaults', handleDefaults);
+app.get('/api/defaults', handleDefaults);
 
 app.listen(PORT, () => {
   console.log(`\n🚀 Server running at http://localhost:${PORT}\n`);
   console.log(`📝 Generator:        http://localhost:${PORT}/generator`);
   console.log(`🎨 Demo:             http://localhost:${PORT}/\n`);
   
-  console.log(`API Endpoint:`);
-  console.log(`⚡ /svg              http://localhost:${PORT}/svg?lines=Hello+World\n`);
+  console.log(`API Endpoints:`);
+  console.log(`⚡ /svg              http://localhost:${PORT}/svg?lines=Hello+World`);
+  console.log(`📋 /api/defaults     http://localhost:${PORT}/api/defaults\n`);
 });
 

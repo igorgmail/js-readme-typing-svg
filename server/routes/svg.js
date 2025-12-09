@@ -18,11 +18,6 @@ export async function handleSVG(req, res) {
     // Применяем дефолтные значения
     const params = applyDefaults(parsedParams);
     
-    // Отладка параметров
-    // console.log('handleSVG - req.query.multiLine:', req.query.multiLine);
-    // console.log('handleSVG - parsedParams.multiLine:', parsedParams.multiLine);
-    // console.log('handleSVG - params.multiLine:', params.multiLine);
-    
     // Генерируем SVG (c возможной асинхронной загрузкой шрифтов)
     const svg = await generateSVG(params);
     

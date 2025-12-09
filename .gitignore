@@ -45,6 +45,8 @@ out/
 tmp/
 temp/
 TEST.md
+.docs
+.serena
 
 # Environment variables
 .env
