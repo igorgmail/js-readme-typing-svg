@@ -45,6 +45,7 @@ out/
 tmp/
 temp/
 TEST.md
+.docs
 
 # Environment variables
 .env
