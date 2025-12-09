@@ -28,10 +28,11 @@ const FALLBACK_CHAR_WIDTH_COEFFICIENT = 0.5;
 export function getCharWidth(char, fontSize, font, letterSpacing) {
   const letterSpacingPx = parseLetterSpacing(letterSpacing, fontSize);
   
-  // Emoji обрабатываем особым образом - их ширина примерно равна fontSize
+  // Emoji обрабатываем особым образом - их ширина обычно больше чем у обычных символов
+  // Используем коэффициент 1.4 для более точного расчёта реальной ширины при отрисовке
   const isEmoji = EMOJI_REGEX.test(char);
   if (isEmoji) {
-    return fontSize + letterSpacingPx;
+    return fontSize * 1.4 + letterSpacingPx;
   }
   
   // Если шрифт загружен, используем реальные метрики из opentype.js
