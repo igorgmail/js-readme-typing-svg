@@ -1,45 +1,66 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <title>SVG Typing Animation with Multiple Erase Modes</title>
 
-    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="SvgGenerate" />
-    <link rel="manifest" href="/site.webmanifest" />
+<head>
+  <meta charset="UTF-8" />
+  <title>SVG Typing Animation with Multiple Erase Modes</title>
 
-    <style>
-      body {
-        font-family: sans-serif;
-        padding: 20px;
-      }
-      #demo {
-        display: inline-block;
-      }
-    </style>
-  </head>
-  <body>
-      <p align="center">
-        <code style="background: #f6f8fa; padding: 10px; border-radius: 5px; display: inline-block;">
-          <span style="color: #6a737d;">// === Начало лога сессии ===</span><br>
-          <span style="color: #22863a;">[INFO]</span> <span id="timestamp">2024-01-01 00:00:00</span> — Сессия инициализирована<br>
-          <span style="color: #005cc5;">[DEBUG]</span> Загрузка профиля разработчика... [OK]<br>
-          <span style="color: #6f42c1;">[SYSTEM]</span> Специализация: Full-Stack | Problem Solving<br>
-          <span style="color: #d73a49;">[ALERT]</span> Обнаружен посетитель! Приветствие активировано<br>
-          <span style="color: #e36209;">[STATUS]</span> Текущий спринт: Оптимизация • Исследование • Документирование<br>
-          <span style="color: #6a737d;">// === Для продолжения просмотрите репозитории ===</span>
-        </code>
-      </p>
+  <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
+  <link rel="shortcut icon" href="/favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
 
-      <picture>
-        <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f440/512.webp" type="image/webp">
-        <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f440/512.gif" alt="👀" width="32" height="32">
-      </picture>
+  <link rel="stylesheet" href="/client/css/fonts.css">
+  <link rel="stylesheet" href="/client/css/index.css">
+  <meta name="apple-mobile-web-app-title" content="SvgGenerate" />
+  <link rel="manifest" href="/site.webmanifest" />
 
-      <img src="https://js-readme-typing-svg.vercel.app/svg?lines=%2F%2F+%3D%3D%3D+%D0%9D%D0%B0%D1%87%D0%B0%D0%BB%D0%BE+%D0%BB%D0%BE%D0%B3%D0%B0+%D1%81%D0%B5%D1%81%D1%81%D0%B8%D0%B8+%3D%3D%3D+%2F%2F%3B%24STYLE%7Bcolor%3A+%2322863a%2C+text%3A+%5BINFO%5D%7D+%D0%A1%D0%B8%D1%81%D1%82%D0%B5%D0%BC%D0%BD%D0%BE%D0%B5+%D0%B2%D1%80%D0%B5%D0%BC%D1%8F%3A+%24DATE%7BdateStyle%3A+full%2C+locale%3A+en%7D+...+%5BOK%5D%3B%24STYLE%7Bcolor%3A+%23d73a49%2C+text%3A+%5BALERT%5D%7D+%D0%9E%D0%B1%D0%BD%D0%B0%D1%80%D1%83%D0%B6%D0%B5%D0%BD+%D0%BF%D0%BE%D1%81%D0%B5%D1%82%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%21+%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82%D1%81%D1%82%D0%B2%D0%B8%D0%B5+%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%BE+...+%5BOK%5D%3B%24STYLE%7Bcolor%3A+%236a737d%2C+text%3A+%5BDEBUG%5D%7D+%D0%97%D0%B0%D0%B3%D1%80%D1%83%D0%B7%D0%BA%D0%B0+%D0%BF%D1%80%D0%BE%D1%84%D0%B8%D0%BB%D1%8F+%D1%80%D0%B0%D0%B7%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D1%87%D0%B8%D0%BA%D0%B0...+%5BOK%5D%3B%24STYLE%7Bcolor%3A+%23e36209%2C+text%3A+%5BSYSTEM%5D%7D+%D0%A1%D0%BF%D0%B5%D1%86%D0%B8%D0%B0%D0%BB%D0%B8%D0%B7%D0%B0%D1%86%D0%B8%D1%8F%3A+Full-Stack+%7C+Problem+Solving...+%5BOK%5D&fontSize=16&fontFamily=Roboto&fontWeight=400&letterSpacing=0&color=FFFFFF&background=54AAB5&width=800&height=200&printSpeed=50&delayBetweenLines=800&eraseSpeed=50&eraseMode=line&cursorStyle=underlined&horizontalAlign=left&verticalAlign=middle&multiLine=true&repeat=true" alt="Typing SVG" />
+  <script 
+        src="https://unpkg.com/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js" 
+        type="module">
+    </script>
+</head>
 
-  </body>
+<body>
+  <div class="container">
+    <div class="header">
+      <img
+      src="http://localhost:3000/svg?lines=%F0%9F%8E%A8+SVG+Typing+Animation+URL+Generator&fontSize=28&fontFamily=Bungee+Tint&fontWeight=400&letterSpacing=0&color=D20000&background=FFFFFF&width=800&height=200&printSpeed=10&delayBetweenLines=800&eraseSpeed=10&eraseMode=line&cursorStyle=emoji&horizontalAlign=center&verticalAlign=middle&multiLine=false&repeat=false"
+      width="800"
+      height="200"
+      alt="Typing SVG" />
+    </div>
+
+    <div class="animation-container">
+      <dotlottie-wc id="my-animation" src="./img/tiger.json"
+      autoplay
+      loop
+      speed="0.5"
+      style="width: 200px; height: 200px;"
+      >
+    </dotlottie-wc>
+    </div>
+
+    <a class="link" href="/generator">Go to Generator -></a>
+
+  </div>
+
+
+
+
+
+
+
+  <script type="module">
+    customElements.whenDefined('dotlottie-wc').then(() => {
+      const animationElement = document.getElementById('my-animation');
+      const player = animationElement.dotLottie;
+      player.addEventListener('ready', () => {
+        player.setSpeed(0.5);
+      });
+    });
+  </script>
+
+</body>
+
 </html>
