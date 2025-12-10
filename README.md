@@ -1,11 +1,19 @@
-# 🎨 SVG Typing Animation Generator
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=%F0%9F%8E%A8+SVG+Typing+Animation&fontSize=36&fontFamily=Nosifer&fontWeight=400&letterSpacing=0&color=0D7B14&background=transparent&width=800&height=200&printSpeed=10&delayBetweenLines=800&eraseSpeed=20&eraseMode=line&cursorStyle=none&horizontalAlign=center&verticalAlign=middle&multiLine=true&repeat=true" alt="Typing SVG" />
 
-> Динамическая генерация SVG с анимацией печати текста через URL параметры
+<div align="center">
+  <h1>🎨 SVG Typing Animation Generator</h1>
+</div>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![ES6 Modules](https://img.shields.io/badge/ES6-Modules-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+> Создавайте анимированные SVG с эффектом печатающего текста для ваших GitHub профилей, README файлов и веб-страниц.
 
-Создавайте анимированные SVG с эффектом печатающего текста для ваших GitHub профилей, README файлов и веб-страниц.
+<div align="center">
+
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![ES6 Modules](https://img.shields.io/badge/ES6-Modules-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+  ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)
+
+</div>
+
 
 ## ✨ Основные возможности
 
@@ -43,9 +51,7 @@
 ```
 
 
-## 📖 Документация
-
-### Параметры анимации
+## 📖 Параметры анимации
 
 | Параметр | Описание | Значения | По умолчанию |
 |----------|----------|----------|--------------|
