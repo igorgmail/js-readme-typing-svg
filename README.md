@@ -54,7 +54,7 @@
 ```
 
 
-## 📖 Параметры анимации
+## 🎛️ Параметры анимации
 
 | Параметр | Описание | Значения | По умолчанию |
 |----------|----------|----------|--------------|
@@ -109,12 +109,12 @@ $STYLE{color: #e36209, text: 'STATUS'}
 
 Самый простой способ развернуть проект:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/js-readme-typing-svg)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/igorgmail/js-readme-typing-svg)
 
 **Или через CLI:**
 ```bash
 npm i -g vercel
-git clone https://github.com/yourusername/js-readme-typing-svg.git
+git clone https://github.com/igorgmail/js-readme-typing-svg.git
 cd js-readme-typing-svg
 vercel
 ```
@@ -125,7 +125,7 @@ vercel
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/yourusername/js-readme-typing-svg.git
+git clone https://github.com/igorgmail/js-readme-typing-svg.git
 cd js-readme-typing-svg
 
 # Установить зависимости
