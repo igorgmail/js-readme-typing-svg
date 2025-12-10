@@ -4,315 +4,175 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![ES6 Modules](https://img.shields.io/badge/ES6-Modules-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
-[![Intl API](https://img.shields.io/badge/Intl-API-green.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl)
 
-Создавайте красивые анимированные SVG с эффектом печатающего текста для ваших GitHub профилей, README файлов и веб-страниц.
+Создавайте анимированные SVG с эффектом печатающего текста для ваших GitHub профилей, README файлов и веб-страниц.
 
-## ✨ Особенности
+## 📸 Превью
 
-- 🎬 **SMIL-анимация v2** — улучшенная версия без JavaScript для GitHub README (работает в `<img>`)
+![Generator Preview](https://via.placeholder.com/800x400/1e1e1e/00ff00?text=Generator+Preview+%28coming+soon%29)
 
-- 🌍 **Нативные Intl API** — поддержка всех локалей через `Intl.DateTimeFormat` и `Intl.RelativeTimeFormat`
-- 📅 **Динамические переменные** — `$DATE` для дат, `$RELDATE` для относительного времени
-- 🎭 **Разные режимы стирания**
-- ⚡ **Разные режимы печати**
-- 🎯 **URL параметры** — полная настройка через query string
-- 🖌️ **Визуальный генератор** — создавайте URL через удобный интерфейс
-- 🌈 **Гибкая настройка** — цвета, размеры, скорости, выравнивание
-- 🚀 **Серверная генерация** — SVG формируется на сервере
+<!-- TODO: Заменить на реальный GIF анимации -->
 
 ## 🚀 Быстрый старт
 
-> 💡 **Новичок?** Читайте [QUICKSTART.md](QUICKSTART.md) для быстрого введения!
+### Используйте генератор (рекомендуется)
 
-### Деплой на Vercel (Рекомендуется)
+👉 **[Открыть генератор](https://js-readme-typing-svg.vercel.app/generator)**
+
+1. Введите текст и настройте параметры
+2. Скопируйте готовый URL/Markdown/HTML
+3. Вставьте в ваш README или веб-страницу
+
+### Использование в GitHub README
+
+**SMIL-версия** (работает в `<img>` тегах):
+```markdown
+![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Hello+World;Welcome+to+my+profile&fontSize=24&color=00ff00)
+```
+
+**HTML-версия** (для веб-страниц):
+```html
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=Hello+World&fontSize=32" alt="Typing SVG" />
+```
+
+## ✨ Основные возможности
+
+- 🎬 **SMIL-анимация** — работает в GitHub README без JavaScript
+- 🌍 **Переменные** — динамические даты и время через `$DATE` и `$RELDATE`
+- 🎭 **Режимы анимации** — различные режимы печати и стирания текста
+- 🎨 **Полная настройка** — цвета, шрифты, скорости, размеры, выравнивание
+- 📝 **Многострочность** — поддержка нескольких строк текста
+- 🔤 **Google Fonts** — любые шрифты из Google Fonts
+- ⚡ **Серверная генерация** — SVG создается на сервере
+
+## 📖 Документация
+
+### Основные параметры
+
+| Параметр | Описание | Пример |
+|----------|----------|--------|
+| `lines` | Строки текста (разделитель `;`) | `Hello;World` |
+| `fontSize` | Размер шрифта (px) | `24` |
+| `color` | Цвет текста (HEX без `#`) | `00ff00` |
+| `background` | Цвет фона (HEX или `transparent`) | `1e1e1e` |
+| `width` | Ширина SVG (px) | `800` |
+| `height` | Высота SVG (px) | `200` |
+| `center` | Центрировать текст | `true` |
+| `multiLine` | Многострочный режим | `true` |
+| `printSpeed` | Скорость печати (символов/сек) | `10` |
+| `eraseSpeed` | Скорость стирания (символов/сек) | `15` |
+
+**Полный список параметров:** см. [docs/URL_PARAMS.md](docs/URL_PARAMS.md)
+
+### Переменные
+
+Используйте динамические переменные в тексте:
+
+```
+$DATE{dateStyle: full, locale: en}
+→ "Monday, December 10, 2024"
+
+$RELDATE{value: -1, unit: day}
+→ "yesterday"
+```
+
+**Подробнее о переменных:** см. [docs/VARIABLES.md](docs/VARIABLES.md)
+
+## 💻 Установка и деплой
+
+### Вариант 1: Deploy на Vercel (рекомендуется)
+
+Самый простой способ развернуть проект:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/js-readme-typing-svg)
-
-1. Нажмите кнопку выше
-2. Авторизуйтесь в Vercel
-3. Получите готовый URL: `https://your-project.vercel.app`
 
 **Или через CLI:**
 ```bash
 npm i -g vercel
+git clone https://github.com/yourusername/js-readme-typing-svg.git
+cd js-readme-typing-svg
 vercel
 ```
 
-📖 **Подробная инструкция**: [docs/VERCEL_DEPLOYMENT.md](docs/VERCEL_DEPLOYMENT.md)
+### Вариант 2: Локальный Express сервер
 
-### Запуск локального сервера
-
-1. Установите зависимости:
-```bash
-npm install
-```
-
-2. Запустите сервер:
-```bash
-npm start              # Express сервер (локальная разработка)
-npm run vercel:dev     # Vercel serverless (эмуляция продакшена)
-```
-
-3. Откройте нужную страницу:
-   - **Генератор URL**: `http://localhost:3000/generator`
-   - **Демо**: `http://localhost:3000/`
-
-4. Используйте API эндпоинт:
-```
-http://localhost:3000/svg?lines=Hello+World&fontSize=32&color=0077cc
-```
-
-📖 **Документация**:
-- [🚀 Деплой на Vercel](docs/VERCEL_DEPLOYMENT.md) — serverless развертывание
-- [Запуск сервера](docs/SERVER_SETUP.md)
-- [Примеры использования API](docs/API_EXAMPLES.md)
-
-### Использование через URL
-
-Просто добавьте параметры в URL:
-
-```
-https://yourusername.github.io/js-readme-typing-svg/?lines=Hello+World&fontSize=32&color=0077cc
-```
-
-### В GitHub Profile README
-
-⭐ **Рекомендуется:** Используйте SMIL-версию (без JavaScript):
-```markdown
-![Typing SVG](http://localhost:3000/svg-smil?lines=Welcome+to+my+profile!;I'm+a+developer;Check+my+projects&fontSize=24&color=0077cc&typingMode=textPath)
-```
-
-
-Через GitHub Pages:
-```markdown
-![Typing SVG](https://yourusername.github.io/js-readme-typing-svg/?lines=Welcome+to+my+profile!;I'm+a+developer;Check+my+projects&center=true)
-```
-
-### Программное использование
-
-```javascript
-import { createMultilineBlockTypingSVG } from './src/typing-svg.js';
-
-createMultilineBlockTypingSVG({
-  lines: ["Hello", "World"],
-  fontSize: 32,
-  color: "#0077cc",
-  center: true
-});
-```
-
-## 📖 Примеры
-
-### Простой текст
-
-```
-?lines=Hello+World&fontSize=24&color=333333
-```
-
-![Example 1](https://via.placeholder.com/400x60/f0f0f0/333333?text=Hello+World)
-
-### Многострочный с переменными
-
-```
-?lines=Today+is+$DATE{dateStyle:+full,+locale:+en};Started+coding+$RELDATE{value:+-2,+unit:+hour}&multiLine=true&fontSize=20
-```
-
-### Стильный профиль
-
-```
-?lines=🅷🅴🆈+I'm+Developer;💻+Coding+since+2020;🚀+Open+source+enthusiast
-&fontSize=24
-&color=1A5975
-&background=81BECE
-&width=900
-&height=120
-&center=true
-&typingMode=static
-&eraseMode=fade
-```
-
-### С датой и временем
-
-```
-?lines=Today:+$DATE{weekday:+long,+month:+long,+day:+numeric}
-&fontSize=28
-&color=0077cc
-&center=true
-```
-
-## 🎯 Основные параметры
-
-| Параметр | Тип | Дефолт | Описание |
-|----------|-----|--------|----------|
-| **Текст и строки** |
-| `lines` | string | - | Строки текста, разделенные `;` |
-| **Цвета** |
-| `color` | HEX | `000000` | Цвет текста (без `#`) |
-| `background` | HEX | `transparent` | Цвет фона (без `#` или `transparent`) |
-| **Скорости анимации (ms)** |
-| `printSpeed` | number | `1` | Скорость печати: количество символов в секунду (0.1-100) |
-| `eraseSpeed` | number | `10` | Скорость стирания: количество символов в секунду (0.1-100) |
-| `delayBetweenLines` | number | `800` | Задержка между строками при печати/стирании (0-5000) |
-| **Размеры** |
-| `fontSize` | number | `16` | Размер шрифта в px |
-| `lineHeight` | number | `1.35` | Межстрочный интервал |
-| `width` | number | `800` | Ширина SVG в px |
-| `height` | number | `200` | Высота SVG в px |
-| `paddingX` | number | `16` | Горизонтальный отступ в px |
-| `paddingY` | number | `20` | Вертикальный отступ в px |
-| **Выравнивание** |
-| `horizontalAlign` | string | `left` | Горизонтальное: `left`, `center`, `right` |
-| `verticalAlign` | string | `top` | Вертикальное: `top`, `middle`, `bottom` |
-| `center` | boolean | - | Центрировать по обеим осям (алиас) |
-| **Режимы работы** |
-| `multiLine` | boolean | `false` | Многострочный режим |
-| `typingMode` | string | `expand` | Режим печати: `expand`, `static` |
-| `eraseMode` | string | `line` | Режим стирания: `line`, `block`, `wipe-down`, `fade` |
-
-## 📅 Переменные
-
-### $DATE - Текущая дата
-
-Использует нативный `Intl.DateTimeFormat` для форматирования дат.
-
-```javascript
-// Полная дата
-$DATE{dateStyle: full, locale: en}
-// → "Monday, November 17, 2025"
-
-// Компоненты даты
-$DATE{weekday: long, month: long, day: numeric}
-// → "Monday, November 17"
-
-// Дата и время
-$DATE{dateStyle: medium, timeStyle: short}
-// → "Nov 17, 2025, 2:30 PM"
-```
-
-### $RELDATE - Относительное время
-
-Использует нативный `Intl.RelativeTimeFormat` для форматирования относительного времени.
-
-```javascript
-// Вчера
-$RELDATE{value: -1, unit: day}
-// → "yesterday"
-
-// Через 5 дней
-$RELDATE{value: 5, unit: day}
-// → "in 5 days"
-
-// 3 часа назад (русский)
-$RELDATE{value: -3, unit: hour, locale: ru}
-// → "3 часа назад"
-```
-
-## 🛠️ Генератор
-
-Используйте визуальный генератор для создания URL:
-
-👉 [generator.html](client/pages/generator.html)
-
-Генератор позволяет:
-- Настроить все параметры через UI
-- Получить готовый URL
-- Скопировать Markdown/HTML код
-- Увидеть превью результата
-
-## 📦 Локальная установка
-
-### 1. Клонирование репозитория
+Для разработки и тестирования:
 
 ```bash
+# Клонировать репозиторий
 git clone https://github.com/yourusername/js-readme-typing-svg.git
 cd js-readme-typing-svg
+
+# Установить зависимости
+npm install
+
+# Запустить сервер
+npm start
 ```
 
-### 2. Запуск локального сервера
+Сервер будет доступен по адресу: `http://localhost:3000`
 
-**VS Code:**
-Используйте расширение "Live Server"
+- **Генератор:** `http://localhost:3000/generator`
+- **API:** `http://localhost:3000/svg?lines=Hello+World`
 
-### 3. Открытие в браузере
+**Требования:**
+- Node.js >= 20.0.0
+- npm
 
-```
-http://localhost:8000/
-```
+## 🎯 Примеры использования
 
-## 📚 Документация
-
-### Основные руководства
-
-- 📘 [Быстрый старт](docs/QUICKSTART.md) — начните здесь!
-
-- 🔗 [URL параметры](docs/URL_PARAMS.md) — полный список параметров
-- 📅 [Переменные](docs/VARIABLES.md) — как использовать $DATE и $RELDATE
-
-### Дополнительно
-
-- [API Reference](#) — документация по функциям
-- [Contributing](#) — как внести вклад
-
-## 💡 Практические примеры
-
-### Для GitHub Profile
-
+### Простой пример
 ```markdown
-### Hi there 👋
-
-![Typing SVG](https://yourusername.github.io/js-readme-typing-svg/?lines=Welcome+to+my+profile!;I'm+a+Full+Stack+Developer;Always+learning+new+things&center=true&width=380&height=50)
+![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Hello+World&fontSize=32)
 ```
 
-### С актуальной датой
-
+### С настройками
 ```markdown
-![Last Updated](https://yourusername.github.io/js-readme-typing-svg/?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666)
+![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Welcome;I'm+a+Developer&fontSize=28&color=00ff00&background=1e1e1e&center=true&multiLine=true)
 ```
 
-### Статистика проекта
-
+### С переменными
 ```markdown
-![Project Status](https://yourusername.github.io/js-readme-typing-svg/?lines=Created+$RELDATE{value:+-365,+unit:+day};Active+development;⭐+Star+us+on+GitHub&multiLine=true&center=true)
+![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Today:+$DATE{dateStyle:+medium}&fontSize=24)
 ```
 
-### Навыки и технологии
+## 📚 Дополнительная документация
 
-```markdown
-![Tech Stack](https://yourusername.github.io/js-readme-typing-svg/?lines=💻+JavaScript+%2B+TypeScript;⚛️+React+%2B+Vue;🚀+Node.js+%2B+Express;🎨+CSS+%2B+Tailwind&multiLine=true&fontSize=20&width=400&height=120)
-```
+- 📘 [Полный список параметров](docs/URL_PARAMS.md)
+- 📅 [Работа с переменными](docs/VARIABLES.md)
+- 🚀 [Деплой на Vercel](docs/VERCEL_DEPLOYMENT.md)
 
+## 💡 Credits
 
+Этот проект вдохновлен и основан на идеях:
+
+- [DenverCoder1/readme-typing-svg](https://github.com/DenverCoder1/readme-typing-svg) — оригинальная идея typing SVG для GitHub
+- [whiteSHADOW1234/TypingSVG](https://github.com/whiteSHADOW1234/TypingSVG) — продвинутая реализация с мультистрочностью
+
+Огромная благодарность авторам этих проектов за вдохновение! ❤️
 
 ## 🤝 Вклад в проект
 
-Приветствуются любые вклады! Пожалуйста:
+Приветствуются любые улучшения:
 
-1. Форкните репозиторий
+1. Fork репозитория
 2. Создайте ветку для фичи (`git checkout -b feature/AmazingFeature`)
-3. Закоммитьте изменения (`git commit -m 'Add AmazingFeature'`)
-4. Запушьте в ветку (`git push origin feature/AmazingFeature`)
+3. Commit изменений (`git commit -m 'Add AmazingFeature'`)
+4. Push в ветку (`git push origin feature/AmazingFeature`)
 5. Откройте Pull Request
 
 ## 📄 Лицензия
 
-Проект распространяется под лицензией MIT. См. [LICENSE](LICENSE) для подробностей.
+Проект распространяется под лицензией MIT. См. [LICENSE](LICENSE).
 
 ## 🔗 Ссылки
 
-- [Демо](https://yourusername.github.io/js-readme-typing-svg/)
-- [Генератор URL](https://yourusername.github.io/js-readme-typing-svg/generator.html)
-- [GitHub Issues](https://github.com/yourusername/js-readme-typing-svg/issues)
-- [Обсуждения](https://github.com/yourusername/js-readme-typing-svg/discussions)
+- 🎨 [Генератор URL](https://js-readme-typing-svg.vercel.app/generator)
+- 📖 [Документация](docs/)
+- 🐛 [Issues](https://github.com/yourusername/js-readme-typing-svg/issues)
 
 ---
 
 <p align="center">
-  Сделано с ❤️ и ☕
-</p>
-
-<p align="center">
-  <a href="#-быстрый-старт">Начать использовать</a> •
-  <a href="#-документация">Документация</a> •
-  <a href="#-примеры">Примеры</a>
+  Сделано с ❤️ для сообщества разработчиков
 </p>
