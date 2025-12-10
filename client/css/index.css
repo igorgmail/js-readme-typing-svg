@@ -33,3 +33,28 @@ bodY {
 		transform: scale(1.05);
 	}
 }
+
+.bg {
+	background: linear-gradient(
+		-45deg,
+		rgba(247, 185, 16, 0.5),
+		rgba(19, 200, 245, 0.5),
+		rgba(217, 58, 241, 0.5),
+		rgba(34, 248, 170, 0.5)
+	);
+	background-size: 400% 400%;
+	animation: gradient 10s ease infinite;
+	height: 100vh;
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+	100% {
+		background-position: 0% 50%;
+	}
+}
