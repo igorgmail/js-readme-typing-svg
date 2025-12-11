@@ -4,7 +4,7 @@
   <h1>SVG Typing Animation Generator</h1>
 </div>
 
-> Создавайте анимированные SVG с эффектом печатающего текста для ваших GitHub профилей, README файлов и веб-страниц.
+> Create animated SVGs with typing text effect for your GitHub profiles, README files, and web pages.
 
 <div align="center">
 
@@ -12,85 +12,85 @@
   [![ES6 Modules](https://img.shields.io/badge/ES6-Modules-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
   ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)
 
-**[Readme-RU](https://js-readme-typing-svg.vercel.app/)**
+**[Русская версия / Russian](/docs/README_RU.md/)**
 </div>
 
 
-## ✨ Основные возможности
+## ✨ Key Features
 
-- **SMIL-анимация** — работает в GitHub README без JavaScript
-- **Переменные** — реализация переменных (DATE, RELDATE, STYLE)
-- **Режимы анимации** — различные режимы печати и стирания текста
-- **Многострочность** — поддержка нескольких строк текста
-- **Google Fonts** — любые шрифты из Google Fonts
-- **Серверная генерация** — SVG создается на сервере
+- **SMIL Animation** — works in GitHub README without JavaScript
+- **Variables** — dynamic variables support (DATE, RELDATE, STYLE)
+- **Animation Modes** — various typing and erasing effects
+- **Multiline Support** — multiple lines of text
+- **Google Fonts** — access to any Google Fonts
+- **Server-side Generation** — SVG rendered on the server
 
-## 🚀 Быстрый старт
+## 🚀 Quick Start
 
-### Используйте генератор
+### Use the Generator
 
-👉 **[Открыть генератор](https://js-readme-typing-svg.vercel.app/generator)**
+👉 **[Open Generator](https://js-readme-typing-svg.vercel.app/generator)**
 
-1. Введите текст и настройте параметры
-2. Скопируйте готовый URL/Markdown/HTML
-3. Вставьте в ваш README или веб-страницу
+1. Enter your text and configure parameters
+2. Copy the generated URL/Markdown/HTML
+3. Paste it into your README or web page
 
 > [!NOTE]
-> При изменении шрифта (Google Fonts) нужно указать font-weight который этот шрифт имеет, иначе будет сгенерирован шрифт по умолчанию
+> When changing the font (Google Fonts), make sure to specify the font-weight that the font supports, otherwise the default font will be used
 
 ## 📸 Demo
 
 ![Generator Preview](/docs/preview.gif)
 
-### Использование в GitHub README
+### Using in GitHub README
 
-**Markdown** :
+**Markdown**:
 ```markdown
 ![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Hello+World;Welcome+to+my+profile&fontSize=24&color=00ff00)
 ```
 
-**HTML** :
+**HTML**:
 ```html
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=Hello+World&fontSize=32" alt="Typing SVG" />
 ```
 
 
-## 🎛️ Параметры анимации
+## 🎛️ Animation Parameters
 
-| Параметр | Описание | Значения | По умолчанию |
+| Parameter | Description | Values | Default |
 |----------|----------|----------|--------------|
-| **Внешний вид** | | | |
-| `fontFamily` | Шрифт из Google Fonts | | `Roboto` |
-| `fontSize` | Размер шрифта (px) | | `16` |
-| `fontWeight` | Толщина шрифта | | `400` |
-| `color` | Цвет текста (HEX без `#`) | | `000000` |
-| `background` | Цвет фона (HEX без `#`) | | `transparent` |
-| `letterSpacing` | Межбуквенный интервал | | `0` |
-| **Размеры** | | | |
-| `width` | Ширина SVG (px) | | `800` |
-| `height` | Высота SVG (px) | | `200` |
-| **Скорости** | | | |
-| `printSpeed` | Скорость печати (символов/сек) | | `10` |
-| `eraseSpeed` | Скорость стирания (символов/сек) | | `10` |
-| `delayBetweenLines` | Задержка между строками (ms) | | `800` |
-| **Выравнивание** | | | |
-| `horizontalAlign` | Горизонтальное | `left`, `center`, `right` | `left` |
-| `verticalAlign` | Вертикальное | `top`, `middle`, `bottom` | `top` |
-| **Режимы** | | | |
-| `typingMode` | Режим печати | `expand`, `static` | `expand` |
-| `eraseMode` | Режим стирания | `line`, `fade`, `none` | `line` |
-| `cursorStyle` | Стиль курсора | `none`, `straight`, `underlined`, `block`, `emoji`, `custom` | `straight` |
-| `multiLine` | Многострочный режим | `true` / `false` | `false` |
-| `repeat` | Повторять анимацию | `true` / `false` | `true` |
-| **Дополнительные параметры**| *(только через URL)*  | | |
-| `paddingX` | Горизонтальный отступ (px) | | `16` |
-| `paddingY` | Вертикальный отступ (px) | | `20` |
-| `lineHeight` | Межстрочный интервал | | `1.35` |
-| `center` | Центрировать по обеим осям | `true` / `false` | `false` |
+| **Appearance** | | | |
+| `fontFamily` | Google Fonts font name | | `Roboto` |
+| `fontSize` | Font size in pixels | | `16` |
+| `fontWeight` | Font weight | | `400` |
+| `color` | Text color (HEX without `#`) | | `000000` |
+| `background` | Background color (HEX without `#`) | | `transparent` |
+| `letterSpacing` | Character spacing | | `0` |
+| **Dimensions** | | | |
+| `width` | SVG width in pixels | | `800` |
+| `height` | SVG height in pixels | | `200` |
+| **Speed** | | | |
+| `printSpeed` | Typing speed (chars/sec) | | `10` |
+| `eraseSpeed` | Erasing speed (chars/sec) | | `10` |
+| `delayBetweenLines` | Delay between lines (ms) | | `800` |
+| **Alignment** | | | |
+| `horizontalAlign` | Horizontal alignment | `left`, `center`, `right` | `left` |
+| `verticalAlign` | Vertical alignment | `top`, `middle`, `bottom` | `top` |
+| **Modes** | | | |
+| `typingMode` | Typing mode | `expand`, `static` | `expand` |
+| `eraseMode` | Erasing mode | `line`, `fade`, `none` | `line` |
+| `cursorStyle` | Cursor style | `none`, `straight`, `underlined`, `block`, `emoji`, `custom` | `straight` |
+| `multiLine` | Multiline mode | `true` / `false` | `false` |
+| `repeat` | Repeat animation | `true` / `false` | `true` |
+| **Additional Parameters**| *(URL only)*  | | |
+| `paddingX` | Horizontal padding (px) | | `16` |
+| `paddingY` | Vertical padding (px) | | `20` |
+| `lineHeight` | Line height | | `1.35` |
+| `center` | Center both axes | `true` / `false` | `false` |
 
-### Переменные
+### Variables
 
-Используйте динамические переменные в тексте:
+Use dynamic variables in your text:
 
 ```
 $DATE{dateStyle: full, locale: en}
@@ -102,17 +102,17 @@ $RELDATE{value: -1, unit: day}
 $STYLE{color: #e36209, text: 'STATUS'}
 ```
 
-**Подробнее о переменных:** см. [VARIABLES.md](docs/VARIABLES.md)
+**Learn more about variables:** see [VARIABLES.md](docs/VARIABLES.md)
 
-## 💻 Установка и деплой
+## 💻 Installation & Deployment
 
-### Вариант 1: Deploy на Vercel (рекомендуется)
+### Option 1: Deploy to Vercel (Recommended)
 
-Самый простой способ развернуть проект:
+The easiest way to deploy the project:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/igorgmail/js-readme-typing-svg)
 
-**Или через CLI:**
+**Or via CLI:**
 ```bash
 npm i -g vercel
 git clone https://github.com/igorgmail/js-readme-typing-svg.git
@@ -120,60 +120,60 @@ cd js-readme-typing-svg
 vercel
 ```
 
-### Вариант 2: Локальный Express сервер
+### Option 2: Local Express Server
 
 
 ```bash
-# Клонировать репозиторий
+# Clone the repository
 git clone https://github.com/igorgmail/js-readme-typing-svg.git
 cd js-readme-typing-svg
 
-# Установить зависимости
+# Install dependencies
 npm install
 
-# Запустить сервер
+# Start the server
 npm start
 ```
 
-Сервер будет доступен по адресу: `http://localhost:3000`
+Server will be available at: `http://localhost:3000`
 
-- **Генератор:** `http://localhost:3000/generator`
+- **Generator:** `http://localhost:3000/generator`
 - **API:** `http://localhost:3000/svg?lines=Hello+World`
 
 
-## 📚 Дополнительная документация
+## 📚 Additional Documentation
 
-- [Работа с переменными](docs/VARIABLES.md)
+- [Working with Variables](docs/VARIABLES.md)
 
-## 🙏 Благодарности
+## 🙏 Acknowledgments
 
-Идея проекта взята из:
+Project inspired by:
 
-- [DenverCoder1/readme-typing-svg](https://github.com/DenverCoder1/readme-typing-svg) — оригинальная реализация
-- [whiteSHADOW1234/TypingSVG](https://github.com/whiteSHADOW1234/TypingSVG) — альтернативная реализация
+- [DenverCoder1/readme-typing-svg](https://github.com/DenverCoder1/readme-typing-svg) — original implementation
+- [whiteSHADOW1234/TypingSVG](https://github.com/whiteSHADOW1234/TypingSVG) — alternative implementation
 
-Огромная благодарность авторам этих проектов за идею! ❤️
+Huge thanks to the authors of these projects for the inspiration! ❤️
 
-## 🚀 Вклад в проект
+## 🏆 Contributing
 
-Приветствуются любые улучшения:
+Contributions are welcome:
 
-1. Fork репозитория
-2. Создайте ветку для фичи (`git checkout -b feature/AmazingFeature`)
-3. Commit изменений (`git commit -m 'Add AmazingFeature'`)
-4. Push в ветку (`git push origin feature/AmazingFeature`)
-5. Откройте Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 🌟 Поддержка
-Если вам понравился этот проект, поставьте ему ⭐ и поделитесь им с друзьями!
+## 🌟 Support
+If you like this project, give it a ⭐ and share it with friends!
 
-## 🔗 Ссылки
+## 🔗 Links
 
-- 🎨 [Demo Генератор URL (Vercel)](https://js-readme-typing-svg.vercel.app/generator)
+- 🎨 [Live Generator Demo (Vercel)](https://js-readme-typing-svg.vercel.app/generator)
 - 🐛 [Issues](https://github.com/igorgmail/js-readme-typing-svg/issues)
 
 ---
 
 <p align="center">
-  Сделано с ❤️ для сообщества разработчиков
+  Made with ❤️ for the developer community
 </p>

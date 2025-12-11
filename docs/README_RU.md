@@ -12,7 +12,7 @@
   [![ES6 Modules](https://img.shields.io/badge/ES6-Modules-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
   ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)
 
-**[Readme-RU](/docs/README_RU.md/)**
+**[Readme-EN](/docs/README.md/)**
 </div>
 
 
@@ -154,7 +154,7 @@ npm start
 
 Огромная благодарность авторам этих проектов за идею! ❤️
 
-## 🚀 Вклад в проект
+## 🏆 Вклад в проект
 
 Приветствуются любые улучшения:
 
