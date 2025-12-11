@@ -125,7 +125,6 @@ export async function getEmbeddedFontCSS(options) {
 
   try {
     const url = buildGoogleFontsUrl(fontFamily, fontWeight, lines);
-    console.log("▶ ⇛ url:", url);
 
     const response = await fetch(url, {
       headers: {
@@ -135,8 +134,6 @@ export async function getEmbeddedFontCSS(options) {
       },
     });
     
-    console.log("▶ ⇛ response:", response);
-
     if (!response.ok) {
       return { css: '', parsedFont: null };
     }
@@ -179,7 +176,6 @@ export async function getEmbeddedFontCSS(options) {
     if (firstFontBuffer) {
       try {
         parsedFont = opentype.parse(firstFontBuffer);
-        console.log(`✓ Font parsed successfully: ${fontFamily}, unitsPerEm: ${parsedFont.unitsPerEm}`);
       } catch (parseError) {
         console.warn(`Failed to parse font ${fontFamily}:`, parseError.message);
         // parsedFont остаётся null, будет использован fallback

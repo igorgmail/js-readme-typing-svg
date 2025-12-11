@@ -346,6 +346,7 @@ $STYLE{text:+'red',+color:+#FF0000}
 3. Boolean параметры (`italic`, `underline`, `strikethrough`) принимают значения `true` или `false`
 4. Можно комбинировать несколько стилей в одном выражении
 5. Стили применяются только к указанному тексту, не влияют на остальную строку
+6. **⚠️ Вложенность переменных не поддерживается** — нельзя использовать `$DATE` или `$RELDATE` внутри параметра `text` переменной `$STYLE`
 
 ## Комбинирование переменных
 
@@ -362,16 +363,34 @@ Today is $DATE{weekday: long};Started coding $RELDATE{value: -365, unit: day}
 ?lines=Today+is+$DATE{weekday:+long};Started+coding+$RELDATE{value:+-365,+unit:+day}
 ```
 
-### Пример с датой и стилизацией
+### Пример с комбинацией переменных (последовательно)
 
 ```
-Last updated: $STYLE{text: '$DATE{dateStyle: medium}', color: #2196F3, fontWeight: bold}
+$STYLE{text: 'Project Status', color: 00FF00, fontWeight: bold}: Started $RELDATE{value: -90, unit: day}
 ```
 
-### Пример со всеми переменными
+```
+Last update: $DATE{dateStyle: short} - $STYLE{text: 'Active', color: 00FF00, fontWeight: bold}
+```
+
+> [!WARNING]
+> Вложенность переменных (переменная внутри переменной) **не поддерживается**. Используйте переменные последовательно, а не вложенно.
+
+### ❌ Неправильно (вложенность):
 
 ```
-$STYLE{text: 'Project Status', color: 00FF00, fontWeight: bold}: Started $RELDATE{value: -90, unit: day}, Last update: $DATE{dateStyle: short}
+$STYLE{text: '$DATE{dateStyle: medium}', color: #FF0000}
+❌ Не будет работать корректно!
+```
+
+### ✅ Правильно (последовательно):
+
+```
+$DATE{dateStyle: medium} - $STYLE{text: 'Updated', color: #00FF00, fontWeight: bold}
+```
+
+```
+$STYLE{text: 'Status', color: #2196F3}: Active since $RELDATE{value: -30, unit: day}
 ```
 
 ## Ограничения

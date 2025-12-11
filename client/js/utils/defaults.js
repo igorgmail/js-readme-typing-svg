@@ -65,7 +65,6 @@ export async function fetchDefaults() {
 
     const defaults = await response.json();
     cachedDefaults = defaults;
-    console.log('✅ Defaults loaded from API');
     return defaults;
   } catch (error) {
     console.warn('Error fetching defaults, using fallback:', error.message);
