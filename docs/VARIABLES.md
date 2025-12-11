@@ -14,6 +14,8 @@ $VARIABLE_NAME{param1: value1, param2: value2}
 
 Использует нативный `Intl.DateTimeFormat` для форматирования.
 
+👉 **[Подробнее на MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)**
+
 ### Основные параметры
 
 | Параметр | Значения | Описание |
@@ -200,14 +202,19 @@ $RELDATE{value:+-3,+unit:+hour}
 ### Последнее обновление профиля
 
 ```markdown
-![Last Update](https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666)
+![Last Update](https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666&repeat=true)
 ```
+
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666&repeat=true" alt="Typing SVG" />
+
+
 
 ### Стаж разработки
 
 ```markdown
 ![Experience](https://js-readme-typing-svg.vercel.app/svg?lines=Coding+since+$RELDATE{value:+-1095,+unit:+day}&fontSize=20)
 ```
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=Coding+since+$RELDATE{value:+-1095,+unit:+day}&fontSize=20&repeat=true" alt="Typing SVG" />
 
 ### Приветствие с датой
 
@@ -215,11 +222,14 @@ $RELDATE{value:+-3,+unit:+hour}
 ![Greeting](https://js-readme-typing-svg.vercel.app/svg?lines=Today+is+$DATE{weekday:+long};Have+a+great+day!&multiLine=true&center=true)
 ```
 
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=Today+is+$DATE{weekday:+long};Have+a+great+day!&multiLine=true&center=true&repeat=true" alt="Typing SVG" />
+
 ### Статус проекта
 
 ```markdown
 ![Project Status](https://js-readme-typing-svg.vercel.app/svg?lines=Project+started+$RELDATE{value:+-180,+unit:+day};Active+development&multiLine=true)
 ```
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=Project+started+$RELDATE{value:+-180,+unit:+day};Active+development&multiLine=true&repeat=true" alt="Typing SVG" />
 
 ## Комбинирование переменных
 
