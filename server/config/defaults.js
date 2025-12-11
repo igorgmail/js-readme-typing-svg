@@ -25,8 +25,8 @@ export const DEFAULT_PARAMS = {
   height: 200,
 
   // printSpeed и eraseSpeed - количество символов в секунду (characters per second)
-  printSpeed: 10,
-  eraseSpeed: 10,
+  printSpeed: 30,
+  eraseSpeed: 30,
 
   delayBetweenLines: 800,
 

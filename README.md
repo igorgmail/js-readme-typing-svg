@@ -1,7 +1,7 @@
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=%F0%9F%8E%A8+SVG+Typing+Animation&fontSize=36&fontFamily=Nosifer&fontWeight=400&letterSpacing=0&color=0D7B14&background=transparent&width=800&height=200&printSpeed=10&delayBetweenLines=800&eraseSpeed=20&eraseMode=line&cursorStyle=none&horizontalAlign=center&verticalAlign=middle&multiLine=true&repeat=true" alt="Typing SVG" />
 
 <div align="center">
-  <h1>🎨 SVG Typing Animation Generator</h1>
+  <h1>SVG Typing Animation Generator</h1>
 </div>
 
 > Создавайте анимированные SVG с эффектом печатающего текста для ваших GitHub профилей, README файлов и веб-страниц.
@@ -12,6 +12,7 @@
   [![ES6 Modules](https://img.shields.io/badge/ES6-Modules-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
   ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)
 
+**[Readme-RU](https://js-readme-typing-svg.vercel.app/)**
 </div>
 
 
@@ -26,7 +27,7 @@
 
 ## 🚀 Быстрый старт
 
-### Используйте генератор (рекомендуется)
+### Используйте генератор
 
 👉 **[Открыть генератор](https://js-readme-typing-svg.vercel.app/generator)**
 
@@ -39,7 +40,7 @@
 
 ## 📸 Demo
 
-![Generator Preview](https://via.placeholder.com/800x400/1e1e1e/00ff00?text=Generator+Preview+%28coming+soon%29)
+![Generator Preview](/docs/preview.gif)
 
 ### Использование в GitHub README
 
@@ -101,7 +102,7 @@ $RELDATE{value: -1, unit: day}
 $STYLE{color: #e36209, text: 'STATUS'}
 ```
 
-**Подробнее о переменных:** см. [docs/VARIABLES.md](docs/VARIABLES.md)
+**Подробнее о переменных:** см. [VARIABLES.md](docs/VARIABLES.md)
 
 ## 💻 Установка и деплой
 
@@ -121,7 +122,6 @@ vercel
 
 ### Вариант 2: Локальный Express сервер
 
-Для разработки и тестирования:
 
 ```bash
 # Клонировать репозиторий
@@ -140,22 +140,6 @@ npm start
 - **Генератор:** `http://localhost:3000/generator`
 - **API:** `http://localhost:3000/svg?lines=Hello+World`
 
-## 🎯 Примеры использования
-
-### Простой пример
-```markdown
-![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Hello+World&fontSize=32)
-```
-
-### С настройками
-```markdown
-![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Welcome;I'm+a+Developer&fontSize=28&color=00ff00&background=1e1e1e&center=true&multiLine=true)
-```
-
-### С переменными
-```markdown
-![Typing SVG](https://js-readme-typing-svg.vercel.app/svg?lines=Today:+$DATE{dateStyle:+medium}&fontSize=24)
-```
 
 ## 📚 Дополнительная документация
 
@@ -163,10 +147,10 @@ npm start
 
 ## 🙏 Благодарности
 
-Этот проект основан на идеях:
+Идея проекта взята из:
 
-- [DenverCoder1/readme-typing-svg](https://github.com/DenverCoder1/readme-typing-svg) — оригинальная идея typing SVG для GitHub
-- [whiteSHADOW1234/TypingSVG](https://github.com/whiteSHADOW1234/TypingSVG) — Немного другая реализация
+- [DenverCoder1/readme-typing-svg](https://github.com/DenverCoder1/readme-typing-svg) — оригинальная реализация
+- [whiteSHADOW1234/TypingSVG](https://github.com/whiteSHADOW1234/TypingSVG) — альтернативная реализация
 
 Огромная благодарность авторам этих проектов за идею! ❤️
 
