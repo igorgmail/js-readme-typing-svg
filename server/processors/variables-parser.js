@@ -230,40 +230,183 @@ function processRelativeDateVariable(params) {
 }
 
 /**
+ * Находит переменные в строке с учетом вложенных скобок
+ * @param {string} str - строка для поиска
+ * @returns {Array} массив объектов {start, end, varName, paramsStr}
+ */
+function findVariablesWithBalancedBraces(str) {
+  const variables = [];
+  const varNameRegex = /\$(\w+)/g;
+  let match;
+  
+  // Находим все потенциальные начала переменных
+  while ((match = varNameRegex.exec(str)) !== null) {
+    const varName = match[1];
+    const startPos = match.index;
+    const afterVarPos = match.index + match[0].length;
+    
+    // Проверяем, есть ли после имени переменной открывающая скобка
+    if (str[afterVarPos] === '{') {
+      // Ищем соответствующую закрывающую скобку с учетом баланса
+      let braceCount = 0;
+      let endPos = afterVarPos;
+      let inQuotes = false;
+      let quoteChar = '';
+      
+      for (let i = afterVarPos; i < str.length; i++) {
+        const char = str[i];
+        
+        // Обрабатываем кавычки
+        if ((char === '"' || char === "'") && (i === 0 || str[i - 1] !== '\\')) {
+          if (!inQuotes) {
+            inQuotes = true;
+            quoteChar = char;
+          } else if (char === quoteChar) {
+            inQuotes = false;
+            quoteChar = '';
+          }
+        }
+        
+        // Считаем скобки только вне кавычек
+        if (!inQuotes) {
+          if (char === '{') {
+            braceCount++;
+          } else if (char === '}') {
+            braceCount--;
+            if (braceCount === 0) {
+              endPos = i;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Если нашли закрывающую скобку
+      if (braceCount === 0 && endPos > afterVarPos) {
+        const paramsStr = str.substring(afterVarPos + 1, endPos);
+        variables.push({
+          start: startPos,
+          end: endPos + 1,
+          varName: varName,
+          paramsStr: paramsStr,
+          fullMatch: str.substring(startPos, endPos + 1)
+        });
+      }
+    } else {
+      // Переменная без параметров (например, $DATE без скобок)
+      variables.push({
+        start: startPos,
+        end: afterVarPos,
+        varName: varName,
+        paramsStr: '',
+        fullMatch: match[0]
+      });
+    }
+  }
+  
+  return variables;
+}
+
+/**
+ * Проверяет, содержит ли строка переменные
+ * @param {string} str - строка для проверки
+ * @returns {boolean} true если содержит переменные
+ */
+function hasVariables(str) {
+  return /\$\w+/.test(str);
+}
+
+/**
  * Основная функция парсинга переменных в строке
+ * Поддерживает вложенные переменные через многопроходный парсинг
  * @param {string} str - строка с переменными
+ * @param {number} maxIterations - максимальное количество итераций (защита от бесконечных циклов)
  * @returns {string} строка с замененными переменными
  */
-export function parseVariables(str) {
-  // Регулярка для поиска переменных вида $VAR{params}
-  const variableRegex = /\$(\w+)(?:\{([^}]*)\})?/g;
+export function parseVariables(str, maxIterations = 10) {
+  let result = str;
+  let iterations = 0;
   
-  return str.replace(variableRegex, (match, varName, paramsStr) => {
-    const params = parseParams(paramsStr);
+  // Парсим пока есть переменные и не достигли лимита итераций
+  while (hasVariables(result) && iterations < maxIterations) {
+    const prevResult = result;
+    
+    // Находим все переменные с учетом вложенных скобок
+    const variables = findVariablesWithBalancedBraces(result);
+    
+    if (variables.length === 0) {
+      break; // Нет переменных для замены
+    }
+    
+    // Ищем "самую внутреннюю" переменную (которая не содержит других переменных в параметрах)
+    let targetVariable = null;
+    for (const variable of variables) {
+      // Проверяем, есть ли вложенные переменные в параметрах
+      if (!hasVariables(variable.paramsStr)) {
+        targetVariable = variable;
+        break; // Нашли самую внутреннюю переменную
+      }
+    }
+    
+    // Если не нашли переменную без вложенных, берем первую
+    // (это может быть переменная без параметров или с уже обработанными параметрами)
+    if (!targetVariable && variables.length > 0) {
+      targetVariable = variables[0];
+    }
+    
+    if (!targetVariable) {
+      break; // Нечего заменять
+    }
+    
+    // Обрабатываем найденную переменную
+    const params = parseParams(targetVariable.paramsStr);
+    let replacement = targetVariable.fullMatch;
     
     // Обработка различных типов переменных
-    switch (varName.toUpperCase()) {
+    switch (targetVariable.varName.toUpperCase()) {
       case 'DATE':
-        return processDateVariable(params);
+        replacement = processDateVariable(params);
+        break;
       
       case 'RELATIVE_DATE':
       case 'RELDATE':
-        return processRelativeDateVariable(params);
+        replacement = processRelativeDateVariable(params);
+        break;
       
       case 'STYLE':
-        return processStyleVariable(params);
+        replacement = processStyleVariable(params);
+        break;
       
       // Здесь можно добавить другие переменные
       // case 'TIME':
-      //   return processTimeVariable(params);
+      //   replacement = processTimeVariable(params);
+      //   break;
       // case 'USER':
-      //   return processUserVariable(params);
+      //   replacement = processUserVariable(params);
+      //   break;
       
       default:
         // Если переменная не распознана, оставляем как есть
-        return match;
+        replacement = targetVariable.fullMatch;
     }
-  });
+    
+    // Заменяем переменную на результат
+    result = result.substring(0, targetVariable.start) + replacement + result.substring(targetVariable.end);
+    
+    // Проверка на зацикливание - если строка не изменилась, выходим
+    if (result === prevResult) {
+      break;
+    }
+    
+    iterations++;
+  }
+  
+  // Предупреждение в консоль, если достигли лимита (возможно зацикливание)
+  if (iterations >= maxIterations && hasVariables(result)) {
+    console.warn('parseVariables: достигнут лимит итераций. Возможно зацикливание в переменных.');
+  }
+  
+  return result;
 }
 
 /**

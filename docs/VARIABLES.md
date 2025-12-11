@@ -346,7 +346,7 @@ $STYLE{text:+'red',+color:+#FF0000}
 3. Boolean параметры (`italic`, `underline`, `strikethrough`) принимают значения `true` или `false`
 4. Можно комбинировать несколько стилей в одном выражении
 5. Стили применяются только к указанному тексту, не влияют на остальную строку
-6. **⚠️ Вложенность переменных не поддерживается** — нельзя использовать `$DATE` или `$RELDATE` внутри параметра `text` переменной `$STYLE`
+6. ✅ **Поддерживается вложенность переменных** — можно использовать `$DATE` или `$RELDATE` внутри `$STYLE` (до 10 уровней вложенности)
 
 ## Комбинирование переменных
 
@@ -373,25 +373,41 @@ $STYLE{text: 'Project Status', color: 00FF00, fontWeight: bold}: Started $RELDAT
 Last update: $DATE{dateStyle: short} - $STYLE{text: 'Active', color: 00FF00, fontWeight: bold}
 ```
 
-> [!WARNING]
-> Вложенность переменных (переменная внутри переменной) **не поддерживается**. Используйте переменные последовательно, а не вложенно.
+### ✅ Вложенные переменные (NEW!)
 
-### ❌ Неправильно (вложенность):
+Теперь поддерживается **вложенность переменных** — можно использовать одну переменную внутри другой (до 10 уровней вложенности):
 
-```
-$STYLE{text: '$DATE{dateStyle: medium}', color: #FF0000}
-❌ Не будет работать корректно!
-```
-
-### ✅ Правильно (последовательно):
+#### Пример 1: Дата внутри стиля
 
 ```
-$DATE{dateStyle: medium} - $STYLE{text: 'Updated', color: #00FF00, fontWeight: bold}
+$STYLE{text: '$DATE{dateStyle: medium}', color: #2196F3, fontWeight: bold}
 ```
 
+**Результат:** Стилизованная текущая дата (например, "Dec 11, 2024" синим жирным шрифтом)
+
+#### Пример 2: Относительная дата внутри стиля
+
 ```
-$STYLE{text: 'Status', color: #2196F3}: Active since $RELDATE{value: -30, unit: day}
+Last updated $STYLE{text: '$RELDATE{value: -3, unit: day}', color: #FF9800, italic: true}
 ```
+
+**Результат:** "Last updated 3 days ago" (оранжевым курсивом)
+
+#### Пример 3: Множественная вложенность
+
+```
+$STYLE{text: '$DATE{weekday: long} - $RELDATE{value: -7, unit: day}', color: #00FF00, fontWeight: bold}
+```
+
+**Результат:** "Thursday - 7 days ago" (зеленым жирным шрифтом)
+
+#### Пример 4: Комбинация с обычным текстом
+
+```
+Status: $STYLE{text: 'Active since $RELDATE{value: -30, unit: day}', color: #4CAF50, fontWeight: bold}
+```
+
+**Результат:** "Status: Active since 30 days ago" (где "Active since..." зеленым жирным)
 
 ## Ограничения
 
@@ -399,6 +415,7 @@ $STYLE{text: 'Status', color: #2196F3}: Active since $RELDATE{value: -30, unit: 
 2. Значения обновляются при каждом запросе к API
 3. GitHub может кэшировать SVG, обновления могут отображаться не сразу
 4. Для форсирования обновления можно добавить параметр `cache-bust` с timestamp
+5. Вложенность переменных поддерживается до 10 уровней (защита от бесконечных циклов)
 
 ## Поддерживаемые локали
 

@@ -61,11 +61,6 @@ function generateTextPathContent(line, defaultColor) {
   // Парсим строку на сегменты с разными стилями
   const segments = parseStyleSegments(line, defaultColor);
   
-  // Если только один сегмент - возвращаем как обычно
-  if (segments.length === 1) {
-    return escapeXml(segments[0].text);
-  }
-  
   // Генерируем tspan для каждого сегмента с применением всех стилей
   return segments.map(segment => {
     const escapedText = escapeXml(segment.text);
