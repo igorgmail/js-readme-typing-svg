@@ -121,7 +121,7 @@ export function computeTextWidthPrecise(text, fontSize, font, letterSpacing) {
  * @param {string|number} letterSpacing - межбуквенный интервал
  * @returns {Array<number>} массив накопленных ширин [0, width1, width1+width2, ...]
  */
-export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letterSpacing) {
+export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letterSpacing, fontsMap = null) {
   if (!text || text.length === 0) {
     return [0];
   }
@@ -154,11 +154,19 @@ export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letter
     const segmentLetterSpacing = segment.styles?.letterSpacing || letterSpacing;
     const letterSpacingPx = parseLetterSpacing(segmentLetterSpacing, segmentFontSize);
     
+    // Определяем font для сегмента (если указан fontFamily в стилях)
+    let segmentFont = font;
+    if (segment.styles?.fontFamily && fontsMap) {
+      const segmentFontFamily = segment.styles.fontFamily;
+      const normalizedSegmentFont = segmentFontFamily.split(',')[0].trim().replace(/["']/g, '').toLowerCase();
+      segmentFont = fontsMap.get(normalizedSegmentFont) || font;
+    }
+    
     const chars = [...segment.text];
     
     for (let i = 0; i < chars.length; i++) {
       const char = chars[i];
-      const charWidth = getCharWidth(char, segmentFontSize, font, 0);
+      const charWidth = getCharWidth(char, segmentFontSize, segmentFont, 0);
       
       accumulated += charWidth;
       

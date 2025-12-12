@@ -93,15 +93,16 @@ export function parseLetterSpacing(letterSpacing, fontSize) {
 }
 
 /**
- * Вычисляет ширину текста с учетом сегментов стилей (разные fontSize)
+ * Вычисляет ширину текста с учетом сегментов стилей (разные fontSize и fontFamily)
  * @param {string} text - текст с маркерами стилей
  * @param {number} defaultFontSize - размер шрифта по умолчанию
  * @param {string|number} letterSpacing - расстояние между символами
  * @param {string} fontFamily - семейство шрифта (для логирования)
- * @param {object|null} parsedFont - объект opentype.Font или null
+ * @param {object|null} parsedFont - объект opentype.Font или null (основной шрифт)
+ * @param {Map<string, object>|null} fontsMap - карта fontFamily -> parsedFont для шрифтов из стилей
  * @returns {number} ширина текста
  */
-export function computeTextWidthWithStyles(text, defaultFontSize, letterSpacing, fontFamily, parsedFont) {
+export function computeTextWidthWithStyles(text, defaultFontSize, letterSpacing, fontFamily, parsedFont, fontsMap = null) {
   if (!text || text.length === 0) {
     return 0;
   }
@@ -132,9 +133,17 @@ export function computeTextWidthWithStyles(text, defaultFontSize, letterSpacing,
     // Определяем letterSpacing для сегмента (если указан в стилях)
     const segmentLetterSpacing = segment.styles?.letterSpacing || letterSpacing;
     
+    // Определяем parsedFont для сегмента (если указан fontFamily в стилях)
+    let segmentParsedFont = parsedFont;
+    if (segment.styles?.fontFamily && fontsMap) {
+      const segmentFontFamily = segment.styles.fontFamily;
+      const normalizedSegmentFont = segmentFontFamily.split(',')[0].trim().replace(/["']/g, '').toLowerCase();
+      segmentParsedFont = fontsMap.get(normalizedSegmentFont) || parsedFont;
+    }
+    
     // Вычисляем ширину сегмента
-    if (parsedFont) {
-      totalWidth += computeTextWidthPrecise(segment.text, segmentFontSize, parsedFont, segmentLetterSpacing);
+    if (segmentParsedFont) {
+      totalWidth += computeTextWidthPrecise(segment.text, segmentFontSize, segmentParsedFont, segmentLetterSpacing);
     } else {
       const chars = [...segment.text];
       const spacing = parseLetterSpacing(segmentLetterSpacing, segmentFontSize);
@@ -185,10 +194,10 @@ export function computeTextWidth(text, fontSize, letterSpacing, fontFamily, pars
  * @param {object|null} parsedFont - объект opentype.Font или null
  * @returns {number} позиция X
  */
-export function computeTextX(text, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont) {
+export function computeTextX(text, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont, fontsMap = null) {
   // Используем функцию с учетом стилей, если есть маркеры
   const textWidth = hasStyleMarkers(text)
-    ? computeTextWidthWithStyles(text, fontSize, letterSpacing, fontFamily, parsedFont)
+    ? computeTextWidthWithStyles(text, fontSize, letterSpacing, fontFamily, parsedFont, fontsMap)
     : computeTextWidth(text, fontSize, letterSpacing, fontFamily, parsedFont);
   
   if (horizontalAlign === 'left') return paddingX;

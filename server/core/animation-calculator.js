@@ -50,7 +50,7 @@ export function calculateStartY(config) {
  * @returns {Object} объект с массивами keyTimes и xPositions
  */
 function calculatePrintCursorPositions(config) {
-  const { line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont } = config;
+  const { line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont, fontsMap } = config;
   
   if (!line || line.length === 0) {
     return {
@@ -62,7 +62,7 @@ function calculatePrintCursorPositions(config) {
   // Получаем накопленные ширины для каждой позиции в тексте
   // Используем версию с учетом стилей, если есть маркеры
   const widths = hasStyleMarkers(line)
-    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing)
+    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing, fontsMap)
     : getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
   
   // Для расчета времени используем чистый текст (без маркеров)
@@ -91,7 +91,7 @@ function calculatePrintCursorPositions(config) {
  * @returns {Object} объект с массивами keyTimes и xPositions
  */
 function calculateEraseCursorPositions(config) {
-  const { line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont } = config;
+  const { line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont, fontsMap } = config;
   
   if (!line || line.length === 0) {
     return {
@@ -103,7 +103,7 @@ function calculateEraseCursorPositions(config) {
   // Получаем накопленные ширины для каждой позиции в тексте
   // Используем версию с учетом стилей, если есть маркеры
   const widths = hasStyleMarkers(line)
-    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing)
+    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing, fontsMap)
     : getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
   
   // Для расчета времени используем чистый текст (без маркеров)
@@ -285,14 +285,14 @@ function calculateMultiLineModeLineAnimation(config) {
       
       // Рассчитываем детальные позиции курсора для печати
       const printCursorData = calculatePrintCursorPositions({
-        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont, fontsMap
       });
       cursorPrintKeyTimes = printCursorData.keyTimes;
       cursorPrintXPositions = printCursorData.xPositions;
       
       // Рассчитываем детальные позиции курсора для стирания
       const eraseCursorData = calculateEraseCursorPositions({
-        line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont
+        line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont, fontsMap
       });
       cursorEraseKeyTimes = eraseCursorData.keyTimes;
       cursorEraseXPositions = eraseCursorData.xPositions;
@@ -313,7 +313,7 @@ function calculateMultiLineModeLineAnimation(config) {
       
       // Рассчитываем детальные позиции курсора для печати (для других режимов стирания курсор движется только при печати)
       const printCursorData = calculatePrintCursorPositions({
-        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont, fontsMap
       });
       cursorPrintKeyTimes = printCursorData.keyTimes;
       cursorPrintXPositions = printCursorData.xPositions;
@@ -455,7 +455,7 @@ function calculateSingleLineModeAnimation(config) {
  * @param {object|null} parsedFont - объект opentype.Font или null
  * @returns {Array<Object>} массив параметров анимации для каждой строки
  */
-export function calculateLinesAnimation(params, lines, startY, parsedFont = null) {
+export function calculateLinesAnimation(params, lines, startY, parsedFont = null, fontsMap = null) {
   const {
     multiLine, repeat, eraseMode,
     printSpeed, eraseSpeed, delayBetweenLines,
@@ -484,11 +484,11 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
     
     // Вычисляем ширину текста с учетом стилей (если есть маркеры)
     const textWidth = hasStyleMarkers(line)
-      ? computeTextWidthWithStyles(line, fontSize, letterSpacing, fontFamily, parsedFont)
+      ? computeTextWidthWithStyles(line, fontSize, letterSpacing, fontFamily, parsedFont, fontsMap)
       : computeTextWidth(cleanLine, fontSize, letterSpacing, fontFamily, parsedFont);
     
     // Вычисляем позицию X с учетом стилей (computeTextX уже поддерживает стили)
-    const startX = computeTextX(line, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont);
+    const startX = computeTextX(line, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont, fontsMap);
     
     // Параметры анимации
     // printSpeed и eraseSpeed - символов в секунду, вычисляем миллисекунды на символ
