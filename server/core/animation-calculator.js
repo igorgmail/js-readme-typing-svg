@@ -6,22 +6,36 @@ import { computeTextWidth, computeTextWidthWithStyles, computeTextX, formatLette
 import { getEraseMode } from '../effects/erase/index.js';
 import { isCursorAllowed, shouldHideCursorWhenFinished } from '../effects/cursor/index.js';
 import { stripStyleMarkers, hasStyleMarkers } from '../processors/style-segments-parser.js';
-import { getCharacterWidths, getCharacterWidthsWithStyles } from '../fonts/font-metrics.js';
+import { getCharacterWidths, getCharacterWidthsWithStyles, getFontAscent } from '../fonts/font-metrics.js';
 
 /**
  * Вычисляет стартовую позицию Y для вертикального выравнивания
  * @param {Object} config - конфигурация
+ * @param {string} config.verticalAlign - вертикальное выравнивание (top, middle, bottom)
+ * @param {number} config.height - высота SVG
+ * @param {number} config.paddingY - вертикальный отступ
+ * @param {number} config.fontSize - размер шрифта
+ * @param {number} config.lineHeight - межстрочный интервал
+ * @param {boolean} config.multiLine - многострочный режим
+ * @param {number} config.linesCount - количество строк
+ * @param {object|null} config.parsedFont - объект opentype.Font или null
  * @returns {number} стартовая позиция Y
  */
 export function calculateStartY(config) {
-  const { verticalAlign, height, paddingY, fontSize, lineHeight, multiLine, linesCount } = config;
+  const { verticalAlign, height, paddingY, fontSize, lineHeight, multiLine, linesCount, parsedFont } = config;
   
   const totalTextHeight = multiLine 
     ? linesCount * fontSize * lineHeight 
     : fontSize;
   
   let startY = paddingY;
-  if (verticalAlign === 'middle') {
+  
+  if (verticalAlign === 'top') {
+    // Для top выравнивания нужно учесть ascent шрифта, чтобы верхняя часть текста не обрезалась
+    // В SVG координата Y для текста - это базовая линия (baseline), поэтому нужно добавить ascent
+    const fontAscent = getFontAscent(fontSize, parsedFont);
+    startY = paddingY + fontAscent;
+  } else if (verticalAlign === 'middle') {
     startY = (height - totalTextHeight) / 2 + fontSize;
   } else if (verticalAlign === 'bottom') {
     startY = height - totalTextHeight + fontSize / 2;

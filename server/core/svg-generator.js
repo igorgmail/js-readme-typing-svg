@@ -51,19 +51,9 @@ export async function generateSVG(params) {
     (params.background.startsWith('#') ? params.background : '#' + params.background);
   const background = processBackground(backgroundValue);
   
-  // Вычисление стартовой позиции Y
-  const startY = calculateStartY({
-    verticalAlign: normalizedParams.verticalAlign,
-    height: normalizedParams.height,
-    paddingY: normalizedParams.paddingY,
-    fontSize: normalizedParams.fontSize,
-    lineHeight: normalizedParams.lineHeight,
-    multiLine: normalizedParams.multiLine,
-    linesCount: lines.length
-  });
-  
   // Попытка подтянуть CSS шрифта, встроить его в SVG и распарсить для получения метрик.
   // Логика опциональная: при ошибке просто генерируем SVG без встроенного шрифта.
+  // ВАЖНО: загружаем шрифт ДО вызова calculateStartY, чтобы использовать метрики для расчета позиции
   let fontCSS = '';
   let parsedFont = null;
   try {
@@ -79,6 +69,18 @@ export async function generateSVG(params) {
     fontCSS = '';
     parsedFont = null;
   }
+  
+  // Вычисление стартовой позиции Y (теперь с учетом метрик шрифта)
+  const startY = calculateStartY({
+    verticalAlign: normalizedParams.verticalAlign,
+    height: normalizedParams.height,
+    paddingY: normalizedParams.paddingY,
+    fontSize: normalizedParams.fontSize,
+    lineHeight: normalizedParams.lineHeight,
+    multiLine: normalizedParams.multiLine,
+    linesCount: lines.length,
+    parsedFont
+  });
   
   // Вычисление параметров анимации для всех строк с использованием метрик шрифта
   const linesData = calculateLinesAnimation(normalizedParams, lines, startY, parsedFont);

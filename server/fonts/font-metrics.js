@@ -18,6 +18,12 @@ const EMOJI_REGEX = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u;
 const FALLBACK_CHAR_WIDTH_COEFFICIENT = 0.5;
 
 /**
+ * Fallback коэффициент для расчёта ascent (высоты над базовой линией)
+ * Основан на средних метриках популярных шрифтов (обычно ascent составляет ~0.8-0.9 от размера шрифта)
+ */
+const FALLBACK_ASCENT_COEFFICIENT = 0.85;
+
+/**
  * Получает ширину одного символа используя метрики шрифта
  * 
  * @param {string} char - символ для измерения
@@ -227,5 +233,33 @@ export function getRemainingTextWidth(text, remainingChars, fontSize, font, lett
   const remainingText = charsToMeasure.join('');
   
   return computeTextWidthPrecise(remainingText, fontSize, font, letterSpacing);
+}
+
+/**
+ * Получает ascent (высоту над базовой линией) шрифта в пикселях
+ * Используется для корректного позиционирования текста при verticalAlign=top
+ * 
+ * @param {number} fontSize - размер шрифта в пикселях
+ * @param {object|null} font - объект opentype.Font или null
+ * @returns {number} ascent в пикселях
+ */
+export function getFontAscent(fontSize, font) {
+  // Если шрифт загружен, используем реальные метрики из opentype.js
+  if (font && typeof font.ascender === 'number' && font.unitsPerEm) {
+    try {
+      // ascender - это высота над базовой линией в font units
+      // Конвертируем в пиксели: (ascender / unitsPerEm) * fontSize
+      const scale = fontSize / font.unitsPerEm;
+      const ascent = font.ascender * scale;
+      
+      return ascent;
+    } catch (error) {
+      // Если произошла ошибка, используем fallback
+      console.warn('Failed to get font ascent:', error.message);
+    }
+  }
+  
+  // Fallback: приближенный расчёт если шрифт не загружен
+  return fontSize * FALLBACK_ASCENT_COEFFICIENT;
 }
 
