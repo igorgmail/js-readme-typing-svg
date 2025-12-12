@@ -204,10 +204,10 @@ $RELDATE{value:+-3,+unit:+hour}
 ### Последнее обновление профиля
 
 ```markdown
-![Last Update](https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666&height=80repeat=true)
+![Last Update](https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666&height=80&repeat=true)
 ```
 
-<img src="https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666&height=80repeat=true" alt="Typing SVG" />
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666&height=80&repeat=true" alt="Typing SVG" />
 
 
 
@@ -328,9 +328,9 @@ $STYLE{text:+'red',+color:+#FF0000}
 #### Акцент на важной информации
 
 ```markdown
-![Warning](https://js-readme-typing-svg.vercel.app/svg?lines=⚠️+$STYLE{text:+WARNING,+color:+FF9800,+fontWeight:+bold}+System+maintenance)
+![Warning](https://js-readme-typing-svg.vercel.app/svg?lines=⚠️+$STYLE{text:+WARNING,+color:+FF9800,+fontWeight:+bold,+fontSize:+32}+System+maintenance)
 ```
-<img src="https://js-readme-typing-svg.vercel.app/svg?lines=⚠️+$STYLE{text:+WARNING,+color:+FF9800,+fontWeight:+bold}+System+maintenance&height=80&repeat=true" alt="Typing SVG" />
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=⚠️+$STYLE{text:+WARNING,+color:+FF9800,+fontWeight:+bold,+fontSize:+32}+System+maintenance&height=80&repeat=true" alt="Typing SVG" />
 
 #### Разноцветный текст
 
@@ -346,7 +346,7 @@ $STYLE{text:+'red',+color:+#FF0000}
 3. Boolean параметры (`italic`, `underline`, `strikethrough`) принимают значения `true` или `false`
 4. Можно комбинировать несколько стилей в одном выражении
 5. Стили применяются только к указанному тексту, не влияют на остальную строку
-6. ✅ **Поддерживается вложенность переменных** — можно использовать `$DATE` или `$RELDATE` внутри `$STYLE` (до 10 уровней вложенности)
+6. ✅ **Поддерживается вложенность переменных** — можно использовать `$DATE` или `$RELDATE` внутри `$STYLE`
 
 ## Комбинирование переменных
 
@@ -355,12 +355,12 @@ $STYLE{text:+'red',+color:+#FF0000}
 ### Пример с датой и относительным временем
 
 ```
-Today is $DATE{weekday: long};Started coding $RELDATE{value: -365, unit: day}
+Today is $DATE{weekday: long} Started coding $RELDATE{value: -365, unit: day}
 ```
 
 В URL:
 ```
-?lines=Today+is+$DATE{weekday:+long};Started+coding+$RELDATE{value:+-365,+unit:+day}
+?lines=Today+is+$DATE{weekday:+long} Started+coding+$RELDATE{value:+-365,+unit:+day}
 ```
 
 ### Пример с комбинацией переменных (последовательно)
@@ -408,14 +408,6 @@ Status: $STYLE{text: 'Active since $RELDATE{value: -30, unit: day}', color: #4CA
 ```
 
 **Результат:** "Status: Active since 30 days ago" (где "Active since..." зеленым жирным)
-
-## Ограничения
-
-1. Переменные обрабатываются на сервере при генерации SVG
-2. Значения обновляются при каждом запросе к API
-3. GitHub может кэшировать SVG, обновления могут отображаться не сразу
-4. Для форсирования обновления можно добавить параметр `cache-bust` с timestamp
-5. Вложенность переменных поддерживается до 10 уровней (защита от бесконечных циклов)
 
 ## Поддерживаемые локали
 
