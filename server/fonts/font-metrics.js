@@ -4,7 +4,7 @@
  */
 
 import { parseLetterSpacing } from '../utils/text-utils.js';
-import { parseStyleSegments, hasStyleMarkers } from '../processors/style-segments-parser.js';
+import { parseStyleSegments, hasStyleMarkers, stripStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
  * Регулярное выражение для определения emoji
@@ -136,7 +136,12 @@ export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letter
   const widths = [0]; // Начинаем с 0
   let accumulated = 0;
   
-  for (const segment of segments) {
+  // Используем letterSpacing по умолчанию для расчета между сегментами
+  const defaultLetterSpacingPx = parseLetterSpacing(letterSpacing, defaultFontSize);
+  
+  for (let segIndex = 0; segIndex < segments.length; segIndex++) {
+    const segment = segments[segIndex];
+    
     // Определяем fontSize для сегмента
     let segmentFontSize = defaultFontSize;
     if (segment.styles?.fontSize) {
@@ -170,13 +175,31 @@ export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letter
       
       accumulated += charWidth;
       
-      // Добавляем letterSpacing после каждого символа кроме последнего
-      if (i < chars.length - 1) {
-        accumulated += letterSpacingPx;
+      // Добавляем letterSpacing после каждого символа кроме последнего символа всего текста
+      const isLastCharOfAll = (segIndex === segments.length - 1) && (i === chars.length - 1);
+      if (!isLastCharOfAll) {
+        if (i < chars.length - 1) {
+          // Внутри сегмента используем letterSpacing сегмента
+          accumulated += letterSpacingPx;
+        }
+        // Между сегментами letterSpacing не добавляем, так как между ними может не быть символов
+        // Если между сегментами есть символы, они будут в следующем сегменте
       }
       
       widths.push(accumulated);
     }
+  }
+  
+  // Проверяем, что количество элементов соответствует количеству символов в cleanLine
+  // Это важно для правильного позиционирования курсора
+  const cleanLine = stripStyleMarkers(text);
+  const expectedLength = cleanLine.length + 1; // +1 для начальной позиции 0
+  
+  if (widths.length !== expectedLength) {
+    // Если длины не совпадают, это может быть из-за проблем с парсингом
+    // В этом случае используем fallback расчет
+    console.warn(`getCharacterWidthsWithStyles: длины не совпадают. Ожидалось ${expectedLength}, получено ${widths.length}. Используется fallback.`);
+    return getCharacterWidths(cleanLine, defaultFontSize, font, letterSpacing);
   }
   
   return widths;
@@ -231,11 +254,35 @@ export function getCharacterWidths(text, fontSize, font, letterSpacing) {
  * @param {string|number} letterSpacing - межбуквенный интервал
  * @returns {number} ширина оставшегося текста
  */
-export function getRemainingTextWidth(text, remainingChars, fontSize, font, letterSpacing) {
+export function getRemainingTextWidth(text, remainingChars, fontSize, font, letterSpacing, fontsMap = null) {
   if (remainingChars <= 0) {
     return 0;
   }
   
+  // Если есть маркеры стилей и fontsMap, используем расчет с учетом стилей
+  if (hasStyleMarkers(text) && fontsMap) {
+    // Извлекаем cleanLine для работы с индексами символов
+    const cleanLine = stripStyleMarkers(text);
+    const chars = [...cleanLine];
+    
+    // Берем только первые remainingChars символов
+    const charsToMeasure = chars.slice(0, remainingChars);
+    const remainingCleanText = charsToMeasure.join('');
+    
+    // Получаем ширины для всех символов с учетом стилей
+    const widths = getCharacterWidthsWithStyles(text, fontSize, font, letterSpacing, fontsMap);
+    
+    // Возвращаем ширину до позиции remainingChars
+    // widths[remainingChars] содержит накопленную ширину до этой позиции
+    if (remainingChars < widths.length) {
+      return widths[remainingChars];
+    }
+    
+    // Если выходим за границы, возвращаем последнее значение
+    return widths.length > 0 ? widths[widths.length - 1] : 0;
+  }
+  
+  // Иначе используем обычный расчет
   const chars = [...text];
   const charsToMeasure = chars.slice(0, remainingChars);
   const remainingText = charsToMeasure.join('');
