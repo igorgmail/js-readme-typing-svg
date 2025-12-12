@@ -2,11 +2,11 @@
  * Калькулятор параметров анимации для различных режимов работы
  */
 
-import { computeTextWidth, computeTextX, formatLetterSpacingForSVG } from '../utils/text-utils.js';
+import { computeTextWidth, computeTextWidthWithStyles, computeTextX, formatLetterSpacingForSVG } from '../utils/text-utils.js';
 import { getEraseMode } from '../effects/erase/index.js';
 import { isCursorAllowed, shouldHideCursorWhenFinished } from '../effects/cursor/index.js';
-import { stripStyleMarkers } from '../processors/style-segments-parser.js';
-import { getCharacterWidths } from '../fonts/font-metrics.js';
+import { stripStyleMarkers, hasStyleMarkers } from '../processors/style-segments-parser.js';
+import { getCharacterWidths, getCharacterWidthsWithStyles } from '../fonts/font-metrics.js';
 
 /**
  * Вычисляет стартовую позицию Y для вертикального выравнивания
@@ -46,8 +46,14 @@ function calculatePrintCursorPositions(config) {
   }
   
   // Получаем накопленные ширины для каждой позиции в тексте
-  const widths = getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
-  const chars = [...line];
+  // Используем версию с учетом стилей, если есть маркеры
+  const widths = hasStyleMarkers(line)
+    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing)
+    : getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
+  
+  // Для расчета времени используем чистый текст (без маркеров)
+  const cleanLine = stripStyleMarkers(line);
+  const chars = [...cleanLine];
   
   const keyTimes = [];
   const xPositions = [];
@@ -81,8 +87,14 @@ function calculateEraseCursorPositions(config) {
   }
   
   // Получаем накопленные ширины для каждой позиции в тексте
-  const widths = getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
-  const chars = [...line];
+  // Используем версию с учетом стилей, если есть маркеры
+  const widths = hasStyleMarkers(line)
+    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing)
+    : getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
+  
+  // Для расчета времени используем чистый текст (без маркеров)
+  const cleanLine = stripStyleMarkers(line);
+  const chars = [...cleanLine];
   
   const keyTimes = [];
   const xPositions = [];
@@ -449,14 +461,20 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
   return lines.map((line, index) => {
     if (!line) return null;
     
-    // Удаляем маркеры стилей для расчета ширины и длительности
-    // Оригинальная строка (с маркерами) будет использована при рендеринге
+    // Удаляем маркеры стилей для расчета длительности
+    // Оригинальная строка (с маркерами) будет использована при рендеринге и расчете ширины
     const cleanLine = stripStyleMarkers(line);
     
     // Вычисляем позицию строки
     const y = isReplacingMode ? startY : startY + index * fontSize * lineHeight;
-    const textWidth = computeTextWidth(cleanLine, fontSize, letterSpacing, fontFamily, parsedFont);
-    const startX = computeTextX(cleanLine, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont);
+    
+    // Вычисляем ширину текста с учетом стилей (если есть маркеры)
+    const textWidth = hasStyleMarkers(line)
+      ? computeTextWidthWithStyles(line, fontSize, letterSpacing, fontFamily, parsedFont)
+      : computeTextWidth(cleanLine, fontSize, letterSpacing, fontFamily, parsedFont);
+    
+    // Вычисляем позицию X с учетом стилей (computeTextX уже поддерживает стили)
+    const startX = computeTextX(line, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont);
     
     // Параметры анимации
     // printSpeed и eraseSpeed - символов в секунду, вычисляем миллисекунды на символ

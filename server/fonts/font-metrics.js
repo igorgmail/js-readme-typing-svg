@@ -4,6 +4,7 @@
  */
 
 import { parseLetterSpacing } from '../utils/text-utils.js';
+import { parseStyleSegments, hasStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
  * Регулярное выражение для определения emoji
@@ -102,6 +103,69 @@ export function computeTextWidthPrecise(text, fontSize, font, letterSpacing) {
   }
   
   return totalWidth;
+}
+
+/**
+ * Вычисляет массив накопленных ширин для каждой позиции в тексте с учетом сегментов стилей
+ * Используется для точного позиционирования курсора и анимации стирания
+ * 
+ * @param {string} text - текст для измерения (может содержать маркеры стилей)
+ * @param {number} defaultFontSize - размер шрифта по умолчанию
+ * @param {object|null} font - объект opentype.Font или null
+ * @param {string|number} letterSpacing - межбуквенный интервал
+ * @returns {Array<number>} массив накопленных ширин [0, width1, width1+width2, ...]
+ */
+export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letterSpacing) {
+  if (!text || text.length === 0) {
+    return [0];
+  }
+  
+  // Если нет маркеров стилей - используем обычный расчет
+  if (!hasStyleMarkers(text)) {
+    return getCharacterWidths(text, defaultFontSize, font, letterSpacing);
+  }
+  
+  // Парсим сегменты стилей
+  const segments = parseStyleSegments(text, '#000000');
+  const widths = [0]; // Начинаем с 0
+  let accumulated = 0;
+  
+  for (const segment of segments) {
+    // Определяем fontSize для сегмента
+    let segmentFontSize = defaultFontSize;
+    if (segment.styles?.fontSize) {
+      const fontSizeValue = segment.styles.fontSize;
+      // Поддерживаем разные форматы: число, строка с "px", просто число
+      const parsed = typeof fontSizeValue === 'number' 
+        ? fontSizeValue 
+        : parseFloat(String(fontSizeValue).replace(/px$/i, ''));
+      if (!isNaN(parsed) && parsed > 0) {
+        segmentFontSize = parsed;
+      }
+    }
+    
+    // Определяем letterSpacing для сегмента
+    const segmentLetterSpacing = segment.styles?.letterSpacing || letterSpacing;
+    const letterSpacingPx = parseLetterSpacing(segmentLetterSpacing, segmentFontSize);
+    
+    const chars = [...segment.text];
+    
+    for (let i = 0; i < chars.length; i++) {
+      const char = chars[i];
+      const charWidth = getCharWidth(char, segmentFontSize, font, 0);
+      
+      accumulated += charWidth;
+      
+      // Добавляем letterSpacing после каждого символа кроме последнего
+      if (i < chars.length - 1) {
+        accumulated += letterSpacingPx;
+      }
+      
+      widths.push(accumulated);
+    }
+  }
+  
+  return widths;
 }
 
 /**
