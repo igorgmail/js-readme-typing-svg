@@ -125,7 +125,6 @@ export async function getEmbeddedFontCSS(options) {
 
   try {
     const url = buildGoogleFontsUrl(fontFamily, fontWeight, lines);
-    console.log("▶ ⇛ url:", url);
 
     const response = await fetch(url, {
       headers: {
@@ -135,8 +134,6 @@ export async function getEmbeddedFontCSS(options) {
       },
     });
     
-    console.log("▶ ⇛ response:", response);
-
     if (!response.ok) {
       return { css: '', parsedFont: null };
     }
@@ -179,7 +176,6 @@ export async function getEmbeddedFontCSS(options) {
     if (firstFontBuffer) {
       try {
         parsedFont = opentype.parse(firstFontBuffer);
-        console.log(`✓ Font parsed successfully: ${fontFamily}, unitsPerEm: ${parsedFont.unitsPerEm}`);
       } catch (parseError) {
         console.warn(`Failed to parse font ${fontFamily}:`, parseError.message);
         // parsedFont остаётся null, будет использован fallback
@@ -191,4 +187,66 @@ export async function getEmbeddedFontCSS(options) {
     // На любой ошибке просто возвращаем пустые значения
     return { css: '', parsedFont: null };
   }
+}
+
+/**
+ * Загружает CSS для нескольких шрифтов и объединяет их в один CSS блок
+ * @param {Array<{fontFamily: string, fontWeight: string|number, lines: string[]}>} fonts - массив объектов с параметрами шрифтов
+ * @returns {Promise<string>} объединенный CSS для всех шрифтов
+ */
+export async function getMultipleEmbeddedFontsCSS(fonts) {
+  if (!Array.isArray(fonts) || fonts.length === 0) {
+    return '';
+  }
+  
+  // Убираем дубликаты шрифтов перед загрузкой
+  const uniqueFonts = [];
+  const seenFonts = new Set();
+  
+  for (const font of fonts) {
+    if (!font.fontFamily) continue;
+    
+    const normalized = normalizeFontFamilyForGoogle(font.fontFamily).toLowerCase();
+    if (normalized && !seenFonts.has(normalized)) {
+      seenFonts.add(normalized);
+      uniqueFonts.push(font);
+    }
+  }
+  
+  if (uniqueFonts.length === 0) {
+    return '';
+  }
+  
+  // Загружаем все шрифты параллельно
+  const cssPromises = uniqueFonts.map(font => getEmbeddedFontCSS(font));
+  const results = await Promise.all(cssPromises);
+  
+  // Объединяем все CSS
+  const allCSS = results.map(r => r.css).filter(Boolean).join('\n');
+  
+  // Удаляем дубликаты @font-face с одинаковыми font-family и font-weight
+  const fontFaceRegex = /@font-face\s*\{[^}]*\}/gs;
+  const fontFaces = new Map();
+  
+  const matches = allCSS.matchAll(fontFaceRegex);
+  for (const match of matches) {
+    const fontFace = match[0];
+    // Извлекаем font-family и font-weight из @font-face для уникальной идентификации
+    const familyMatch = fontFace.match(/font-family:\s*['"]?([^'";}]+)['"]?/i);
+    const weightMatch = fontFace.match(/font-weight:\s*([^;}+]+)/i);
+    
+    if (familyMatch) {
+      const family = familyMatch[1].trim().toLowerCase();
+      const weight = weightMatch ? weightMatch[1].trim() : 'normal';
+      const key = `${family}:${weight}`;
+      
+      // Сохраняем первый вариант (они все одинаковые после загрузки)
+      if (!fontFaces.has(key)) {
+        fontFaces.set(key, fontFace);
+      }
+    }
+  }
+  
+  // Объединяем уникальные @font-face
+  return Array.from(fontFaces.values()).join('\n');
 }

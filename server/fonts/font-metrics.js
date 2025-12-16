@@ -4,6 +4,7 @@
  */
 
 import { parseLetterSpacing } from '../utils/text-utils.js';
+import { parseStyleSegments, hasStyleMarkers, stripStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
  * Регулярное выражение для определения emoji
@@ -15,6 +16,12 @@ const EMOJI_REGEX = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u;
  * Основан на средней ширине символов в популярных пропорциональных шрифтах
  */
 const FALLBACK_CHAR_WIDTH_COEFFICIENT = 0.5;
+
+/**
+ * Fallback коэффициент для расчёта ascent (высоты над базовой линией)
+ * Основан на средних метриках популярных шрифтов (обычно ascent составляет ~0.8-0.9 от размера шрифта)
+ */
+const FALLBACK_ASCENT_COEFFICIENT = 0.85;
 
 /**
  * Получает ширину одного символа используя метрики шрифта
@@ -105,6 +112,100 @@ export function computeTextWidthPrecise(text, fontSize, font, letterSpacing) {
 }
 
 /**
+ * Вычисляет массив накопленных ширин для каждой позиции в тексте с учетом сегментов стилей
+ * Используется для точного позиционирования курсора и анимации стирания
+ * 
+ * @param {string} text - текст для измерения (может содержать маркеры стилей)
+ * @param {number} defaultFontSize - размер шрифта по умолчанию
+ * @param {object|null} font - объект opentype.Font или null
+ * @param {string|number} letterSpacing - межбуквенный интервал
+ * @returns {Array<number>} массив накопленных ширин [0, width1, width1+width2, ...]
+ */
+export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letterSpacing, fontsMap = null) {
+  if (!text || text.length === 0) {
+    return [0];
+  }
+  
+  // Если нет маркеров стилей - используем обычный расчет
+  if (!hasStyleMarkers(text)) {
+    return getCharacterWidths(text, defaultFontSize, font, letterSpacing);
+  }
+  
+  // Парсим сегменты стилей
+  const segments = parseStyleSegments(text, '#000000');
+  const widths = [0]; // Начинаем с 0
+  let accumulated = 0;
+  
+  // Используем letterSpacing по умолчанию для расчета между сегментами
+  const defaultLetterSpacingPx = parseLetterSpacing(letterSpacing, defaultFontSize);
+  
+  for (let segIndex = 0; segIndex < segments.length; segIndex++) {
+    const segment = segments[segIndex];
+    
+    // Определяем fontSize для сегмента
+    let segmentFontSize = defaultFontSize;
+    if (segment.styles?.fontSize) {
+      const fontSizeValue = segment.styles.fontSize;
+      // Поддерживаем разные форматы: число, строка с "px", просто число
+      const parsed = typeof fontSizeValue === 'number' 
+        ? fontSizeValue 
+        : parseFloat(String(fontSizeValue).replace(/px$/i, ''));
+      if (!isNaN(parsed) && parsed > 0) {
+        segmentFontSize = parsed;
+      }
+    }
+    
+    // Определяем letterSpacing для сегмента
+    const segmentLetterSpacing = segment.styles?.letterSpacing || letterSpacing;
+    const letterSpacingPx = parseLetterSpacing(segmentLetterSpacing, segmentFontSize);
+    
+    // Определяем font для сегмента (если указан fontFamily в стилях)
+    let segmentFont = font;
+    if (segment.styles?.fontFamily && fontsMap) {
+      const segmentFontFamily = segment.styles.fontFamily;
+      const normalizedSegmentFont = segmentFontFamily.split(',')[0].trim().replace(/["']/g, '').toLowerCase();
+      segmentFont = fontsMap.get(normalizedSegmentFont) || font;
+    }
+    
+    const chars = [...segment.text];
+    
+    for (let i = 0; i < chars.length; i++) {
+      const char = chars[i];
+      const charWidth = getCharWidth(char, segmentFontSize, segmentFont, 0);
+      
+      accumulated += charWidth;
+      
+      // Добавляем letterSpacing после каждого символа кроме последнего символа всего текста
+      const isLastCharOfAll = (segIndex === segments.length - 1) && (i === chars.length - 1);
+      if (!isLastCharOfAll) {
+        if (i < chars.length - 1) {
+          // Внутри сегмента используем letterSpacing сегмента
+          accumulated += letterSpacingPx;
+        }
+        // Между сегментами letterSpacing не добавляем, так как между ними может не быть символов
+        // Если между сегментами есть символы, они будут в следующем сегменте
+      }
+      
+      widths.push(accumulated);
+    }
+  }
+  
+  // Проверяем, что количество элементов соответствует количеству символов в cleanLine
+  // Это важно для правильного позиционирования курсора
+  const cleanLine = stripStyleMarkers(text);
+  const expectedLength = cleanLine.length + 1; // +1 для начальной позиции 0
+  
+  if (widths.length !== expectedLength) {
+    // Если длины не совпадают, это может быть из-за проблем с парсингом
+    // В этом случае используем fallback расчет
+    console.warn(`getCharacterWidthsWithStyles: длины не совпадают. Ожидалось ${expectedLength}, получено ${widths.length}. Используется fallback.`);
+    return getCharacterWidths(cleanLine, defaultFontSize, font, letterSpacing);
+  }
+  
+  return widths;
+}
+
+/**
  * Вычисляет массив накопленных ширин для каждой позиции в тексте
  * Используется для точного позиционирования курсора и анимации стирания
  * 
@@ -153,15 +254,67 @@ export function getCharacterWidths(text, fontSize, font, letterSpacing) {
  * @param {string|number} letterSpacing - межбуквенный интервал
  * @returns {number} ширина оставшегося текста
  */
-export function getRemainingTextWidth(text, remainingChars, fontSize, font, letterSpacing) {
+export function getRemainingTextWidth(text, remainingChars, fontSize, font, letterSpacing, fontsMap = null) {
   if (remainingChars <= 0) {
     return 0;
   }
   
+  // Если есть маркеры стилей и fontsMap, используем расчет с учетом стилей
+  if (hasStyleMarkers(text) && fontsMap) {
+    // Извлекаем cleanLine для работы с индексами символов
+    const cleanLine = stripStyleMarkers(text);
+    const chars = [...cleanLine];
+    
+    // Берем только первые remainingChars символов
+    const charsToMeasure = chars.slice(0, remainingChars);
+    const remainingCleanText = charsToMeasure.join('');
+    
+    // Получаем ширины для всех символов с учетом стилей
+    const widths = getCharacterWidthsWithStyles(text, fontSize, font, letterSpacing, fontsMap);
+    
+    // Возвращаем ширину до позиции remainingChars
+    // widths[remainingChars] содержит накопленную ширину до этой позиции
+    if (remainingChars < widths.length) {
+      return widths[remainingChars];
+    }
+    
+    // Если выходим за границы, возвращаем последнее значение
+    return widths.length > 0 ? widths[widths.length - 1] : 0;
+  }
+  
+  // Иначе используем обычный расчет
   const chars = [...text];
   const charsToMeasure = chars.slice(0, remainingChars);
   const remainingText = charsToMeasure.join('');
   
   return computeTextWidthPrecise(remainingText, fontSize, font, letterSpacing);
+}
+
+/**
+ * Получает ascent (высоту над базовой линией) шрифта в пикселях
+ * Используется для корректного позиционирования текста при verticalAlign=top
+ * 
+ * @param {number} fontSize - размер шрифта в пикселях
+ * @param {object|null} font - объект opentype.Font или null
+ * @returns {number} ascent в пикселях
+ */
+export function getFontAscent(fontSize, font) {
+  // Если шрифт загружен, используем реальные метрики из opentype.js
+  if (font && typeof font.ascender === 'number' && font.unitsPerEm) {
+    try {
+      // ascender - это высота над базовой линией в font units
+      // Конвертируем в пиксели: (ascender / unitsPerEm) * fontSize
+      const scale = fontSize / font.unitsPerEm;
+      const ascent = font.ascender * scale;
+      
+      return ascent;
+    } catch (error) {
+      // Если произошла ошибка, используем fallback
+      console.warn('Failed to get font ascent:', error.message);
+    }
+  }
+  
+  // Fallback: приближенный расчёт если шрифт не загружен
+  return fontSize * FALLBACK_ASCENT_COEFFICIENT;
 }
 

@@ -109,3 +109,43 @@ export function stripStyleMarkers(text) {
     return styledText;
   });
 }
+
+/**
+ * Извлекает все уникальные fontFamily из маркеров стилей в строках
+ * @param {Array<string>} lines - массив строк с маркерами стилей
+ * @returns {Set<string>} множество уникальных fontFamily
+ */
+export function extractFontFamiliesFromStyles(lines) {
+  const fontFamilies = new Set();
+  
+  if (!Array.isArray(lines)) {
+    return fontFamilies;
+  }
+  
+  const styleMarkerRegex = /\x00STYLE_START\x00(.*?)\x00(.*?)\x00STYLE_END\x00/g;
+  
+  for (const line of lines) {
+    if (!hasStyleMarkers(line)) {
+      continue;
+    }
+    
+    let match;
+    while ((match = styleMarkerRegex.exec(line)) !== null) {
+      try {
+        const stylesJson = match[1];
+        const styles = JSON.parse(stylesJson);
+        
+        if (styles.fontFamily && typeof styles.fontFamily === 'string') {
+          const trimmed = styles.fontFamily.trim();
+          if (trimmed) {
+            fontFamilies.add(trimmed);
+          }
+        }
+      } catch (error) {
+        // Игнорируем ошибки парсинга отдельных маркеров
+      }
+    }
+  }
+  
+  return fontFamilies;
+}

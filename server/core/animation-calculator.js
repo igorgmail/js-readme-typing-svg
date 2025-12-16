@@ -2,26 +2,40 @@
  * Калькулятор параметров анимации для различных режимов работы
  */
 
-import { computeTextWidth, computeTextX, formatLetterSpacingForSVG } from '../utils/text-utils.js';
+import { computeTextWidth, computeTextWidthWithStyles, computeTextX, formatLetterSpacingForSVG } from '../utils/text-utils.js';
 import { getEraseMode } from '../effects/erase/index.js';
 import { isCursorAllowed, shouldHideCursorWhenFinished } from '../effects/cursor/index.js';
-import { stripStyleMarkers } from '../processors/style-segments-parser.js';
-import { getCharacterWidths } from '../fonts/font-metrics.js';
+import { stripStyleMarkers, hasStyleMarkers } from '../processors/style-segments-parser.js';
+import { getCharacterWidths, getCharacterWidthsWithStyles, getFontAscent } from '../fonts/font-metrics.js';
 
 /**
  * Вычисляет стартовую позицию Y для вертикального выравнивания
  * @param {Object} config - конфигурация
+ * @param {string} config.verticalAlign - вертикальное выравнивание (top, middle, bottom)
+ * @param {number} config.height - высота SVG
+ * @param {number} config.paddingY - вертикальный отступ
+ * @param {number} config.fontSize - размер шрифта
+ * @param {number} config.lineHeight - межстрочный интервал
+ * @param {boolean} config.multiLine - многострочный режим
+ * @param {number} config.linesCount - количество строк
+ * @param {object|null} config.parsedFont - объект opentype.Font или null
  * @returns {number} стартовая позиция Y
  */
 export function calculateStartY(config) {
-  const { verticalAlign, height, paddingY, fontSize, lineHeight, multiLine, linesCount } = config;
+  const { verticalAlign, height, paddingY, fontSize, lineHeight, multiLine, linesCount, parsedFont } = config;
   
   const totalTextHeight = multiLine 
     ? linesCount * fontSize * lineHeight 
     : fontSize;
   
   let startY = paddingY;
-  if (verticalAlign === 'middle') {
+  
+  if (verticalAlign === 'top') {
+    // Для top выравнивания нужно учесть ascent шрифта, чтобы верхняя часть текста не обрезалась
+    // В SVG координата Y для текста - это базовая линия (baseline), поэтому нужно добавить ascent
+    const fontAscent = getFontAscent(fontSize, parsedFont);
+    startY = paddingY + fontAscent;
+  } else if (verticalAlign === 'middle') {
     startY = (height - totalTextHeight) / 2 + fontSize;
   } else if (verticalAlign === 'bottom') {
     startY = height - totalTextHeight + fontSize / 2;
@@ -36,7 +50,7 @@ export function calculateStartY(config) {
  * @returns {Object} объект с массивами keyTimes и xPositions
  */
 function calculatePrintCursorPositions(config) {
-  const { line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont } = config;
+  const { line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont, fontsMap } = config;
   
   if (!line || line.length === 0) {
     return {
@@ -45,9 +59,26 @@ function calculatePrintCursorPositions(config) {
     };
   }
   
+  // Для расчета времени используем чистый текст (без маркеров)
+  const cleanLine = stripStyleMarkers(line);
+  const chars = [...cleanLine];
+  
   // Получаем накопленные ширины для каждой позиции в тексте
-  const widths = getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
-  const chars = [...line];
+  // Используем версию с учетом стилей, если есть маркеры
+  const widths = hasStyleMarkers(line)
+    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing, fontsMap)
+    : getCharacterWidths(cleanLine, fontSize, parsedFont, letterSpacing);
+  
+  // Проверяем, что массив widths имеет правильную длину
+  const expectedLength = chars.length + 1; // +1 для начальной позиции 0
+  if (widths.length !== expectedLength) {
+    console.warn(`calculatePrintCursorPositions: длины не совпадают. Ожидалось ${expectedLength}, получено ${widths.length}. Строка: "${cleanLine.substring(0, 50)}"`);
+    // Используем последнее значение ширины для всех недостающих позиций
+    const lastWidth = widths.length > 0 ? widths[widths.length - 1] : 0;
+    while (widths.length < expectedLength) {
+      widths.push(lastWidth);
+    }
+  }
   
   const keyTimes = [];
   const xPositions = [];
@@ -56,7 +87,9 @@ function calculatePrintCursorPositions(config) {
   for (let i = 0; i <= chars.length; i++) {
     const progress = chars.length > 0 ? i / chars.length : 0;
     const time = printStart + (printEnd - printStart) * progress;
-    const x = startX + widths[i];
+    // Используем последнее значение, если выходим за границы массива
+    const width = i < widths.length ? widths[i] : (widths.length > 0 ? widths[widths.length - 1] : 0);
+    const x = startX + width;
     
     keyTimes.push(time);
     xPositions.push(x);
@@ -71,7 +104,7 @@ function calculatePrintCursorPositions(config) {
  * @returns {Object} объект с массивами keyTimes и xPositions
  */
 function calculateEraseCursorPositions(config) {
-  const { line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont } = config;
+  const { line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont, fontsMap } = config;
   
   if (!line || line.length === 0) {
     return {
@@ -80,9 +113,26 @@ function calculateEraseCursorPositions(config) {
     };
   }
   
+  // Для расчета времени используем чистый текст (без маркеров)
+  const cleanLine = stripStyleMarkers(line);
+  const chars = [...cleanLine];
+  
   // Получаем накопленные ширины для каждой позиции в тексте
-  const widths = getCharacterWidths(line, fontSize, parsedFont, letterSpacing);
-  const chars = [...line];
+  // Используем версию с учетом стилей, если есть маркеры
+  const widths = hasStyleMarkers(line)
+    ? getCharacterWidthsWithStyles(line, fontSize, parsedFont, letterSpacing, fontsMap)
+    : getCharacterWidths(cleanLine, fontSize, parsedFont, letterSpacing);
+  
+  // Проверяем, что массив widths имеет правильную длину
+  const expectedLength = chars.length + 1; // +1 для начальной позиции 0
+  if (widths.length !== expectedLength) {
+    console.warn(`calculateEraseCursorPositions: длины не совпадают. Ожидалось ${expectedLength}, получено ${widths.length}. Строка: "${cleanLine.substring(0, 50)}"`);
+    // Используем последнее значение ширины для всех недостающих позиций
+    const lastWidth = widths.length > 0 ? widths[widths.length - 1] : 0;
+    while (widths.length < expectedLength) {
+      widths.push(lastWidth);
+    }
+  }
   
   const keyTimes = [];
   const xPositions = [];
@@ -91,7 +141,9 @@ function calculateEraseCursorPositions(config) {
   for (let i = chars.length; i >= 0; i--) {
     const progress = chars.length > 0 ? (chars.length - i) / chars.length : 0;
     const time = eraseStart + (eraseEnd - eraseStart) * progress;
-    const x = startX + widths[i];
+    // Используем последнее значение, если выходим за границы массива
+    const width = i < widths.length ? widths[i] : (widths.length > 0 ? widths[widths.length - 1] : 0);
+    const x = startX + width;
     
     keyTimes.push(time);
     xPositions.push(x);
@@ -109,7 +161,7 @@ function calculateReplacingModeLineAnimation(config) {
   const {
     line, index, lastLineIndex, startX, y, textWidth,
     printDuration, eraseDuration, delayBetweenLines,
-    repeat, eraseMode, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+    repeat, eraseMode, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap
   } = config;
   
   const isLastLine = index === lastLineIndex;
@@ -125,7 +177,7 @@ function calculateReplacingModeLineAnimation(config) {
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayBetweenLines,
-      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap
     };
     
     const eraseResult = eraseModeInstance.calculateReplacingMode(eraseConfig);
@@ -193,7 +245,7 @@ function calculateMultiLineModeLineAnimation(config) {
   const {
     line, index, lines, startX, y, textWidth,
     printDuration, eraseSpeed, delayBetweenLines,
-    repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont, printSpeed
+    repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont, printSpeed, fontsMap
   } = config;
   
   // Очищаем все строки от маркеров стилей для корректного расчета длительности
@@ -240,7 +292,7 @@ function calculateMultiLineModeLineAnimation(config) {
         eraseStartTime += delayBetweenLines;
       }
       
-      const thisEraseDuration = line.length * msPerCharErase;
+      const thisEraseDuration = cleanLines[index].length * msPerCharErase;
       const totalEraseDuration = cleanLines.reduce((sum, l) => sum + l.length * msPerCharErase, 0);
       // Паузы: перед началом стирания + между строками при стирании
       const totalErasePauses = cleanLines.length * delayBetweenLines;
@@ -259,14 +311,14 @@ function calculateMultiLineModeLineAnimation(config) {
       
       // Рассчитываем детальные позиции курсора для печати
       const printCursorData = calculatePrintCursorPositions({
-        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont, fontsMap
       });
       cursorPrintKeyTimes = printCursorData.keyTimes;
       cursorPrintXPositions = printCursorData.xPositions;
       
       // Рассчитываем детальные позиции курсора для стирания
       const eraseCursorData = calculateEraseCursorPositions({
-        line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont
+        line, startX, eraseStart, eraseEnd, fontSize, letterSpacing, parsedFont, fontsMap
       });
       cursorEraseKeyTimes = eraseCursorData.keyTimes;
       cursorEraseXPositions = eraseCursorData.xPositions;
@@ -287,7 +339,7 @@ function calculateMultiLineModeLineAnimation(config) {
       
       // Рассчитываем детальные позиции курсора для печати (для других режимов стирания курсор движется только при печати)
       const printCursorData = calculatePrintCursorPositions({
-        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+        line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont, fontsMap
       });
       cursorPrintKeyTimes = printCursorData.keyTimes;
       cursorPrintXPositions = printCursorData.xPositions;
@@ -295,7 +347,7 @@ function calculateMultiLineModeLineAnimation(config) {
     
     const eraseConfig = {
       startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd,
-      line, fontSize, letterSpacing, eraseSpeed, totalDuration, fontFamily, parsedFont
+      line, fontSize, letterSpacing, eraseSpeed, totalDuration, fontFamily, parsedFont, fontsMap
     };
     
     const eraseResult = eraseModeInstance.calculateMultiLineMode(eraseConfig);
@@ -333,7 +385,7 @@ function calculateMultiLineModeLineAnimation(config) {
     
     // Рассчитываем детальные позиции курсора для печати
     const printCursorData = calculatePrintCursorPositions({
-      line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont
+      line, startX, printStart, printEnd, fontSize, letterSpacing, parsedFont, fontsMap
     });
     cursorPrintKeyTimes = printCursorData.keyTimes;
     cursorPrintXPositions = printCursorData.xPositions;
@@ -372,7 +424,7 @@ function calculateSingleLineModeAnimation(config) {
   const {
     startX, y, textWidth, printDuration, eraseDuration,
     delayBetweenLines, repeat, eraseMode,
-    line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+    line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap
   } = config;
   
   const eraseModeInstance = getEraseMode(eraseMode);
@@ -386,7 +438,7 @@ function calculateSingleLineModeAnimation(config) {
     
     const eraseConfig = {
       startX, y, textWidth, printDuration, delayBetweenLines,
-      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap
     };
     
     const eraseResult = eraseModeInstance.calculateSingleLineMode(eraseConfig);
@@ -429,7 +481,7 @@ function calculateSingleLineModeAnimation(config) {
  * @param {object|null} parsedFont - объект opentype.Font или null
  * @returns {Array<Object>} массив параметров анимации для каждой строки
  */
-export function calculateLinesAnimation(params, lines, startY, parsedFont = null) {
+export function calculateLinesAnimation(params, lines, startY, parsedFont = null, fontsMap = null) {
   const {
     multiLine, repeat, eraseMode,
     printSpeed, eraseSpeed, delayBetweenLines,
@@ -449,14 +501,20 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
   return lines.map((line, index) => {
     if (!line) return null;
     
-    // Удаляем маркеры стилей для расчета ширины и длительности
-    // Оригинальная строка (с маркерами) будет использована при рендеринге
+    // Удаляем маркеры стилей для расчета длительности
+    // Оригинальная строка (с маркерами) будет использована при рендеринге и расчете ширины
     const cleanLine = stripStyleMarkers(line);
     
     // Вычисляем позицию строки
     const y = isReplacingMode ? startY : startY + index * fontSize * lineHeight;
-    const textWidth = computeTextWidth(cleanLine, fontSize, letterSpacing, fontFamily, parsedFont);
-    const startX = computeTextX(cleanLine, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont);
+    
+    // Вычисляем ширину текста с учетом стилей (если есть маркеры)
+    const textWidth = hasStyleMarkers(line)
+      ? computeTextWidthWithStyles(line, fontSize, letterSpacing, fontFamily, parsedFont, fontsMap)
+      : computeTextWidth(cleanLine, fontSize, letterSpacing, fontFamily, parsedFont);
+    
+    // Вычисляем позицию X с учетом стилей (computeTextX уже поддерживает стили)
+    const startX = computeTextX(line, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont, fontsMap);
     
     // Параметры анимации
     // printSpeed и eraseSpeed - символов в секунду, вычисляем миллисекунды на символ
@@ -473,21 +531,21 @@ export function calculateLinesAnimation(params, lines, startY, parsedFont = null
     // Выбираем режим вычисления в зависимости от типа анимации
     if (isReplacingMode) {
       animationParams = calculateReplacingModeLineAnimation({
-        line: cleanLine, index, lastLineIndex, startX, y, textWidth,
+        line, index, lastLineIndex, startX, y, textWidth,
         printDuration, eraseDuration, delayBetweenLines,
-        repeat, eraseMode, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+        repeat, eraseMode, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap
       });
     } else if (multiLine) {
       animationParams = calculateMultiLineModeLineAnimation({
-        line: cleanLine, index, lines, startX, y, textWidth,
+        line, index, lines, startX, y, textWidth,
         printDuration, eraseSpeed, delayBetweenLines,
-        repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont, printSpeed
+        repeat, eraseMode, fontSize, letterSpacing, fontFamily, parsedFont, printSpeed, fontsMap
       });
     } else {
       animationParams = calculateSingleLineModeAnimation({
         startX, y, textWidth, printDuration, eraseDuration,
         delayBetweenLines, repeat, eraseMode,
-        line: cleanLine, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+        line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap
       });
     }
 

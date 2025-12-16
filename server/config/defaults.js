@@ -19,15 +19,14 @@ export const DEFAULT_PARAMS = {
   fontSize: 16,
   fontWeight: 400,
   fontFamily: 'Roboto',
-  lineHeight: 1.35,
   letterSpacing: 0,
 
   width: 800,
   height: 200,
 
   // printSpeed и eraseSpeed - количество символов в секунду (characters per second)
-  printSpeed: 10,
-  eraseSpeed: 10,
+  printSpeed: 30,
+  eraseSpeed: 30,
 
   delayBetweenLines: 800,
 
@@ -35,15 +34,14 @@ export const DEFAULT_PARAMS = {
   verticalAlign: 'top',
   horizontalAlign: 'left',
 
-  paddingX: 16,
-  paddingY: 20,
-
   multiLine: false,
   eraseMode: 'line', // none | line | fade
   cursorStyle: 'none', // none | straight | underlined | block
 
-  //typingMode: 'default', // default | expand
-  // showCaret: true
+  // Отсутствуют в генераторе, но можно передать в URL
+  paddingX: 16,
+  paddingY: 20,
+  lineHeight: 1.35,
 };
 
 /**

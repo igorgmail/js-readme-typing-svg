@@ -47,7 +47,7 @@ function generateOpacityAnimation(config) {
 }
 
 /**
- * Генерирует контент для textPath - либо простой текст, либо tspan элементы с разными цветами
+ * Генерирует контент для textPath - либо простой текст, либо tspan элементы с разными стилями
  * @param {string} line - текст строки
  * @param {string} defaultColor - цвет по умолчанию
  * @returns {string} содержимое для textPath
@@ -61,22 +61,58 @@ function generateTextPathContent(line, defaultColor) {
   // Парсим строку на сегменты с разными стилями
   const segments = parseStyleSegments(line, defaultColor);
   
-  // Если только один сегмент - возвращаем как обычно
-  if (segments.length === 1) {
-    return escapeXml(segments[0].text);
-  }
-  
-  // Генерируем tspan для каждого сегмента
+  // Генерируем tspan для каждого сегмента с применением всех стилей
   return segments.map(segment => {
     const escapedText = escapeXml(segment.text);
+    const styles = segment.styles || {};
+    const attributes = [];
     
-    // Если цвет сегмента совпадает с дефолтным, не добавляем атрибут fill
-    if (segment.color === defaultColor) {
+    // Цвет текста (fill)
+    if (segment.color && segment.color !== defaultColor) {
+      attributes.push(`fill="${segment.color}"`);
+    }
+    
+    // Font Weight
+    if (styles.fontWeight) {
+      attributes.push(`font-weight="${styles.fontWeight}"`);
+    }
+    
+    // Font Size
+    if (styles.fontSize) {
+      attributes.push(`font-size="${styles.fontSize}"`);
+    }
+    
+    // Font Family
+    if (styles.fontFamily) {
+      const sanitizedFont = validateAndSanitizeFontFamily(styles.fontFamily);
+      attributes.push(`font-family="${sanitizedFont}"`);
+    }
+    
+    // Opacity
+    if (styles.opacity) {
+      attributes.push(`opacity="${styles.opacity}"`);
+    }
+    
+    // Font Style (italic)
+    if (styles.italic) {
+      attributes.push(`font-style="italic"`);
+    }
+    
+    // Text Decoration (underline, strikethrough)
+    const decorations = [];
+    if (styles.underline) decorations.push('underline');
+    if (styles.strikethrough) decorations.push('line-through');
+    if (decorations.length > 0) {
+      attributes.push(`text-decoration="${decorations.join(' ')}"`);
+    }
+    
+    // Если нет атрибутов - возвращаем просто текст
+    if (attributes.length === 0) {
       return escapedText;
     }
     
-    // Иначе оборачиваем в tspan с нужным цветом
-    return `<tspan fill="${segment.color}">${escapedText}</tspan>`;
+    // Оборачиваем в tspan со всеми стилями
+    return `<tspan ${attributes.join(' ')}>${escapedText}</tspan>`;
   }).join('');
 }
 

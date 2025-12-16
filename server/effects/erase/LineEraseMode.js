@@ -3,6 +3,7 @@
  */
 import { EraseMode } from './EraseMode.js';
 import { getRemainingTextWidth } from '../../fonts/font-metrics.js';
+import { stripStyleMarkers } from '../../processors/style-segments-parser.js';
 
 /**
  * Вычисляет временные метки для эффекта стирания
@@ -21,10 +22,12 @@ function computeEraseTimes(printDuration, delayBetweenLines, eraseDuration, tota
 function generateCharByCharErase(config) {
   const {
     startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed,
-    eraseStart, eraseEnd, totalDuration, fontFamily, parsedFont
+    eraseStart, eraseEnd, totalDuration, fontFamily, parsedFont, fontsMap
   } = config;
   
-  const chars = [...line];
+  // Используем cleanLine для подсчета реальных символов (без маркеров стилей)
+  const cleanLine = stripStyleMarkers(line);
+  const chars = [...cleanLine];
   const charCount = chars.length;
   
   // Если строка пустая, возвращаем простую анимацию
@@ -62,8 +65,8 @@ function generateCharByCharErase(config) {
   // Генерируем промежуточные точки для каждого символа (стираем справа налево)
   // Начинаем с charCount - 1, чтобы не дублировать точку начала стирания
   for (let i = charCount - 1; i >= 0; i--) {
-    // Вычисляем оставшуюся ширину используя точные метрики из шрифта
-    const remainingWidth = getRemainingTextWidth(line, i, fontSize, parsedFont, letterSpacing);
+    // Вычисляем оставшуюся ширину используя точные метрики из шрифта с учетом стилей
+    const remainingWidth = getRemainingTextWidth(line, i, fontSize, parsedFont, letterSpacing, fontsMap);
     
     const charIndex = charCount - i;
     const timeProgress = charIndex / charCount;
@@ -89,7 +92,7 @@ export class LineEraseMode extends EraseMode {
   calculateReplacingMode(config) {
     const {
       startX, y, textWidth, printDuration, delayBetweenLines,
-      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont
+      eraseDuration, totalDuration, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap
     } = config;
     
     const printEnd = printDuration / totalDuration;
@@ -97,7 +100,7 @@ export class LineEraseMode extends EraseMode {
     
     // Генерируем посимвольное стирание
     const eraseAnimation = generateCharByCharErase({
-      startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont,
+      startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap,
       eraseStart: eraseTimes.start, eraseEnd: eraseTimes.end, totalDuration, printEnd
     });
     
@@ -113,12 +116,12 @@ export class LineEraseMode extends EraseMode {
   calculateMultiLineMode(config) {
     const {
       startX, y, textWidth, printStart, printEnd, eraseStart, eraseEnd,
-      line, fontSize, letterSpacing, eraseSpeed, totalDuration, fontFamily, parsedFont
+      line, fontSize, letterSpacing, eraseSpeed, totalDuration, fontFamily, parsedFont, fontsMap
     } = config;
     
     // Генерируем посимвольное стирание
     const eraseAnimation = generateCharByCharErase({
-      startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont,
+      startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap,
       eraseStart, eraseEnd, totalDuration, printStart, printEnd
     });
     
@@ -134,7 +137,7 @@ export class LineEraseMode extends EraseMode {
   calculateSingleLineMode(config) {
     const {
       startX, y, textWidth, printDuration, totalDuration,
-      line, fontSize, letterSpacing, eraseSpeed, eraseDuration, delayBetweenLines, fontFamily, parsedFont
+      line, fontSize, letterSpacing, eraseSpeed, eraseDuration, delayBetweenLines, fontFamily, parsedFont, fontsMap
     } = config;
     
     const printEnd = printDuration / totalDuration;
@@ -143,7 +146,7 @@ export class LineEraseMode extends EraseMode {
     
     // Генерируем посимвольное стирание
     const eraseAnimation = generateCharByCharErase({
-      startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont,
+      startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap,
       eraseStart, eraseEnd, totalDuration, printEnd
     });
     
