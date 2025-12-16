@@ -12,7 +12,7 @@
   [![ES6 Modules](https://img.shields.io/badge/ES6-Modules-blue.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
   ![Made with Love](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red.svg)
 
-**[Русская версия / Russian](/docs/README_RU.md/)**
+**[Русская версия / Readme-RU](/docs/README_RU.md/)**
 </div>
 
 

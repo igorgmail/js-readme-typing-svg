@@ -1,50 +1,50 @@
-# 📅 Работа с переменными
+# 📅 Working with Variables
 
-Переменные позволяют вставлять динамический контент в текст SVG-анимации.
+Variables allow you to insert dynamic content into SVG animation text.
 
-## Синтаксис
+## Syntax
 
 ```
 $VARIABLE_NAME{param1: value1, param2: value2}
 ```
 
-Параметры указываются в фигурных скобках через запятую.
+Parameters are specified in curly braces, separated by commas.
 
-## $DATE — Текущая дата и время
+## $DATE — Current Date and Time
 
-Использует нативный `Intl.DateTimeFormat` для форматирования.
+Uses native `Intl.DateTimeFormat` for formatting.
 
-👉 **[Подробнее на MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)**
+👉 **[Read more on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)**
 
-### Основные параметры
+### Main Parameters
 
-| Параметр | Значения | Описание |
+| Parameter | Values | Description |
 |----------|----------|----------|
-| `locale` | `en`, `ru`, `de`, и т.д. | Язык форматирования |
-| `dateStyle` | `full`, `long`, `medium`, `short` | Стиль даты |
-| `timeStyle` | `full`, `long`, `medium`, `short` | Стиль времени |
+| `locale` | `en`, `ru`, `de`, etc. | Formatting language |
+| `dateStyle` | `full`, `long`, `medium`, `short` | Date style |
+| `timeStyle` | `full`, `long`, `medium`, `short` | Time style |
 
-### Компоненты даты
+### Date Components
 
-| Параметр | Значения | Пример |
+| Parameter | Values | Example |
 |----------|----------|--------|
 | `weekday` | `long`, `short`, `narrow` | `Monday`, `Mon`, `M` |
 | `year` | `numeric`, `2-digit` | `2024`, `24` |
 | `month` | `long`, `short`, `narrow`, `numeric`, `2-digit` | `December`, `Dec`, `D`, `12`, `12` |
 | `day` | `numeric`, `2-digit` | `10`, `10` |
 
-### Компоненты времени
+### Time Components
 
-| Параметр | Значения | Пример |
+| Parameter | Values | Example |
 |----------|----------|--------|
 | `hour` | `numeric`, `2-digit` | `14`, `14` |
 | `minute` | `numeric`, `2-digit` | `5`, `05` |
 | `second` | `numeric`, `2-digit` | `3`, `03` |
-| `hour12` | `true`, `false` | Формат 12/24 часа |
+| `hour12` | `true`, `false` | 12/24 hour format |
 
-## Примеры $DATE
+## $DATE Examples
 
-### Полная дата
+### Full Date
 
 ```
 $DATE{dateStyle: full, locale: en}
@@ -54,7 +54,7 @@ $DATE{dateStyle: full, locale: ru}
 → "понедельник, 10 декабря 2024 г."
 ```
 
-### Короткая дата
+### Short Date
 
 ```
 $DATE{dateStyle: short}
@@ -64,7 +64,7 @@ $DATE{dateStyle: medium}
 → "Dec 10, 2024"
 ```
 
-### Компоненты даты
+### Date Components
 
 ```
 $DATE{weekday: long, month: long, day: numeric}
@@ -74,7 +74,7 @@ $DATE{year: numeric, month: short, day: numeric}
 → "2024, Dec 10"
 ```
 
-### Дата и время
+### Date and Time
 
 ```
 $DATE{dateStyle: medium, timeStyle: short}
@@ -84,7 +84,7 @@ $DATE{dateStyle: short, timeStyle: medium}
 → "12/10/24, 2:30:45 PM"
 ```
 
-### Только время
+### Time Only
 
 ```
 $DATE{timeStyle: short}
@@ -94,24 +94,24 @@ $DATE{hour: numeric, minute: 2-digit, second: 2-digit, hour12: false}
 → "14:30:05"
 ```
 
-## $RELDATE — Относительное время
+## $RELDATE — Relative Time
 
-Использует нативный `Intl.RelativeTimeFormat`.
+Uses native `Intl.RelativeTimeFormat`.
 
-👉 **[Подробнее на MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)**
+👉 **[Read more on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat)**
 
-### Параметры
+### Parameters
 
-| Параметр | Описание | Обязательный |
+| Parameter | Description | Required |
 |----------|----------|--------------|
-| `value` | Числовое значение (положительное = будущее, отрицательное = прошлое) | ✅ Да |
-| `unit` | Единица времени: `year`, `month`, `week`, `day`, `hour`, `minute`, `second` | ✅ Да |
-| `locale` | Язык форматирования (по умолчанию `en`) | ❌ Нет |
-| `style` | Стиль: `long`, `short`, `narrow` (по умолчанию `long`) | ❌ Нет |
+| `value` | Numeric value (positive = future, negative = past) | ✅ Yes |
+| `unit` | Time unit: `year`, `month`, `week`, `day`, `hour`, `minute`, `second` | ✅ Yes |
+| `locale` | Formatting language (default: `en`) | ❌ No |
+| `style` | Style: `long`, `short`, `narrow` (default: `long`) | ❌ No |
 
-## Примеры $RELDATE
+## $RELDATE Examples
 
-### Прошлое время
+### Past Time
 
 ```
 $RELDATE{value: -1, unit: day}
@@ -127,7 +127,7 @@ $RELDATE{value: -1, unit: year}
 → "last year"
 ```
 
-### Будущее время
+### Future Time
 
 ```
 $RELDATE{value: 1, unit: day}
@@ -143,7 +143,7 @@ $RELDATE{value: 2, unit: month}
 → "in 2 months"
 ```
 
-### С разными локалями
+### With Different Locales
 
 ```
 $RELDATE{value: -3, unit: hour, locale: ru}
@@ -156,7 +156,7 @@ $RELDATE{value: -5, unit: day, locale: fr}
 → "il y a 5 jours"
 ```
 
-### Стили форматирования
+### Formatting Styles
 
 ```
 $RELDATE{value: -7, unit: day, style: long}
@@ -169,39 +169,39 @@ $RELDATE{value: -7, unit: day, style: narrow}
 → "7d ago"
 ```
 
-## Использование в URL
+## URL Usage
 
-При использовании в URL параметрах, обязательно кодируйте специальные символы:
+When using in URL parameters, make sure to encode special characters:
 
-### Пример для $DATE
+### Example for $DATE
 
 ```
-Обычный текст:
+Plain text:
 $DATE{dateStyle: full, locale: en}
 
-URL-кодированный:
+URL-encoded:
 $DATE%7BdateStyle%3A%20full%2C%20locale%3A%20en%7D
 
-Или с + вместо пробелов:
+Or with + instead of spaces:
 $DATE{dateStyle:+full,+locale:+en}
 ```
 
-### Пример для $RELDATE
+### Example for $RELDATE
 
 ```
-Обычный текст:
+Plain text:
 $RELDATE{value: -3, unit: hour}
 
-URL-кодированный:
+URL-encoded:
 $RELDATE%7Bvalue%3A%20-3%2C%20unit%3A%20hour%7D
 
-Или с + вместо пробелов:
+Or with + instead of spaces:
 $RELDATE{value:+-3,+unit:+hour}
 ```
 
-## Практические примеры
+## Practical Examples
 
-### Последнее обновление профиля
+### Profile Last Update
 
 ```markdown
 ![Last Update](https://js-readme-typing-svg.vercel.app/svg?lines=Last+updated:+$DATE{dateStyle:+medium}&fontSize=16&color=666666&height=80&repeat=true)
@@ -211,14 +211,14 @@ $RELDATE{value:+-3,+unit:+hour}
 
 
 
-### Стаж разработки
+### Coding Experience
 
 ```markdown
 ![Experience](https://js-readme-typing-svg.vercel.app/svg?lines=Coding+since+$RELDATE{value:+-1095,+unit:+day}&fontSize=20&height=80&repeat=true)
 ```
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=Coding+since+$RELDATE{value:+-1095,+unit:+day}&fontSize=20&height=80&repeat=true" alt="Typing SVG" />
 
-### Приветствие с датой
+### Greeting with Date
 
 ```markdown
 ![Greeting](https://js-readme-typing-svg.vercel.app/svg?lines=Today+is+$DATE{weekday:+long};Have+a+great+day!&multiLine=true&center=true&height=80&repeat=true)
@@ -226,144 +226,144 @@ $RELDATE{value:+-3,+unit:+hour}
 
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=Today+is+$DATE{weekday:+long};Have+a+great+day!&multiLine=true&center=true&height=80&repeat=true" alt="Typing SVG" />
 
-### Статус проекта
+### Project Status
 
 ```markdown
 ![Project Status](https://js-readme-typing-svg.vercel.app/svg?lines=Project+started+$RELDATE{value:+-180,+unit:+day};Active+development&multiLine=true&height=80&repeat=true)
 ```
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=Project+started+$RELDATE{value:+-180,+unit:+day};Active+development&multiLine=true&height=80&repeat=true" alt="Typing SVG" />
 
-## $STYLE — Стилизация текста
+## $STYLE — Text Styling
 
-Позволяет применять различные стили к части текста внутри строки.
+Allows you to apply various styles to a portion of text within a line.
 
-### Параметры
+### Parameters
 
-| Параметр | Описание | Пример значения | Обязательный |
+| Parameter | Description | Example Value | Required |
 |----------|----------|-----------------|--------------|
-| `text` | Текст для стилизации | `"Hello"` | ✅ Да |
-| `color` | Цвет текста | `#FF0000`, `FF0000` | ❌ Нет |
-| `fontWeight` или `weight` | Толщина шрифта | `bold`, `400`, `700` | ❌ Нет |
-| `fontSize` или `size` | Размер шрифта | `20`, `24px` | ❌ Нет |
-| `fontFamily` или `font` | Семейство шрифта | `"Arial"`, `"Roboto"` | ❌ Нет |
-| `opacity` | Прозрачность | `0.5`, `0.8` | ❌ Нет |
-| `italic` | Курсив | `true`, `false` | ❌ Нет |
-| `underline` | Подчеркивание | `true`, `false` | ❌ Нет |
-| `strikethrough` | Зачеркивание | `true`, `false` | ❌ Нет |
+| `text` | Text to style | `"Hello"` | ✅ Yes |
+| `color` | Text color | `#FF0000`, `FF0000` | ❌ No |
+| `fontWeight` or `weight` | Font weight | `bold`, `400`, `700` | ❌ No |
+| `fontSize` or `size` | Font size | `20`, `24px` | ❌ No |
+| `fontFamily` or `font` | Font family | `"Arial"`, `"Roboto"` | ❌ No |
+| `opacity` | Opacity | `0.5`, `0.8` | ❌ No |
+| `italic` | Italic style | `true`, `false` | ❌ No |
+| `underline` | Underline | `true`, `false` | ❌ No |
+| `strikethrough` | Strikethrough | `true`, `false` | ❌ No |
 
-### Примеры $STYLE
+### $STYLE Examples
 
-#### Изменение цвета
+#### Color Change
 
 ```
 Normal text $STYLE{text: 'red text', color: #FF0000} back to normal
 ```
 
-#### Жирный шрифт
+#### Bold Font
 
 ```
 $STYLE{text: 'Important!', fontWeight: bold, color: #FF5722}
 ```
 
-#### Курсив с прозрачностью
+#### Italic with Opacity
 
 ```
 $STYLE{text: 'subtle text', italic: true, opacity: 0.7}
 ```
 
-#### Подчеркнутый текст
+#### Underlined Text
 
 ```
 $STYLE{text: 'underlined', underline: true, color: #2196F3}
 ```
 
-#### Зачеркнутый текст
+#### Strikethrough Text
 
 ```
 $STYLE{text: 'deprecated', strikethrough: true, color: #999999}
 ```
 
-#### Другой размер шрифта
+#### Different Font Size
 
 ```
 Normal text $STYLE{text: 'BIG', fontSize: 32} and small again
 ```
 
-#### Другой шрифт
+#### Different Font
 
 ```
 $STYLE{text: 'Monospace', fontFamily: 'Courier New', color: #4CAF50}
 ```
 
-#### Комбинация стилей
+#### Combined Styles
 
 ```
 $STYLE{text: 'STYLED', color: #9C27B0, fontWeight: bold, italic: true, fontSize: 28}
 ```
 
-### Использование $STYLE в URL
+### Using $STYLE in URLs
 
-При использовании в URL параметрах, обязательно кодируйте специальные символы:
+When using in URL parameters, make sure to encode special characters:
 
 ```
-Обычный текст:
+Plain text:
 $STYLE{text: 'red', color: #FF0000}
 
-URL-кодированный:
+URL-encoded:
 $STYLE%7Btext%3A%20%27red%27%2C%20color%3A%20%23FF0000%7D
 
-Или с + вместо пробелов:
+Or with + instead of spaces:
 $STYLE{text:+'red',+color:+#FF0000}
 ```
 
-### Практические примеры $STYLE
+### Practical $STYLE Examples
 
-#### Выделение статуса
+#### Status Highlighting
 
 ```markdown
 ![Status](https://js-readme-typing-svg.vercel.app/svg?lines=$STYLE{text:+ONLINE,+color:+00FF00,+fontWeight:+bold}+Server+Status)
 ```
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=$STYLE{text:+ONLINE,+color:+00FF00,+fontWeight:+bold}+Server+Status&height=80&repeat=true" alt="Typing SVG" />
 
-#### Акцент на важной информации
+#### Emphasizing Important Information
 
 ```markdown
 ![Warning](https://js-readme-typing-svg.vercel.app/svg?lines=⚠️+$STYLE{text:+WARNING,+color:+FF9800,+fontWeight:+bold,+fontSize:+32}+System+maintenance)
 ```
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=⚠️+$STYLE{text:+WARNING,+color:+FF9800,+fontWeight:+bold,+fontSize:+32}+System+maintenance&height=80&repeat=true" alt="Typing SVG" />
 
-#### Разноцветный текст
+#### Multicolor Text
 
 ```markdown
 ![Colorful](https://js-readme-typing-svg.vercel.app/svg?lines=$STYLE{text:+H,+color:+FF0000}$STYLE{text:+e,+color:+FF7F00}$STYLE{text:+l,+color:+FFFF00}$STYLE{text:+l,+color:+00FF00}$STYLE{text:+o,+color:+0000FF})
 ```
 <img src="https://js-readme-typing-svg.vercel.app/svg?lines=$STYLE{text:+H,+color:+FF0000}$STYLE{text:+e,+color:+FF7F00}$STYLE{text:+l,+color:+FFFF00}$STYLE{text:+l,+color:+00FF00}$STYLE{text:+o,+color:+0000FF}&height=80&repeat=true" alt="Typing SVG" />
 
-### Ограничения $STYLE
+### $STYLE Limitations
 
-1. Параметр `text` обязателен
-2. Цвет можно указывать с `#` или без него (`#FF0000` или `FF0000`)
-3. Boolean параметры (`italic`, `underline`, `strikethrough`) принимают значения `true` или `false`
-4. Можно комбинировать несколько стилей в одном выражении
-5. Стили применяются только к указанному тексту, не влияют на остальную строку
-6. ✅ **Поддерживается вложенность переменных** — можно использовать `$DATE` или `$RELDATE` внутри `$STYLE`
+1. The `text` parameter is required
+2. Color can be specified with or without `#` (`#FF0000` or `FF0000`)
+3. Boolean parameters (`italic`, `underline`, `strikethrough`) accept `true` or `false` values
+4. Multiple styles can be combined in a single expression
+5. Styles apply only to the specified text, not affecting the rest of the line
+6. ✅ **Nested variables are supported** — you can use `$DATE` or `$RELDATE` inside `$STYLE`
 
-## Комбинирование переменных
+## Combining Variables
 
-Можно использовать несколько переменных в одном тексте, включая комбинацию $DATE, $RELDATE и $STYLE:
+You can use multiple variables in one text, including combinations of $DATE, $RELDATE, and $STYLE:
 
-### Пример с датой и относительным временем
+### Example with Date and Relative Time
 
 ```
 Today is $DATE{weekday: long} Started coding $RELDATE{value: -365, unit: day}
 ```
 
-В URL:
+In URL:
 ```
 ?lines=Today+is+$DATE{weekday:+long} Started+coding+$RELDATE{value:+-365,+unit:+day}
 ```
 
-### Пример с комбинацией переменных (последовательно)
+### Example with Sequential Variable Combination
 
 ```
 $STYLE{text: 'Project Status', color: 00FF00, fontWeight: bold}: Started $RELDATE{value: -90, unit: day}
@@ -373,45 +373,45 @@ $STYLE{text: 'Project Status', color: 00FF00, fontWeight: bold}: Started $RELDAT
 Last update: $DATE{dateStyle: short} - $STYLE{text: 'Active', color: 00FF00, fontWeight: bold}
 ```
 
-### ✅ Вложенные переменные (NEW!)
+### ✅ Nested Variables (NEW!)
 
-Теперь поддерживается **вложенность переменных** — можно использовать одну переменную внутри другой (до 10 уровней вложенности):
+**Nested variables are now supported** — you can use one variable inside another (up to 10 nesting levels):
 
-#### Пример 1: Дата внутри стиля
+#### Example 1: Date Inside Style
 
 ```
 $STYLE{text: '$DATE{dateStyle: medium}', color: #2196F3, fontWeight: bold}
 ```
 
-**Результат:** Стилизованная текущая дата (например, "Dec 11, 2024" синим жирным шрифтом)
+**Result:** Styled current date (e.g., "Dec 11, 2024" in bold blue font)
 
-#### Пример 2: Относительная дата внутри стиля
+#### Example 2: Relative Date Inside Style
 
 ```
 Last updated $STYLE{text: '$RELDATE{value: -3, unit: day}', color: #FF9800, italic: true}
 ```
 
-**Результат:** "Last updated 3 days ago" (оранжевым курсивом)
+**Result:** "Last updated 3 days ago" (in orange italic)
 
-#### Пример 3: Множественная вложенность
+#### Example 3: Multiple Nesting
 
 ```
 $STYLE{text: '$DATE{weekday: long} - $RELDATE{value: -7, unit: day}', color: #00FF00, fontWeight: bold}
 ```
 
-**Результат:** "Thursday - 7 days ago" (зеленым жирным шрифтом)
+**Result:** "Thursday - 7 days ago" (in bold green font)
 
-#### Пример 4: Комбинация с обычным текстом
+#### Example 4: Combination with Regular Text
 
 ```
 Status: $STYLE{text: 'Active since $RELDATE{value: -30, unit: day}', color: #4CAF50, fontWeight: bold}
 ```
 
-**Результат:** "Status: Active since 30 days ago" (где "Active since..." зеленым жирным)
+**Result:** "Status: Active since 30 days ago" (where "Active since..." is in bold green)
 
-## Поддерживаемые локали
+## Supported Locales
 
-Переменные поддерживают все локали из стандарта IETF BCP 47:
+Variables support all locales from the IETF BCP 47 standard:
 
 - `en` — English
 - `ru` — Русский
@@ -423,17 +423,17 @@ Status: $STYLE{text: 'Active since $RELDATE{value: -30, unit: day}', color: #4CA
 - `ja` — 日本語
 - `zh` — 中文
 - `ko` — 한국어
-- И многие другие...
+- And many more...
 
-## Отладка
+## Debugging
 
-Если переменная не работает:
+If a variable is not working:
 
-1. Проверьте синтаксис: `$VARIABLE{param: value}`
-2. Убедитесь что параметры URL-кодированы
-3. Проверьте названия параметров (регистр важен)
-4. Для `$RELDATE` обязательны `value` и `unit`
-5. Используйте [генератор](https://js-readme-typing-svg.vercel.app/generator) для автоматического создания правильных URL
+1. Check syntax: `$VARIABLE{param: value}`
+2. Ensure parameters are URL-encoded
+3. Check parameter names (case-sensitive)
+4. For `$RELDATE`, both `value` and `unit` are required
+5. Use the [generator](https://js-readme-typing-svg.vercel.app/generator) to automatically create correct URLs
 
 ---
 

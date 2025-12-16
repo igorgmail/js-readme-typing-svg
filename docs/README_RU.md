@@ -102,7 +102,7 @@ $RELDATE{value: -1, unit: day}
 $STYLE{color: #e36209, text: 'STATUS'}
 ```
 
-**Подробнее о переменных:** см. [VARIABLES.md](docs/VARIABLES.md)
+**Подробнее о переменных:** см. [VARIABLES_RU.md](VARIABLES_RU.md)
 
 ## 💻 Установка и деплой
 
