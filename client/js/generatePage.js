@@ -9,6 +9,7 @@ export default class GeneratorPage {
 		this.controls = this.initControls();
 		this.outputs = this.initOutputs();
 		this.preview = document.querySelector('[data-js="preview"]');
+		this.svgDataObjectURL = null;
 		this.generatedURL = '';
 		this.autoUpdateEnabled = false;
 		this.autoUpdateTimeout = null;
@@ -85,6 +86,12 @@ export default class GeneratorPage {
 		document
 			.querySelectorAll('[pin-name]')
 			.forEach(btn => btn.addEventListener('click', () => this.handlePin(btn)));
+			document
+			.querySelector('[data-js-action="download-svg-preview"]')
+			.addEventListener('click', () => this.handleDownloadSVGPreview());
+		document
+			.querySelector('[data-js-action="copy-svg-preview"]')
+			.addEventListener('click', () => this.handleCopySVGPreview());
 	}
 
 	collectParams() {
@@ -219,33 +226,40 @@ export default class GeneratorPage {
 		// Добавляем класс загрузки
 		this.preview.classList.add('loader');
 
-		fetch(url, { signal })
-			.then(response => {
-				if (!response.ok) {
-					throw new Error(`HTTP status: ${response.status}`);
-				}
-				return response.blob();
-			})
-			.then(blob => {
-				// Очищаем старый URL объекта
-				if (this.previewObjectURL) {
-					URL.revokeObjectURL(this.previewObjectURL);
-				}
-				this.previewObjectURL = URL.createObjectURL(blob);
+	fetch(url, { signal })
+		.then(response => {
+			if (!response.ok) {
+				throw new Error(`HTTP status: ${response.status}`);
+			}
+			return response.text();
+		})
+		.then(svgText => {
+			// Сохраняем SVG как текст для копирования и скачивания
+			this.svgDataObjectURL = svgText;
+			console.log("▶ ⇛ this.svgDataObjectURL (text):", this.svgDataObjectURL);
 
-				const img = document.createElement('img');
-				img.alt = 'SVG Preview';
-				img.onload = () => {
-					// this.preview.classList.remove('loader');
-				};
-				img.src = this.previewObjectURL;
+			// Создаем Blob и URL для отображения в <img>
+			const blob = new Blob([svgText], { type: 'image/svg+xml' });
+			
+			// Очищаем старый URL объекта
+			if (this.previewObjectURL) {
+				URL.revokeObjectURL(this.previewObjectURL);
+			}
+			this.previewObjectURL = URL.createObjectURL(blob);
 
-				this.preview.innerHTML = '';
-				this.preview.appendChild(img);
-			})
+			const img = document.createElement('img');
+			img.alt = 'SVG Preview';
+			img.onload = () => {
+				// this.preview.classList.remove('loader');
+			};
+			img.src = this.previewObjectURL;
+
+			this.preview.innerHTML = '';
+			this.preview.appendChild(img);
+		})
 			.catch(error => {
 				if (error.name === 'AbortError') return;
-				this.preview.innerHTML = `<div class="error-message" style="color: #e06c75; padding: 1rem;">Ошибка загрузки: ${error.message}</div>`;
+				this.preview.innerHTML = `<div class="error-message" style="color: #e06c75; padding: 1rem;">Error loading: ${error.message}</div>`;
 			})
 			.finally(() => {
 				this.preview.classList.remove('loader');
@@ -272,6 +286,33 @@ export default class GeneratorPage {
 		});
 	}
 	
+	handleDownloadSVGPreview() {
+		if (!this.svgDataObjectURL) {
+			console.warn('SVG data not available');
+			return;
+		}
+		
+		const blob = new Blob([this.svgDataObjectURL], { type: 'image/svg+xml' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'typing-svg.svg';
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	handleCopySVGPreview(btn) {
+		if (!this.svgDataObjectURL) {
+			console.warn('SVG data not available');
+			return;
+		}
+		
+		navigator.clipboard.writeText(this.svgDataObjectURL).then(() => {
+			btn.classList.add('copied');
+			setTimeout(() => btn.classList.remove('copied'), 1000);
+		});
+	}
+
 	/**
 	 * Применяет дефолтные значения к полям формы
 	 */
