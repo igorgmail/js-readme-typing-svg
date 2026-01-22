@@ -433,7 +433,7 @@ Status: $STYLE{text: 'Active since $RELDATE{value: -30, unit: day}', color: #4CA
 2. Убедитесь что параметры URL-кодированы
 3. Проверьте названия параметров (регистр важен)
 4. Для `$RELDATE` обязательны `value` и `unit`
-5. Используйте [генератор](https://js-readme-typing-svg.vercel.app/generator) для автоматического создания правильных URL
+5. Используйте [генератор](https://js-readme-typing-svg.vercel.app/) для автоматического создания правильных URL
 
 ---
 

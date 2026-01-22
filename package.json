@@ -18,9 +18,6 @@
   ],
   "author": "igorfordev@gmail.com",
   "license": "MIT",
-  "engines": {
-    "node": ">=20.0.0"
-  },
   "dependencies": {
     "opentype.js": "^1.3.4"
   },

@@ -6,6 +6,13 @@ import logger from'morgan';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Проверка поддержки fetch API при старте
+if (typeof fetch !== 'function') {
+  console.warn('\n⚠️  WARNING: fetch API is not available in your Node.js version');
+  console.warn('   Google Fonts will not be loaded. Custom fonts will be ignored.');
+  console.warn('   Please upgrade to Node.js >= 18.13.0 for full functionality.\n');
+}
+
 // cod
 app.use(logger('dev'));
 // Статические файлы: раздаем /client/* из папки client/
@@ -13,17 +20,9 @@ app.use('/client', express.static('client'));
 // Корневые статические файлы (для обратной совместимости)
 app.use(express.static('client'));
 
-// Роуты для прямого доступа к страницам
+// Роут для главной страницы (генератор)
 app.get('/', (req, res) => {
   res.sendFile('index.html', { root: 'client' });
-});
-
-app.get('/generator', (req, res) => {
-  res.sendFile('generator.html', { root: 'client' });
-});
-
-app.get('/generator.html', (req, res) => {
-  res.sendFile('generator.html', { root: 'client' });
 });
 
 // API endpoints
@@ -33,8 +32,7 @@ app.get('/api/defaults', handleDefaults);
 
 app.listen(PORT, () => {
   console.log(`\n🚀 Server running at http://localhost:${PORT}\n`);
-  console.log(`📝 Generator:        http://localhost:${PORT}/generator`);
-  console.log(`🎨 Demo:             http://localhost:${PORT}/\n`);
+  console.log(`🎨 Generator:        http://localhost:${PORT}/\n`);
   
   console.log(`API Endpoints:`);
   console.log(`⚡ /svg              http://localhost:${PORT}/svg?lines=Hello+World`);

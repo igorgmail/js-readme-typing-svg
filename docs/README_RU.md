@@ -29,7 +29,7 @@
 
 ### Используйте генератор
 
-👉 **[Открыть генератор](https://js-readme-typing-svg.vercel.app/generator)**
+👉 **[Открыть генератор](https://js-readme-typing-svg.vercel.app/)**
 
 1. Введите текст и настройте параметры
 2. Скопируйте готовый URL/Markdown/HTML
@@ -137,7 +137,7 @@ npm start
 
 Сервер будет доступен по адресу: `http://localhost:3000`
 
-- **Генератор:** `http://localhost:3000/generator`
+- **Генератор:** `http://localhost:3000/`
 - **API:** `http://localhost:3000/svg?lines=Hello+World`
 
 
@@ -169,7 +169,7 @@ npm start
 
 ## 🔗 Ссылки
 
-- 🎨 [Demo Генератор URL (Vercel)](https://js-readme-typing-svg.vercel.app/generator)
+- 🎨 [Demo Генератор URL (Vercel)](https://js-readme-typing-svg.vercel.app/)
 - 🐛 [Issues](https://github.com/igorgmail/js-readme-typing-svg/issues)
 
 ---

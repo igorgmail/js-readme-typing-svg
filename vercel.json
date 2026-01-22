@@ -1,9 +1,7 @@
 {
   "rewrites": [
     { "source": "/svg", "destination": "/api/svg" },
-    { "source": "/", "destination": "/client/index.html" },
-    { "source": "/generator", "destination": "/client/generator.html" },
-    { "source": "/generator.html", "destination": "/client/generator.html" }
+    { "source": "/", "destination": "/client/index.html" }
   ],
   "headers": [
     {

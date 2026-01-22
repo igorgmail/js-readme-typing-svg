@@ -3,7 +3,8 @@ import GeneratorPage from "./generatePage.js";
 async function initGenPage() {
 	const locate = window.location.pathname;
 	// Поддерживаем разные пути к странице генератора
-	const isGeneratorPage = locate === "/generator.html" || 
+	const isGeneratorPage = locate === "/" ||
+	                        locate === "/generator.html" || 
 	                        locate === "/generator" || 
 	                        locate === "/client/generator.html";
 	
