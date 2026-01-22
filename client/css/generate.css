@@ -74,6 +74,15 @@ body {
 	justify-content: space-between;
 }
 
+.generator-page__panel-footer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+
+	padding-top: 10px;
+}
+
 .panel-title__wrap {
 	display: flex;
 	align-items: center;
