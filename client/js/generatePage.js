@@ -27,6 +27,7 @@ export default class GeneratorPage {
 	async init() {
 		// Загружаем дефолты с сервера
 		this.defaults = await fetchDefaults();
+		console.log("▶ ⇛ this.defaults:", this.defaults);
 		
 		// Применяем дефолты к форме
 		this.applyDefaultsToForm();
@@ -236,7 +237,6 @@ export default class GeneratorPage {
 		.then(svgText => {
 			// Сохраняем SVG как текст для копирования и скачивания
 			this.svgDataObjectURL = svgText;
-			console.log("▶ ⇛ this.svgDataObjectURL (text):", this.svgDataObjectURL);
 
 			// Создаем Blob и URL для отображения в <img>
 			const blob = new Blob([svgText], { type: 'image/svg+xml' });

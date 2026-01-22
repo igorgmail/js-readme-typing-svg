@@ -152,7 +152,6 @@ var jsc = {
 	},
 
 
-	// See https://stackoverflow.com/questions/384286/
 	isNode : function (val) {
 		if (typeof Node === 'object') {
 			return val instanceof Node;
