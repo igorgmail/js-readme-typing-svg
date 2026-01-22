@@ -6,6 +6,13 @@ import logger from'morgan';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Проверка поддержки fetch API при старте
+if (typeof fetch !== 'function') {
+  console.warn('\n⚠️  WARNING: fetch API is not available in your Node.js version');
+  console.warn('   Google Fonts will not be loaded. Custom fonts will be ignored.');
+  console.warn('   Please upgrade to Node.js >= 18.13.0 for full functionality.\n');
+}
+
 // cod
 app.use(logger('dev'));
 // Статические файлы: раздаем /client/* из папки client/

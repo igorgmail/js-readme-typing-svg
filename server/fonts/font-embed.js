@@ -14,6 +14,9 @@ import * as opentype from 'opentype.js';
 
 const GOOGLE_FONTS_API = 'https://fonts.googleapis.com/css';
 
+// Флаг для единоразового предупреждения об отсутствии fetch
+let fetchWarningShown = false;
+
 /**
  * Нормализует значение font-family для использования в запросе к Google Fonts:
  * - берёт только первое семейство до запятой
@@ -118,8 +121,12 @@ export async function getEmbeddedFontCSS(options) {
     return { css: '', parsedFont: null };
   }
 
-  // Если fetch недоступен (старый Node) — тихо выходим без шрифта
+  // Если fetch недоступен (старый Node) — выводим предупреждение
   if (typeof fetch !== 'function') {
+    if (!fetchWarningShown) {
+      console.warn('⚠️  Cannot load Google Font: fetch API unavailable (Node.js < 18)');
+      fetchWarningShown = true;
+    }
     return { css: '', parsedFont: null };
   }
 
