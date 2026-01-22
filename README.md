@@ -29,7 +29,7 @@
 
 ### Use the Generator
 
-👉 **[Open Generator](https://js-readme-typing-svg.vercel.app/generator)**
+👉 **[Open Generator](https://js-readme-typing-svg.vercel.app/)**
 
 1. Enter your text and configure parameters
 2. Copy the generated URL/Markdown/HTML
@@ -137,7 +137,7 @@ npm start
 
 Server will be available at: `http://localhost:3000`
 
-- **Generator:** `http://localhost:3000/generator`
+- **Generator:** `http://localhost:3000/`
 - **API:** `http://localhost:3000/svg?lines=Hello+World`
 
 
@@ -169,7 +169,7 @@ If you like this project, give it a ⭐ and share it with friends!
 
 ## 🔗 Links
 
-- 🎨 [Live Generator Demo (Vercel)](https://js-readme-typing-svg.vercel.app/generator)
+- 🎨 [Live Generator Demo (Vercel)](https://js-readme-typing-svg.vercel.app/)
 - 🐛 [Issues](https://github.com/igorgmail/js-readme-typing-svg/issues)
 
 ---

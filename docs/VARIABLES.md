@@ -433,7 +433,7 @@ If a variable is not working:
 2. Ensure parameters are URL-encoded
 3. Check parameter names (case-sensitive)
 4. For `$RELDATE`, both `value` and `unit` are required
-5. Use the [generator](https://js-readme-typing-svg.vercel.app/generator) to automatically create correct URLs
+5. Use the [generator](https://js-readme-typing-svg.vercel.app/) to automatically create correct URLs
 
 ---
 
