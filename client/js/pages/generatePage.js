@@ -1,6 +1,6 @@
-import { fetchDefaults } from './utils/defaults.js';
-import './utils/colorPicker.js';
-import './utils/highlight.js';
+import { fetchDefaults } from '../utils/defaults.js';
+import '../utils/colorPicker.js';
+import '../utils/highlight.js';
 
 export default class GeneratorPage {
 	constructor() {

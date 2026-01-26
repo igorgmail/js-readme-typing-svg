@@ -1,4 +1,4 @@
-import GeneratorPage from "./generatePage.js";
+import GeneratorPage from "./pages/generatePage.js";
 
 async function initGenPage() {
 	const locate = window.location.pathname;
