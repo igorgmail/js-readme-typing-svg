@@ -1,10 +1,12 @@
-<img src="https://js-readme-typing-svg.vercel.app/svg?lines=%F0%9F%8E%A8+SVG+Typing+Animation&fontSize=36&fontFamily=Nosifer&fontWeight=400&letterSpacing=0&color=0D7B14&background=transparent&width=800&height=200&printSpeed=10&delayBetweenLines=800&eraseSpeed=20&eraseMode=line&cursorStyle=none&horizontalAlign=center&verticalAlign=middle&multiLine=true&repeat=true" alt="Typing SVG" />
+<img src="https://js-readme-typing-svg.vercel.app/svg?lines=%F0%9F%8C%9F+%24STYLE%7Btext%3A+SVG%2C+color%3A+95190C%7D+Typing+%24STYLE%7Btext%3A+Animation%2C+color%3A+044B7F%7D&fontSize=36&fontFamily=Alfa+Slab+One&fontWeight=400&letterSpacing=2&color=107E7D&background=transparent&width=800&height=200&printSpeed=20&delayBetweenLines=800&eraseSpeed=20&eraseMode=line&cursorStyle=underlined&horizontalAlign=center&verticalAlign=middle&multiLine=false&repeat=true" alt="Typing SVG" />
 
 <div align="center">
   <h1>SVG Typing Animation Generator</h1>
 </div>
 
-> Create animated SVGs with typing text effect for your GitHub profiles, README files, and web pages.
+> Create animated SVG typing text for GitHub profiles, README files and web pages. 
+JavaScript-based typing SVG generator.
+
 
 <div align="center">
 
