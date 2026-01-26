@@ -36,7 +36,7 @@
 3. Paste it into your README or web page
 
 > [!NOTE]
-> When changing the font (Google Fonts), make sure to specify the font-weight that the font supports, otherwise the default font will be used
+> When changing the font (Google Fonts), make sure to specify the font-weight that the font has, otherwise the font will be rendered with its default font-weight
 
 ## 📸 Demo
 

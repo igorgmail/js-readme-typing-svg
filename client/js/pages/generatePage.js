@@ -1,6 +1,6 @@
-import { fetchDefaults } from './utils/defaults.js';
-import './utils/colorPicker.js';
-import './utils/highlight.js';
+import { fetchDefaults } from '../utils/defaults.js';
+import '../utils/colorPicker.js';
+import '../utils/highlight.js';
 
 export default class GeneratorPage {
 	constructor() {
@@ -176,97 +176,6 @@ export default class GeneratorPage {
 		return params;
 	}
 
-	/**
-	 * Генерирует URL для SVG, обновляет предпросмотр и блоки кода.
-	 * Считывает значения из элементов управления, формирует параметры URL,
-	 * создает HTML и Markdown код, и обновляет соответствующие элементы DOM.
-	 * Если доступна функция highlight, применяет подсветку синтаксиса.
-	 */
-	handleGenerate() {
-		const params = this.collectParams();
-		const fullURL = `${this.baseURL}?${params.toString()}`;
-		this.generatedURL = fullURL;
-
-		const markdownCode = `![Typing SVG](${fullURL})`;
-		const htmlCode = `<img src="${fullURL}" alt="Typing SVG" />`;
-
-		// Применяем подсветку синтаксиса для всех полей
-		if (typeof highlight === 'function') {
-			this.outputs.url.innerHTML = highlight(
-				fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-			this.outputs.markdown.innerHTML = highlight(
-				markdownCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-			this.outputs.html.innerHTML = highlight(
-				htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-		} else {
-			// Fallback если функция highlight недоступна
-			this.outputs.url.textContent = fullURL;
-			this.outputs.markdown.textContent = markdownCode;
-			this.outputs.html.textContent = htmlCode;
-		}
-		
-		this.updatePreview(fullURL);
-	}
-
-	/**
-	 * Загружает SVG изображение и обновляет превью с индикацией загрузки
-	 * @param {string} url 
-	 */
-	updatePreview(url) {
-		// Отменяем предыдущий запрос
-		if (this.fetchController) {
-			this.fetchController.abort();
-		}
-		this.fetchController = new AbortController();
-		const signal = this.fetchController.signal;
-
-		// Добавляем класс загрузки
-		this.preview.classList.add('loader');
-
-	fetch(url, { signal })
-		.then(response => {
-			if (!response.ok) {
-				throw new Error(`HTTP status: ${response.status}`);
-			}
-			return response.text();
-		})
-		.then(svgText => {
-			// Сохраняем SVG как текст для копирования и скачивания
-			this.svgDataObjectURL = svgText;
-			console.log("▶ ⇛ this.svgDataObjectURL (text):", this.svgDataObjectURL);
-
-			// Создаем Blob и URL для отображения в <img>
-			const blob = new Blob([svgText], { type: 'image/svg+xml' });
-			
-			// Очищаем старый URL объекта
-			if (this.previewObjectURL) {
-				URL.revokeObjectURL(this.previewObjectURL);
-			}
-			this.previewObjectURL = URL.createObjectURL(blob);
-
-			const img = document.createElement('img');
-			img.alt = 'SVG Preview';
-			img.onload = () => {
-				// this.preview.classList.remove('loader');
-			};
-			img.src = this.previewObjectURL;
-
-			this.preview.innerHTML = '';
-			this.preview.appendChild(img);
-		})
-			.catch(error => {
-				if (error.name === 'AbortError') return;
-				this.preview.innerHTML = `<div class="error-message" style="color: #e06c75; padding: 1rem;">Error loading: ${error.message}</div>`;
-			})
-			.finally(() => {
-				this.preview.classList.remove('loader');
-			});
-	}
-
-
 	handlePin(btn) {
 		const pinStatus = btn.closest('[pin-status]').getAttribute('pin-status');
 		if (pinStatus === 'on') {
@@ -311,6 +220,110 @@ export default class GeneratorPage {
 			btn.classList.add('copied');
 			setTimeout(() => btn.classList.remove('copied'), 1000);
 		});
+	}
+
+	/**
+	 * Генерирует URL для SVG, обновляет предпросмотр и блоки кода.
+	 * Считывает значения из элементов управления, формирует параметры URL,
+	 * создает HTML и Markdown код, и обновляет соответствующие элементы DOM.
+	 * Если доступна функция highlight, применяет подсветку синтаксиса.
+	 */
+	handleGenerate() {
+		const params = this.collectParams();
+		const fullURL = `${this.baseURL}?${params.toString()}`;
+		this.generatedURL = fullURL;
+
+		const markdownCode = `![Typing SVG](${fullURL})`;
+		const htmlCode = `<img src="${fullURL}" alt="Typing SVG" />`;
+
+		// Применяем подсветку синтаксиса для всех полей
+		if (typeof highlight === 'function') {
+			this.outputs.url.innerHTML = highlight(
+				fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			);
+			this.outputs.markdown.innerHTML = highlight(
+				markdownCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			);
+			this.outputs.html.innerHTML = highlight(
+				htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			);
+		} else {
+			// Fallback если функция highlight недоступна
+			this.outputs.url.textContent = fullURL;
+			this.outputs.markdown.textContent = markdownCode;
+			this.outputs.html.textContent = htmlCode;
+		}
+		
+		this.updatePreview(fullURL);
+	}
+
+	/**
+	 * Сбрасывает значения формы на дефолтные и генерирует новый SVG
+	 */
+	handleReset() {
+		// Применяем дефолты к форме
+		this.applyDefaultsToForm();
+
+		// Автоматически генерируем SVG с дефолтными параметрами
+		this.generate();
+	}
+
+	setFontWeight(weight) {
+		this.controls['font-weight'].value = weight;
+	}
+	
+	/**
+	 * Загружает SVG изображение и обновляет превью с индикацией загрузки
+	 * @param {string} url 
+	 */
+	updatePreview(url) {
+		// Отменяем предыдущий запрос
+		if (this.fetchController) {
+			this.fetchController.abort();
+		}
+		this.fetchController = new AbortController();
+		const signal = this.fetchController.signal;
+
+		// Добавляем класс загрузки
+		this.preview.classList.add('loader');
+
+	fetch(url, { signal })
+		.then(response => {
+			if (!response.ok) {
+				throw new Error(`HTTP status: ${response.status}`);
+			}
+			return response.text();
+		})
+		.then(svgText => {
+			// Сохраняем SVG как текст для копирования и скачивания
+			this.svgDataObjectURL = svgText;
+
+			// Создаем Blob и URL для отображения в <img>
+			const blob = new Blob([svgText], { type: 'image/svg+xml' });
+			
+			// Очищаем старый URL объекта
+			if (this.previewObjectURL) {
+				URL.revokeObjectURL(this.previewObjectURL);
+			}
+			this.previewObjectURL = URL.createObjectURL(blob);
+
+			const img = document.createElement('img');
+			img.alt = 'SVG Preview';
+			img.onload = () => {
+				// this.preview.classList.remove('loader');
+			};
+			img.src = this.previewObjectURL;
+
+			this.preview.innerHTML = '';
+			this.preview.appendChild(img);
+		})
+			.catch(error => {
+				if (error.name === 'AbortError') return;
+				this.preview.innerHTML = `<div class="error-message" style="color: #e06c75; padding: 1rem;">Error loading: ${error.message}</div>`;
+			})
+			.finally(() => {
+				this.preview.classList.remove('loader');
+			});
 	}
 
 	/**
@@ -367,13 +380,6 @@ export default class GeneratorPage {
 		this.controls.repeat.checked = this.defaults.repeat;
 	}
 
-	handleReset() {
-		// Применяем дефолты к форме
-		this.applyDefaultsToForm();
-
-		// Автоматически генерируем SVG с дефолтными параметрами
-		this.generate();
-	}
 
 	
 	/**
