@@ -12,7 +12,7 @@
 import { Buffer } from 'node:buffer';
 import * as opentype from 'opentype.js';
 
-const GOOGLE_FONTS_API = 'https://fonts.googleapis.com/css';
+const GOOGLE_FONTS_API = 'https://fonts.googleapis.com/css2';
 
 // Флаг для единоразового предупреждения об отсутствии fetch
 let fetchWarningShown = false;

@@ -27,7 +27,6 @@ export default class GeneratorPage {
 	async init() {
 		// Загружаем дефолты с сервера
 		this.defaults = await fetchDefaults();
-		console.log("▶ ⇛ this.defaults:", this.defaults);
 		
 		// Применяем дефолты к форме
 		this.applyDefaultsToForm();
@@ -177,6 +176,52 @@ export default class GeneratorPage {
 		return params;
 	}
 
+	handlePin(btn) {
+		const pinStatus = btn.closest('[pin-status]').getAttribute('pin-status');
+		if (pinStatus === 'on') {
+			btn.closest('[pin-status]').setAttribute('pin-status', 'off');
+			btn.closest('.js-preview').classList.remove('pin');
+		} else {
+			btn.closest('[pin-status]').setAttribute('pin-status', 'on');
+			btn.closest('.js-preview').classList.add('pin');
+		}
+	}
+
+	handleCopy(btn) {
+		const text = btn.closest('.code-container').querySelector('code').textContent;
+		navigator.clipboard.writeText(text).then(() => {
+			btn.classList.add('copied');
+			setTimeout(() => btn.classList.remove('copied'), 1000);
+		});
+	}
+	
+	handleDownloadSVGPreview() {
+		if (!this.svgDataObjectURL) {
+			console.warn('SVG data not available');
+			return;
+		}
+		
+		const blob = new Blob([this.svgDataObjectURL], { type: 'image/svg+xml' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'typing-svg.svg';
+		a.click();
+		URL.revokeObjectURL(url);
+	}
+
+	handleCopySVGPreview(btn) {
+		if (!this.svgDataObjectURL) {
+			console.warn('SVG data not available');
+			return;
+		}
+		
+		navigator.clipboard.writeText(this.svgDataObjectURL).then(() => {
+			btn.classList.add('copied');
+			setTimeout(() => btn.classList.remove('copied'), 1000);
+		});
+	}
+
 	/**
 	 * Генерирует URL для SVG, обновляет предпросмотр и блоки кода.
 	 * Считывает значения из элементов управления, формирует параметры URL,
@@ -212,6 +257,21 @@ export default class GeneratorPage {
 		this.updatePreview(fullURL);
 	}
 
+	/**
+	 * Сбрасывает значения формы на дефолтные и генерирует новый SVG
+	 */
+	handleReset() {
+		// Применяем дефолты к форме
+		this.applyDefaultsToForm();
+
+		// Автоматически генерируем SVG с дефолтными параметрами
+		this.generate();
+	}
+
+	setFontWeight(weight) {
+		this.controls['font-weight'].value = weight;
+	}
+	
 	/**
 	 * Загружает SVG изображение и обновляет превью с индикацией загрузки
 	 * @param {string} url 
@@ -264,53 +324,6 @@ export default class GeneratorPage {
 			.finally(() => {
 				this.preview.classList.remove('loader');
 			});
-	}
-
-
-	handlePin(btn) {
-		const pinStatus = btn.closest('[pin-status]').getAttribute('pin-status');
-		if (pinStatus === 'on') {
-			btn.closest('[pin-status]').setAttribute('pin-status', 'off');
-			btn.closest('.js-preview').classList.remove('pin');
-		} else {
-			btn.closest('[pin-status]').setAttribute('pin-status', 'on');
-			btn.closest('.js-preview').classList.add('pin');
-		}
-	}
-
-	handleCopy(btn) {
-		const text = btn.closest('.code-container').querySelector('code').textContent;
-		navigator.clipboard.writeText(text).then(() => {
-			btn.classList.add('copied');
-			setTimeout(() => btn.classList.remove('copied'), 1000);
-		});
-	}
-	
-	handleDownloadSVGPreview() {
-		if (!this.svgDataObjectURL) {
-			console.warn('SVG data not available');
-			return;
-		}
-		
-		const blob = new Blob([this.svgDataObjectURL], { type: 'image/svg+xml' });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'typing-svg.svg';
-		a.click();
-		URL.revokeObjectURL(url);
-	}
-
-	handleCopySVGPreview(btn) {
-		if (!this.svgDataObjectURL) {
-			console.warn('SVG data not available');
-			return;
-		}
-		
-		navigator.clipboard.writeText(this.svgDataObjectURL).then(() => {
-			btn.classList.add('copied');
-			setTimeout(() => btn.classList.remove('copied'), 1000);
-		});
 	}
 
 	/**
@@ -367,13 +380,6 @@ export default class GeneratorPage {
 		this.controls.repeat.checked = this.defaults.repeat;
 	}
 
-	handleReset() {
-		// Применяем дефолты к форме
-		this.applyDefaultsToForm();
-
-		// Автоматически генерируем SVG с дефолтными параметрами
-		this.generate();
-	}
 
 	
 	/**
