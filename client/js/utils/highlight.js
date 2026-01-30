@@ -1,13 +1,13 @@
-// Вспомогательная функция для обработки URL с параметрами
+// Helper function for processing URL with parameters
 export function highlightUrl(url) {
   return url.replace(/(https?:\/\/[^\s?]+)(\?.*)?/g, (match, baseUrl, params) => {
     let result = `<span class="token-url">${baseUrl}</span>`;
     
-    // Если есть параметры запроса, обрабатываем их отдельно
+    // If query parameters exist, process them separately
     if (params) {
-      // Убираем начальный ? и обрабатываем параметры
+      // Remove leading ? and process parameters
       const paramsStr = params.substring(1);
-      // Обрабатываем каждый параметр отдельно
+      // Process each parameter separately
       const processedParams = paramsStr.split('&').map(param => {
         const [key, ...valueParts] = param.split('=');
         const value = valueParts.join('=');
@@ -29,17 +29,17 @@ export function highlight(code) {
 
   // ---------- 1) HTML ----------
   if (code.trim().startsWith("<") || code.trim().startsWith("&lt;")) {
-    // Обрабатываем HTML теги целиком, чтобы избежать обработки атрибутов внутри span-ов
+    // Process HTML tags as a whole to avoid processing attributes inside spans
     highlighted = highlighted.replace(/(&lt;\/?)(\w+)(.*?)(&gt;)/g, (m, start, tag, attrs, end) => {
-      // Обрабатываем атрибуты внутри тега по отдельности
+      // Process attributes inside tag separately
       let processedAttrs = attrs.replace(/(\s+)?(\w+)="([^"]*)"/g, (match, space, attrName, attrValue) => {
-        // Обрабатываем значение атрибута (URL или обычное значение)
+        // Process attribute value (URL or regular value)
         let processedValue = attrValue;
         if (attrValue.includes('http://') || attrValue.includes('https://')) {
-          // Если значение содержит URL, обрабатываем его с параметрами
+          // If value contains URL, process it with parameters
           processedValue = highlightUrl(attrValue);
         } else {
-          // Иначе просто выделяем как значение
+          // Otherwise just highlight as value
           processedValue = `<span class="token-value">${attrValue}</span>`;
         }
         
@@ -56,7 +56,7 @@ export function highlight(code) {
     highlighted = highlighted
       .replace(/!\[(.*?)\]/, `![<span class="token-key">$1</span>]`)
       .replace(/\((.*?)\)/, (match, url) => {
-        // Обрабатываем URL в скобках с параметрами
+        // Process URL in parentheses with parameters
         return `(${highlightUrl(url)})`;
       });
   }
@@ -69,7 +69,7 @@ export function highlight(code) {
   return highlighted;
 }
 
-// Поддержка старого варианта подключения через глобальную функцию
+// Support for legacy connection via global function
 if (typeof window !== 'undefined') {
   window.highlight = highlight;
 }

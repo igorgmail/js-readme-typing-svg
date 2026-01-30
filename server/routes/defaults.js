@@ -1,19 +1,19 @@
 /**
- * Роут для получения дефолтных параметров
+ * Route for getting default parameters
  */
 
 import { getClientDefaults } from '../config/defaults.js';
 
 /**
- * Обработчик GET /defaults
- * Возвращает дефолтные параметры для клиента
+ * Handler for GET /defaults
+ * Returns default parameters for the client
  */
 export function handleDefaults(req, res) {
   try {
     const defaults = getClientDefaults();
     
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Кеш на 1 час
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
     res.json(defaults);
   } catch (error) {
     console.error('Error getting defaults:', error);

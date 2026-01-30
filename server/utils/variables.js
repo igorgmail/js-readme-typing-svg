@@ -1,19 +1,19 @@
 /**
- * Модуль для парсинга и обработки переменных в строках
- * Работает как на сервере (Node.js), так и в браузере
+ * Module for parsing and processing variables in strings
+ * Works both on server (Node.js) and in browser
  */
 
 /**
- * Парсит параметры из строки формата {key: value, key2: value2}
- * @param {string} paramsStr - строка с параметрами
- * @returns {Object} объект с распарсенными параметрами
+ * Parses parameters from string in format {key: value, key2: value2}
+ * @param {string} paramsStr - string with parameters
+ * @returns {Object} object with parsed parameters
  */
 function parseParams(paramsStr) {
   const params = {};
   
   if (!paramsStr) return params;
   
-  // разбиваем по запятым и парсим пары key: value
+  // split by commas and parse key: value pairs
   const pairs = paramsStr.split(',').map(p => p.trim());
   
   pairs.forEach(pair => {
@@ -28,16 +28,16 @@ function parseParams(paramsStr) {
 }
 
 /**
- * Обрабатывает переменную $DATE
- * Использует нативный Intl.DateTimeFormat API
- * @param {Object} params - параметры из фигурных скобок
- * @returns {string} отформатированная дата
+ * Processes $DATE variable
+ * Uses native Intl.DateTimeFormat API
+ * @param {Object} params - parameters from curly braces
+ * @returns {string} formatted date
  */
 function processDateVariable(params) {
   const date = new Date();
   const locale = params.locale || 'en';
   
-  // Если используется preset стиль (full, long, medium, short)
+  // If preset style is used (full, long, medium, short)
   if (params.dateStyle || params.timeStyle) {
     try {
       const options = {};
@@ -52,26 +52,26 @@ function processDateVariable(params) {
     }
   }
   
-  // Иначе используем детальные опции компонентов
+  // Otherwise use detailed component options
   try {
     const options = {};
     
-    // Опции даты
+    // Date options
     if (params.year) options.year = params.year; // numeric, 2-digit
     if (params.month) options.month = params.month; // numeric, 2-digit, long, short, narrow
     if (params.day) options.day = params.day; // numeric, 2-digit
     if (params.weekday) options.weekday = params.weekday; // long, short, narrow
     
-    // Опции времени
+    // Time options
     if (params.hour) options.hour = params.hour; // numeric, 2-digit
     if (params.minute) options.minute = params.minute; // numeric, 2-digit
     if (params.second) options.second = params.second; // numeric, 2-digit
     
-    // Дополнительные опции
+    // Additional options
     if (params.timeZone) options.timeZone = params.timeZone;
     if (params.hour12 !== undefined) options.hour12 = params.hour12 === 'true';
     
-    // Если опции не указаны, используем дефолтные
+    // If options are not specified, use defaults
     if (Object.keys(options).length === 0) {
       options.year = 'numeric';
       options.month = '2-digit';
@@ -86,10 +86,10 @@ function processDateVariable(params) {
 }
 
 /**
- * Обрабатывает переменную $RELATIVE_DATE
- * Использует нативный Intl.RelativeTimeFormat API
- * @param {Object} params - параметры из фигурных скобок
- * @returns {string} отформатированное относительное время
+ * Processes $RELATIVE_DATE variable
+ * Uses native Intl.RelativeTimeFormat API
+ * @param {Object} params - parameters from curly braces
+ * @returns {string} formatted relative time
  */
 function processRelativeDateVariable(params) {
   const locale = params.locale || 'en';
@@ -99,17 +99,17 @@ function processRelativeDateVariable(params) {
   
   let value = 0;
   
-  // Если указано значение напрямую
+  // If value is specified directly
   if (params.value !== undefined) {
     value = parseInt(params.value, 10);
   }
-  // Если указана дата для сравнения - вычисляем разницу
+  // If date for comparison is specified - calculate difference
   else if (params.date) {
     const targetDate = new Date(params.date);
     const now = new Date();
     const diffMs = targetDate - now;
     
-    // Простое вычисление разницы в указанных единицах
+    // Simple calculation of difference in specified units
     const msPerUnit = {
       year: 1000 * 60 * 60 * 24 * 365,
       quarter: 1000 * 60 * 60 * 24 * 91,
@@ -124,30 +124,30 @@ function processRelativeDateVariable(params) {
     value = Math.round(diffMs / (msPerUnit[unit] || msPerUnit.day));
   }
   
-  // Используем нативный Intl.RelativeTimeFormat - он делает всю работу
+  // Use native Intl.RelativeTimeFormat - it does all the work
   try {
     const rtf = new Intl.RelativeTimeFormat(locale, { numeric, style });
     return rtf.format(value, unit);
   } catch (error) {
     console.error('RelativeTimeFormat error:', error);
-    // Fallback на простое форматирование
+    // Fallback to simple formatting
     return `${value} ${unit}${Math.abs(value) !== 1 ? 's' : ''}`;
   }
 }
 
 /**
- * Основная функция парсинга переменных в строке
- * @param {string} str - строка с переменными
- * @returns {string} строка с замененными переменными
+ * Main function for parsing variables in string
+ * @param {string} str - string with variables
+ * @returns {string} string with replaced variables
  */
 export function parseVariables(str) {
-  // Регулярка для поиска переменных вида $VAR{params}
+  // Regular expression to find variables in format $VAR{params}
   const variableRegex = /\$(\w+)(?:\{([^}]*)\})?/g;
   
   return str.replace(variableRegex, (match, varName, paramsStr) => {
     const params = parseParams(paramsStr);
     
-    // Обработка различных типов переменных
+    // Process different types of variables
     switch (varName.toUpperCase()) {
       case 'DATE':
         return processDateVariable(params);
@@ -156,23 +156,23 @@ export function parseVariables(str) {
       case 'RELDATE':
         return processRelativeDateVariable(params);
       
-      // Здесь можно добавить другие переменные
+      // Other variables can be added here
       // case 'TIME':
       //   return processTimeVariable(params);
       // case 'USER':
       //   return processUserVariable(params);
       
       default:
-        // Если переменная не распознана, оставляем как есть
+        // If variable is not recognized, leave as is
         return match;
     }
   });
 }
 
 /**
- * Парсит массив строк, заменяя переменные
- * @param {Array<string>} lines - массив строк
- * @returns {Array<string>} массив с обработанными строками
+ * Parses array of strings, replacing variables
+ * @param {Array<string>} lines - array of strings
+ * @returns {Array<string>} array with processed strings
  */
 export function parseLines(lines) {
   return lines.map(line => parseVariables(line));

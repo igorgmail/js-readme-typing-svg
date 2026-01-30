@@ -5,7 +5,7 @@ import '../utils/highlight.js';
 export default class GeneratorPage {
 	constructor() {
 		this.baseURL = `${window.location.origin}/svg`;
-		this.defaults = null; // Будут загружены асинхронно
+		this.defaults = null; // Will be loaded asynchronously
 		this.controls = this.initControls();
 		this.outputs = this.initOutputs();
 		this.preview = document.querySelector('[data-js="preview"]');
@@ -17,21 +17,21 @@ export default class GeneratorPage {
 		this.fetchController = null;
 		this.previewObjectURL = null;
 		
-		// Алиас для метода генерации, так как он используется в autoUpdate и handleReset
+		// Alias for the generate method, as it's used in autoUpdate and handleReset
 		this.generate = this.handleGenerate.bind(this);
 		
-		// Асинхронная инициализация
+		// Asynchronous initialization
 		this.init();
 	}
 
 	async init() {
-		// Загружаем дефолты с сервера
+		// Load defaults from server
 		this.defaults = await fetchDefaults();
 		
-		// Применяем дефолты к форме
+		// Apply defaults to form
 		this.applyDefaultsToForm();
 		
-		// Теперь можем инициализировать остальное
+		// Now we can initialize the rest
 		this.bindEvents();
 		this.setAutoUpdate(true);
 		this.handleGenerate();
@@ -110,20 +110,20 @@ export default class GeneratorPage {
 		params.append('fontWeight', this.controls['font-weight'].value);
 		params.append('letterSpacing', this.controls['letter-spacing'].value);
 		
-		// Получаем цвет из jscolor с поддержкой альфа-канала
+		// Get color from jscolor with alpha channel support
 		let colorValue = '000000';
 		if (this.controls.color.jscolor) {
 			const colorHexa = this.controls.color.jscolor.toString('hexa');
-			// Убираем # и проверяем альфа-канал
+			// Remove # and check alpha channel
 			const hexaValue = colorHexa.replace('#', '');
-			// Если альфа = 00 (полностью прозрачный), используем transparent
+			// If alpha = 00 (fully transparent), use transparent
 			if (hexaValue.length === 8 && hexaValue.substr(6, 2).toUpperCase() === '00') {
 				colorValue = 'transparent';
 			} else if (hexaValue.length === 8 && hexaValue.substr(6, 2).toUpperCase() === 'FF') {
-				// Если альфа = FF (непрозрачный), используем только RGB
+				// If alpha = FF (opaque), use only RGB
 				colorValue = hexaValue.substr(0, 6);
 			} else if (hexaValue.length === 8) {
-				// Используем полный hexa формат с альфа-каналом
+				// Use full hexa format with alpha channel
 				colorValue = hexaValue;
 			} else {
 				colorValue = hexaValue;
@@ -133,20 +133,20 @@ export default class GeneratorPage {
 		}
 		params.append('color', colorValue);
 
-		// Получаем background из jscolor
+		// Get background from jscolor
 		let backgroundValue = 'transparent';
 		if (this.controls.background.jscolor) {
 			const bgColor = this.controls.background.jscolor.toString('hexa');
-			// Убираем # и проверяем альфа-канал
+			// Remove # and check alpha channel
 			const hexaValue = bgColor.replace('#', '');
-			// Если альфа = 00 (полностью прозрачный), используем transparent
+			// If alpha = 00 (fully transparent), use transparent
 			if (hexaValue.length === 8 && hexaValue.substr(6, 2).toUpperCase() === '00') {
 				backgroundValue = 'transparent';
 			} else if (hexaValue.length === 8 && hexaValue.substr(6, 2).toUpperCase() === 'FF') {
-				// Если альфа = FF (непрозрачный), используем только RGB
+				// If alpha = FF (opaque), use only RGB
 				backgroundValue = hexaValue.substr(0, 6);
 			} else if (hexaValue.length === 8) {
-				// Используем полный hexa формат с альфа-каналом
+				// Use full hexa format with alpha channel
 				backgroundValue = hexaValue;
 			} else {
 				backgroundValue = hexaValue;
@@ -162,14 +162,14 @@ export default class GeneratorPage {
 		params.append('eraseMode', this.controls['erase-mode'].value);
 		params.append('cursorStyle', this.controls['cursor-style'].value);
 		
-		// Обработка выравнивания из checkbox (checked -> center/middle, unchecked -> left/top)
+		// Handle alignment from checkboxes (checked -> center/middle, unchecked -> left/top)
 		const horizontalAlign = this.controls['horizontal-align'].checked ? 'center' : 'left';
 		params.append('horizontalAlign', horizontalAlign);
 		
 		const verticalAlign = this.controls['vertical-align'].checked ? 'middle' : 'top';
 		params.append('verticalAlign', verticalAlign);
 		
-		// Обработка multiline и repeat из checkbox
+		// Handle multiline and repeat from checkboxes
 		params.append('multiLine', this.controls.multiline.checked ? 'true' : 'false');
 		params.append('repeat', this.controls.repeat.checked ? 'true' : 'false');
 
@@ -223,10 +223,10 @@ export default class GeneratorPage {
 	}
 
 	/**
-	 * Генерирует URL для SVG, обновляет предпросмотр и блоки кода.
-	 * Считывает значения из элементов управления, формирует параметры URL,
-	 * создает HTML и Markdown код, и обновляет соответствующие элементы DOM.
-	 * Если доступна функция highlight, применяет подсветку синтаксиса.
+	 * Generates SVG URL, updates preview and code blocks.
+	 * Reads values from control elements, formats URL parameters,
+	 * creates HTML and Markdown code, and updates corresponding DOM elements.
+	 * If highlight function is available, applies syntax highlighting.
 	 */
 	handleGenerate() {
 		const params = this.collectParams();
@@ -236,7 +236,7 @@ export default class GeneratorPage {
 		const markdownCode = `![Typing SVG](${fullURL})`;
 		const htmlCode = `<img src="${fullURL}" alt="Typing SVG" />`;
 
-		// Применяем подсветку синтаксиса для всех полей
+		// Apply syntax highlighting for all fields
 		if (typeof highlight === 'function') {
 			this.outputs.url.innerHTML = highlight(
 				fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -248,7 +248,7 @@ export default class GeneratorPage {
 				htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
 			);
 		} else {
-			// Fallback если функция highlight недоступна
+			// Fallback if highlight function is not available
 			this.outputs.url.textContent = fullURL;
 			this.outputs.markdown.textContent = markdownCode;
 			this.outputs.html.textContent = htmlCode;
@@ -258,13 +258,13 @@ export default class GeneratorPage {
 	}
 
 	/**
-	 * Сбрасывает значения формы на дефолтные и генерирует новый SVG
+	 * Resets form values to defaults and generates new SVG
 	 */
 	handleReset() {
-		// Применяем дефолты к форме
+		// Apply defaults to form
 		this.applyDefaultsToForm();
 
-		// Автоматически генерируем SVG с дефолтными параметрами
+		// Automatically generate SVG with default parameters
 		this.generate();
 	}
 
@@ -273,18 +273,18 @@ export default class GeneratorPage {
 	}
 	
 	/**
-	 * Загружает SVG изображение и обновляет превью с индикацией загрузки
+	 * Loads SVG image and updates preview with loading indication
 	 * @param {string} url 
 	 */
 	updatePreview(url) {
-		// Отменяем предыдущий запрос
+		// Cancel previous request
 		if (this.fetchController) {
 			this.fetchController.abort();
 		}
 		this.fetchController = new AbortController();
 		const signal = this.fetchController.signal;
 
-		// Добавляем класс загрузки
+		// Add loading class
 		this.preview.classList.add('loader');
 
 	fetch(url, { signal })
@@ -295,13 +295,13 @@ export default class GeneratorPage {
 			return response.text();
 		})
 		.then(svgText => {
-			// Сохраняем SVG как текст для копирования и скачивания
+			// Save SVG as text for copying and downloading
 			this.svgDataObjectURL = svgText;
 
-			// Создаем Blob и URL для отображения в <img>
+			// Create Blob and URL for display in <img>
 			const blob = new Blob([svgText], { type: 'image/svg+xml' });
 			
-			// Очищаем старый URL объекта
+			// Clean up old object URL
 			if (this.previewObjectURL) {
 				URL.revokeObjectURL(this.previewObjectURL);
 			}
@@ -327,23 +327,23 @@ export default class GeneratorPage {
 	}
 
 	/**
-	 * Применяет дефолтные значения к полям формы
+	 * Applies default values to form fields
 	 */
 	applyDefaultsToForm() {
-		// Проверяем что дефолты загружены
+		// Check that defaults are loaded
 		if (!this.defaults) {
 			console.warn('Defaults not loaded yet');
 			return;
 		}
 
-		// Применяем все дефолтные значения к форме
+		// Apply all default values to form
 		this.controls.lines.value = this.defaults.lines;
 		this.controls['font-size'].value = this.defaults.fontSize;
 		this.controls['font-family'].value = this.defaults.fontFamily;
 		this.controls['font-weight'].value = this.defaults.fontWeight;
 		this.controls['letter-spacing'].value = this.defaults.letterSpacing;
 		
-		// Сброс цветов через jscolor
+		// Reset colors via jscolor
 		if (this.controls.color.jscolor) {
 			this.controls.color.jscolor.fromString(this.defaults.color);
 		} else {
@@ -351,12 +351,12 @@ export default class GeneratorPage {
 		}
 		
 		if (this.controls.background.jscolor) {
-			// Для transparent устанавливаем непрозрачный черный цвет (альфа = FF)
-			// чтобы ползунок прозрачности был в положении непрозрачный
+			// For transparent, set opaque white color (alpha = FF)
+			// so the transparency slider is in opaque position
 			if (this.defaults.background === 'transparent') {
 				this.controls.background.jscolor.fromString('#FFFFFFFF');
 			} else {
-				// Если значение не hexa формат, добавляем альфа-канал FF
+				// If value is not in hexa format, add alpha channel FF
 				const bgValue = this.defaults.background;
 				const hexaValue = bgValue.length === 6 ? bgValue + 'FF' : bgValue;
 				this.controls.background.jscolor.fromString(hexaValue);
@@ -383,8 +383,8 @@ export default class GeneratorPage {
 
 	
 	/**
-	 * Включает или отключает режим автоматического обновления SVG при изменении параметров.
-	 * @param {boolean} enabled - Если true, включает автообновление (вешает обработчики), иначе отключает.
+	 * Enables or disables automatic SVG update mode when parameters change.
+	 * @param {boolean} enabled - If true, enables auto-update (attaches handlers), otherwise disables.
 	 */
 	setAutoUpdate(enabled) {
 		this.autoUpdateEnabled = enabled;
@@ -397,10 +397,10 @@ export default class GeneratorPage {
 	}
 
 	enableAutoUpdate() {
-		// Очищаем предыдущие обработчики
+		// Clear previous handlers
 		this.disableAutoUpdate();
 
-		// Функция для debounce генерации
+		// Function for debounced generation
 		const debouncedGenerate = () => {
 			if (this.autoUpdateTimeout) {
 				clearTimeout(this.autoUpdateTimeout);
@@ -410,7 +410,7 @@ export default class GeneratorPage {
 			}, 300);
 		};
 
-		// Добавляем обработчики для обычных полей
+		// Add handlers for standard fields
 		const standardFields = [
 			'lines', 'font-size', 'font-family', 'font-weight', 'letter-spacing',
 			'width', 'height', 'print-speed', 'delay-after-print', 'erase-speed',
@@ -427,7 +427,7 @@ export default class GeneratorPage {
 			}
 		});
 
-		// Обработчики для цветовых полей через jscolor
+		// Handlers for color fields via jscolor
 		if (this.controls.color.jscolor) {
 			const colorHandler = () => debouncedGenerate();
 			this.controls.color.jscolor.onChange = colorHandler;
@@ -442,7 +442,7 @@ export default class GeneratorPage {
 	}
 
 	disableAutoUpdate() {
-		// Удаляем все обработчики
+		// Remove all handlers
 		this.fieldHandlers.forEach(({ element, event, handler, type }) => {
 			if (type === 'jscolor') {
 				element.jscolor.onChange = null;
@@ -452,7 +452,7 @@ export default class GeneratorPage {
 		});
 		this.fieldHandlers = [];
 
-		// Очищаем таймер
+		// Clear timer
 		if (this.autoUpdateTimeout) {
 			clearTimeout(this.autoUpdateTimeout);
 			this.autoUpdateTimeout = null;

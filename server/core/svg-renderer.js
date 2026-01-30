@@ -1,5 +1,5 @@
 /**
- * Генератор SVG шаблона на основе готовых параметров анимации
+ * SVG template generator based on prepared animation parameters
  */
 
 import { escapeXml, validateAndSanitizeFontFamily } from '../utils/text-utils.js';
@@ -7,9 +7,9 @@ import { getCursorInfo } from '../effects/cursor/index.js';
 import { parseStyleSegments, hasStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
- * Генерирует секцию <defs> с опциональными стилями шрифта.
- * @param {string} fontCSS - CSS для вставки (может быть пустым)
- * @returns {string} SVG-разметка для <defs> или пустая строка
+ * Generates <defs> section with optional font styles.
+ * @param {string} fontCSS - CSS to insert (can be empty)
+ * @returns {string} SVG markup for <defs> or empty string
  */
 function generateDefs(fontCSS) {
   const hasFontCSS = typeof fontCSS === 'string' && fontCSS.trim().length > 0;
@@ -29,9 +29,9 @@ ${trimmedCSS}
 }
 
 /**
- * Генерирует анимацию opacity для fade эффекта
- * @param {Object} config - конфигурация fade анимации
- * @returns {string} SVG код анимации opacity
+ * Generates opacity animation for fade effect
+ * @param {Object} config - fade animation configuration
+ * @returns {string} SVG code for opacity animation
  */
 function generateOpacityAnimation(config) {
   const { index, begin, totalDuration, fillValue, fadeEraseStart, fadeEraseEnd } = config;
@@ -47,27 +47,27 @@ function generateOpacityAnimation(config) {
 }
 
 /**
- * Генерирует контент для textPath - либо простой текст, либо tspan элементы с разными стилями
- * @param {string} line - текст строки
- * @param {string} defaultColor - цвет по умолчанию
- * @returns {string} содержимое для textPath
+ * Generates content for textPath - either plain text or tspan elements with different styles
+ * @param {string} line - line text
+ * @param {string} defaultColor - default color
+ * @returns {string} content for textPath
  */
 function generateTextPathContent(line, defaultColor) {
-  // Проверяем наличие маркеров стилей
+  // Check for style markers
   if (!hasStyleMarkers(line)) {
     return escapeXml(line);
   }
   
-  // Парсим строку на сегменты с разными стилями
+  // Parse line into segments with different styles
   const segments = parseStyleSegments(line, defaultColor);
   
-  // Генерируем tspan для каждого сегмента с применением всех стилей
+  // Generate tspan for each segment with all styles applied
   return segments.map(segment => {
     const escapedText = escapeXml(segment.text);
     const styles = segment.styles || {};
     const attributes = [];
     
-    // Цвет текста (fill)
+    // Text color (fill)
     if (segment.color && segment.color !== defaultColor) {
       attributes.push(`fill="${segment.color}"`);
     }
@@ -106,20 +106,20 @@ function generateTextPathContent(line, defaultColor) {
       attributes.push(`text-decoration="${decorations.join(' ')}"`);
     }
     
-    // Если нет атрибутов - возвращаем просто текст
+    // If no attributes - return plain text
     if (attributes.length === 0) {
       return escapedText;
     }
     
-    // Оборачиваем в tspan со всеми стилями
+    // Wrap in tspan with all styles
     return `<tspan ${attributes.join(' ')}>${escapedText}</tspan>`;
   }).join('');
 }
 
 /**
- * Генерирует текстовый элемент с анимацией
- * @param {Object} lineData - данные для генерации текстового элемента
- * @returns {string} SVG код текстового элемента
+ * Generates text element with animation
+ * @param {Object} lineData - data for text element generation
+ * @returns {string} SVG code for text element
  */
 function generateTextElement(lineData) {
   const {
@@ -150,7 +150,7 @@ function generateTextElement(lineData) {
   
   const opacityAttr = useFadeErase ? ' opacity="1"' : '';
   
-  // Генерируем контент с поддержкой цветовых сегментов
+  // Generate content with color segments support
   const textContent = generateTextPathContent(line, color);
 
   return `
@@ -168,10 +168,10 @@ function generateTextElement(lineData) {
 }
 
 /**
- * Генерирует единственный глобальный элемент курсора
- * на основе данных по всем строкам
- * @param {Array<Object>} linesData - массив параметров строк
- * @returns {string} SVG код элемента курсора или пустая строка
+ * Generates single global cursor element
+ * based on data from all lines
+ * @param {Array<Object>} linesData - array of line parameters
+ * @returns {string} SVG code for cursor element or empty string
  */
 function generateCursorElement(linesData) {
   if (!Array.isArray(linesData) || linesData.length === 0) {
@@ -188,10 +188,10 @@ function generateCursorElement(linesData) {
 }
 
 /**
- * Курсор для обычного режима (single / replacing): отдельные animate для каждой строки
+ * Cursor for normal mode (single / replacing): separate animate for each line
  */
 function generatePerLineCursor(linesData) {
-  // Берем первую строку, в которой есть рассчитанная анимация курсора
+  // Take the first line with calculated cursor animation
   const sampleLine = linesData.find(
     (lineData) =>
       lineData &&
@@ -216,9 +216,9 @@ function generatePerLineCursor(linesData) {
   const animateYParts = [];
   let hideOpacityAnimation = '';
 
-  // Определяем, нужно ли скрывать курсор по завершении всей анимации
-  // hideWhenFinished сейчас настроен как { repeat: false } и реализован через cursorFillValue === 'remove'
-  // при исходном fillValue !== 'remove'
+  // Determine if cursor should be hidden when all animation completes
+  // hideWhenFinished is currently configured as { repeat: false } and implemented via cursorFillValue === 'remove'
+  // when original fillValue !== 'remove'
   const hideOnFinish =
     sampleLine.cursorFillValue === 'remove' &&
     typeof sampleLine.fillValue !== 'undefined' &&
@@ -241,13 +241,13 @@ function generatePerLineCursor(linesData) {
 
     const cursorFill = cursorFillValue || fillValue || 'remove';
 
-    // Анимация X для данного диапазона времени (печать/стирание строки)
+    // X animation for this time range (line print/erase)
     animateXParts.push(`
       <animate attributeName="x" begin="${begin}"
         dur="${totalDuration}ms" fill="${cursorFill}"
         values="${cursorValues}" keyTimes="${cursorKeyTimes}" />`);
 
-    // Анимация Y: фиксированное значение для каждой ключевой точки
+    // Y animation: fixed value for each key point
     const keyCount = cursorKeyTimes.split(';').filter(Boolean).length;
     const yValues = Array(keyCount).fill(String(y)).join(';');
 
@@ -261,8 +261,8 @@ function generatePerLineCursor(linesData) {
     return '';
   }
 
-  // Если нужно скрыть курсор после завершения всех строк — вешаем
-  // отдельную анимацию opacity, которая срабатывает после последней строки
+  // If cursor needs to be hidden after all lines complete — add
+  // a separate opacity animation that triggers after the last line
   if (hideOnFinish) {
     const lastLineWithCursor = [...linesData]
       .reverse()
@@ -283,7 +283,7 @@ function generatePerLineCursor(linesData) {
     }
   }
 
-  // Общие визуальные параметры берем из примера строки
+  // Take common visual parameters from sample line
   const { color, fontSize, fontWeight } = sampleLine;
 
   return `
@@ -297,10 +297,10 @@ function generatePerLineCursor(linesData) {
 }
 
 /**
- * Курсор для multiline режима: один общий трек x/y на весь цикл
+ * Cursor for multiline mode: one common x/y track for entire cycle
  */
 function generateMultiLineCursor(linesData) {
-  // Фильтруем только строки, для которых есть данные курсора и печати
+  // Filter only lines with cursor and print data
   const multiLines = linesData.filter(
     (lineData) =>
       lineData &&
@@ -332,10 +332,10 @@ function generateMultiLineCursor(linesData) {
   const fill = sampleLine.cursorFillValue || sampleLine.fillValue || 'remove';
 
   /**
-   * Собираем интервалы активности курсора с детальными позициями:
-   * - печать строки [printStart, printEnd] с массивами keyTimes и xPositions
-   * - стирание строки [eraseStart, eraseEnd] с массивами keyTimes и xPositions (если есть)
-   * На основе этих интервалов строим единый трек x/y/opacity.
+   * Collect cursor activity intervals with detailed positions:
+   * - line print [printStart, printEnd] with keyTimes and xPositions arrays
+   * - line erase [eraseStart, eraseEnd] with keyTimes and xPositions arrays (if available)
+   * Build unified x/y/opacity track based on these intervals.
    */
   const intervals = [];
 
@@ -346,7 +346,7 @@ function generateMultiLineCursor(linesData) {
       cursorEraseKeyTimes, cursorEraseXPositions
     } = lineData;
 
-    // Добавляем интервал печати если есть детальные данные
+    // Add print interval if detailed data available
     if (
       typeof printStart === 'number' && 
       typeof printEnd === 'number' && 
@@ -366,7 +366,7 @@ function generateMultiLineCursor(linesData) {
       });
     }
 
-    // Добавляем интервал стирания если есть детальные данные
+    // Add erase interval if detailed data available
     if (
       typeof eraseStart === 'number' && 
       typeof eraseEnd === 'number' && 
@@ -426,7 +426,7 @@ function generateMultiLineCursor(linesData) {
     lastOpacity = opacity;
   }
 
-  // Стартовая точка: до первой активности курсора он невидим
+  // Starting point: cursor is invisible before first activity
   pushPoint(0, lastX, lastY, 0);
 
   intervals.forEach((interval) => {
@@ -436,51 +436,51 @@ function generateMultiLineCursor(linesData) {
     const isEraseInterval = interval.type === 'erase';
     const isLastPrintInterval = isPrintInterval && lastPrintInterval === interval;
 
-    // Используем детальные позиции из interval
+    // Use detailed positions from interval
     const detailedKeyTimes = interval.keyTimes;
     const detailedXPositions = interval.xPositions;
 
-    // Если есть "дырка" между предыдущим концом и началом интервала и курсор видим —
-    // явно фиксируем текущую позицию курсора до начала интервала
+    // If there's a gap between previous end and interval start and cursor is visible —
+    // explicitly fix current cursor position before interval starts
     if (interval.start > lastTime && lastOpacity > 0) {
       pushPoint(interval.start, lastX, lastY, lastOpacity);
     }
 
-    // Телепортируем курсор в начальную позицию невидимым (если он еще не там)
+    // Teleport cursor to starting position invisible (if not already there)
     if (detailedXPositions[0] !== lastX || lineY !== lastY || lastOpacity !== 0) {
       pushPoint(detailedKeyTimes[0], detailedXPositions[0], lineY, 0);
     }
     
-    // Делаем курсор видимым в начальной позиции
-    // SVG поддерживает несколько точек с одинаковым keyTime для мгновенного изменения
+    // Make cursor visible at starting position
+    // SVG supports multiple points with same keyTime for instant change
     pushPoint(detailedKeyTimes[0], detailedXPositions[0], lineY, 1);
 
-    // Добавляем все остальные точки из детального трека
+    // Add all remaining points from detailed track
     for (let i = 1; i < detailedKeyTimes.length; i++) {
       const time = detailedKeyTimes[i];
       const x = detailedXPositions[i];
       
-      // Последняя точка - особая обработка для стирания
+      // Last point - special handling for erase
       const isLastPoint = i === detailedKeyTimes.length - 1;
       
       if (isLastPoint && isEraseInterval) {
-        // Для стирания: в последней точке курсор еще видим
+        // For erase: cursor is still visible at last point
         pushPoint(time, x, lineY, 1);
-        // Затем гасим курсор - используем тот же keyTime для мгновенного изменения
+        // Then hide cursor - use same keyTime for instant change
         pushPoint(time, x, lineY, 0);
       } else if (isLastPoint && isLastPrintInterval && !hasEraseIntervals) {
-        // Для последней печати без стирания: курсор гаснет в конце
+        // For last print without erase: cursor fades at the end
         pushPoint(time, x, lineY, 1);
-        // Гасим курсор мгновенно
+        // Hide cursor instantly
         pushPoint(time, x, lineY, 0);
       } else {
-        // Обычная точка - курсор видим
+        // Regular point - cursor visible
         pushPoint(time, x, lineY, 1);
       }
     }
   });
 
-  // Гарантируем наличие точки в конце шкалы времени
+  // Ensure point exists at end of timeline
   if (lastTime < 1) {
     pushPoint(1, lastX, lastY, lastOpacity);
   }
@@ -504,14 +504,14 @@ function generateMultiLineCursor(linesData) {
 }
 
 /**
- * Генерирует финальный SVG документ
- * @param {Object} config - конфигурация для генерации SVG
- * @returns {string} готовый SVG код
+ * Generates final SVG document
+ * @param {Object} config - configuration for SVG generation
+ * @returns {string} ready SVG code
  */
 export function renderSVG(config) {
   const { width, height, background, linesData, fontCSS } = config;
   
-  // Генерируем все текстовые элементы
+  // Generate all text elements
   const pathsAndTexts = linesData.map((lineData) => generateTextElement(lineData)).join('');
   const cursorElement = generateCursorElement(linesData);
   const defs = generateDefs(fontCSS);

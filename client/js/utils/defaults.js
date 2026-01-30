@@ -1,13 +1,13 @@
 /**
- * Модуль для загрузки дефолтных значений с сервера
+ * Module for loading default values from server
  * 
- * Дефолты загружаются с API endpoint /api/defaults один раз при инициализации.
- * Если API недоступен, используются захардкоженные fallback значения.
+ * Defaults are loaded from API endpoint /api/defaults once during initialization.
+ * If API is unavailable, hardcoded fallback values are used.
  */
 
 /**
- * Fallback дефолты (используются если API недоступен)
- * Синхронизированы с server/config/defaults.js
+ * Fallback defaults (used if API is unavailable)
+ * Synchronized with server/config/defaults.js
  */
 const FALLBACK_DEFAULTS = {
   lines: 'Your text here',
@@ -21,7 +21,7 @@ const FALLBACK_DEFAULTS = {
   width: 800,
   height: 200,
 
-  // printSpeed и eraseSpeed - количество символов в секунду (characters per second)
+  // printSpeed and eraseSpeed - characters per second
   printSpeed: 10,
   eraseSpeed: 10,
 
@@ -39,8 +39,8 @@ const FALLBACK_DEFAULTS = {
 let cachedDefaults = null;
 
 /**
- * Загружает дефолтные параметры с сервера
- * @returns {Promise<Object>} дефолтные параметры
+ * Loads default parameters from server
+ * @returns {Promise<Object>} default parameters
  */
 export async function fetchDefaults() {
   if (cachedDefaults) {
@@ -53,7 +53,7 @@ export async function fetchDefaults() {
       headers: {
         'Accept': 'application/json'
       },
-      // Таймаут 3 секунды
+      // 3 second timeout
       signal: AbortSignal.timeout(3000)
     });
 
@@ -74,7 +74,7 @@ export async function fetchDefaults() {
 }
 
 /**
- * Синхронный доступ к дефолтам (возвращает fallback до загрузки)
- * @deprecated Используйте fetchDefaults() для гарантированно актуальных данных
+ * Synchronous access to defaults (returns fallback before loading)
+ * @deprecated Use fetchDefaults() for guaranteed up-to-date data
  */
 export const DEFAULT_PARAMS = cachedDefaults || FALLBACK_DEFAULTS;
