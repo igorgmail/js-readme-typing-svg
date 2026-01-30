@@ -1,11 +1,11 @@
 /**
- * Генератор SVG с SMIL анимацией эффекта печатающегося текста
+ * SVG generator with SMIL animation for typing text effect
  * 
- * Координирует работу модулей:
- * - text-utils: утилиты для работы с текстом
- * - svg-template: рендеринг SVG шаблона
- * - erase-modes: стратегии стирания текста
- * - animation-calculator: вычисление параметров анимации
+ * Coordinates module operations:
+ * - text-utils: text manipulation utilities
+ * - svg-template: SVG template rendering
+ * - erase-modes: text erasing strategies
+ * - animation-calculator: animation parameters calculation
  */
 
 import { parseLines } from '../processors/variables-parser.js';
@@ -16,12 +16,12 @@ import { getEmbeddedFontCSS, getMultipleEmbeddedFontsCSS } from '../fonts/font-e
 import { extractFontFamiliesFromStyles } from '../processors/style-segments-parser.js';
 
 /**
- * Генерирует SVG код с SMIL анимацией печатающегося текста
- * @param {Object} params - параметры генерации
- * @returns {string} SVG код
+ * Generates SVG code with SMIL animation for typing text
+ * @param {Object} params - generation parameters
+ * @returns {string} SVG code
  */
 export async function generateSVG(params) {
-  // Парсинг строк текста
+  // Parse text lines
   const rawLines = Array.isArray(params.lines) 
     ? params.lines 
     : (typeof params.lines === 'string' 
@@ -34,7 +34,7 @@ export async function generateSVG(params) {
     lines.push('Your+text+here');
   }
   
-  // Нормализация параметров
+  // Normalize parameters
   const normalizedParams = {
     ...params,
     multiLine: params.multiLine === true || params.multiLine === 'true' || params.multiLine === '1',
@@ -47,22 +47,22 @@ export async function generateSVG(params) {
     letterSpacing: params.letterSpacing || 'normal'
   };
   
-  // Обработка фона
+  // Process background
   const backgroundValue = params.background === 'transparent' ? params.background : 
     (params.background.startsWith('#') ? params.background : '#' + params.background);
   const background = processBackground(backgroundValue);
   
-  // Попытка подтянуть CSS шрифта, встроить его в SVG и распарсить для получения метрик.
-  // Логика опциональная: при ошибке просто генерируем SVG без встроенного шрифта.
-  // ВАЖНО: загружаем шрифт ДО вызова calculateStartY, чтобы использовать метрики для расчета позиции
+  // Attempt to fetch font CSS, embed it in SVG and parse to get metrics.
+  // Logic is optional: on error, simply generate SVG without embedded font.
+  // IMPORTANT: load font BEFORE calling calculateStartY to use metrics for position calculation
   
-  // Извлекаем все уникальные fontFamily из сегментов стилей $STYLE
+  // Extract all unique fontFamily from $STYLE style segments
   const styleFontFamilies = extractFontFamiliesFromStyles(lines);
   
-  // Собираем список всех шрифтов для загрузки: основной + из стилей
+  // Collect list of all fonts to load: main + from styles
   const fontsToLoad = [];
   
-  // Добавляем основной шрифт
+  // Add main font
   if (normalizedParams.fontFamily) {
     fontsToLoad.push({
       fontFamily: normalizedParams.fontFamily,
@@ -71,9 +71,9 @@ export async function generateSVG(params) {
     });
   }
   
-  // Добавляем шрифты из стилей (если они отличаются от основного)
+  // Add fonts from styles (if they differ from main)
   for (const styleFontFamily of styleFontFamilies) {
-    // Проверяем, не является ли это основным шрифтом
+    // Check if this is not the main font
     if (normalizedParams.fontFamily) {
       const normalizedMain = normalizedParams.fontFamily.split(',')[0].trim().replace(/["']/g, '').toLowerCase();
       const normalizedStyle = styleFontFamily.split(',')[0].trim().replace(/["']/g, '').toLowerCase();
@@ -86,7 +86,7 @@ export async function generateSVG(params) {
         });
       }
     } else {
-      // Если основного шрифта нет, добавляем все из стилей
+      // If there's no main font, add all from styles
       fontsToLoad.push({
         fontFamily: styleFontFamily,
         fontWeight: normalizedParams.fontWeight,
@@ -97,39 +97,39 @@ export async function generateSVG(params) {
   
   let fontCSS = '';
   let parsedFont = null;
-  // Карта для хранения метрик всех шрифтов: fontFamily -> parsedFont
+  // Map for storing metrics of all fonts: fontFamily -> parsedFont
   const fontsMap = new Map();
   
   try {
-    // Загружаем все шрифты (основной + из стилей) и объединяем CSS
+    // Load all fonts (main + from styles) and combine CSS
     if (fontsToLoad.length > 0) {
       fontCSS = await getMultipleEmbeddedFontsCSS(fontsToLoad);
       
-      // Загружаем метрики для всех шрифтов параллельно
+      // Load metrics for all fonts in parallel
       const fontMetricsPromises = fontsToLoad.map(async (fontConfig) => {
         try {
           const fontData = await getEmbeddedFontCSS(fontConfig);
           if (fontData.parsedFont) {
-            // Нормализуем имя шрифта для ключа (убираем кавычки, берем первое семейство)
+            // Normalize font name for key (remove quotes, take first family)
             const normalizedName = fontConfig.fontFamily.split(',')[0].trim().replace(/["']/g, '').toLowerCase();
             fontsMap.set(normalizedName, fontData.parsedFont);
           }
           return fontData;
         } catch (error) {
-          // Игнорируем ошибки загрузки отдельных шрифтов
+          // Ignore individual font loading errors
           return null;
         }
       });
       
       await Promise.all(fontMetricsPromises);
       
-      // Устанавливаем основной parsedFont для обратной совместимости
+      // Set main parsedFont for backward compatibility
       if (normalizedParams.fontFamily) {
         const normalizedMain = normalizedParams.fontFamily.split(',')[0].trim().replace(/["']/g, '').toLowerCase();
         parsedFont = fontsMap.get(normalizedMain) || null;
       }
     } else if (normalizedParams.fontFamily) {
-      // Если нет шрифтов из стилей, загружаем только основной
+      // If no fonts from styles, load only main
       const mainFontData = await getEmbeddedFontCSS({
         fontFamily: normalizedParams.fontFamily,
         fontWeight: normalizedParams.fontWeight,
@@ -149,7 +149,7 @@ export async function generateSVG(params) {
     parsedFont = null;
   }
   
-  // Вычисление стартовой позиции Y (теперь с учетом метрик шрифта)
+  // Calculate starting Y position (now with font metrics)
   const startY = calculateStartY({
     verticalAlign: normalizedParams.verticalAlign,
     height: normalizedParams.height,
@@ -161,10 +161,10 @@ export async function generateSVG(params) {
     parsedFont
   });
   
-  // Вычисление параметров анимации для всех строк с использованием метрик шрифта
+  // Calculate animation parameters for all lines using font metrics
   const linesData = calculateLinesAnimation(normalizedParams, lines, startY, parsedFont, fontsMap);
   
-  // Рендеринг итогового SVG
+  // Render final SVG
   return renderSVG({
     width: normalizedParams.width,
     height: normalizedParams.height,

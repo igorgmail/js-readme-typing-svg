@@ -1,5 +1,5 @@
 /**
- * Vercel Serverless Function для генерации SVG
+ * Vercel Serverless Function for generating SVG
  * API Endpoint: /svg или /api/svg
  */
 
@@ -14,16 +14,16 @@ import { applyDefaults } from '../server/config/defaults.js';
  */
 export default async function handler(req, res) {
   try {
-    // Парсим query параметры
+    // Parse query parameters
     const parsedParams = parseQueryParams(req.query);
     
-    // Применяем дефолтные значения
+    // Apply default values
     const params = applyDefaults(parsedParams);
     
-    // Генерируем SVG (c возможной асинхронной загрузкой шрифтов)
+    // Generate SVG (with possible asynchronous font loading)
     const svg = await generateSVG(params);
     
-    // Отправляем с правильным Content-Type
+    // Send with correct Content-Type
     res.setHeader('Content-Type', 'image/svg+xml; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');

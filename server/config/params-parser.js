@@ -1,35 +1,35 @@
 /**
- * Модуль для парсинга query параметров на сервере
- * Адаптированная версия url-parser.js для работы без window
+ * Module for parsing query parameters on server
+ * Adapted version of url-parser.js to work without window
  */
 
 /**
- * Парсит строку lines (разделитель: точка с запятой)
- * @param {string} linesStr - строка с текстом, разделенным ;
- * @returns {Array<string>} массив строк (или пустой массив если строка пустая)
+ * Parses lines string (separator: semicolon)
+ * @param {string} linesStr - string with text separated by ;
+ * @returns {Array<string>} array of strings (or empty array if string is empty)
  */
 function parseLines(linesStr) {
   if (!linesStr || typeof linesStr !== 'string') return [];
   
-  // Разбиваем по ; на отдельные строки
+  // Split by ; into separate lines
   const parsed = linesStr.split(';').map(line => line.trim()).filter(line => line);
   return parsed.length > 0 ? parsed : [];
 }
 
 /**
- * Преобразует строковые значения параметров в нужные типы
- * @param {string} key - ключ параметра
- * @param {string} value - значение параметра
- * @returns {*} преобразованное значение
+ * Converts string parameter values to required types
+ * @param {string} key - parameter key
+ * @param {string} value - parameter value
+ * @returns {*} converted value
  */
 function convertParamType(key, value) {
-  // Булевы параметры
+  // Boolean parameters
   const booleanParams = ['multiLine', 'showCaret', 'repeat'];
   if (booleanParams.includes(key)) {
     return value === 'true' || value === '1';
   }
   
-  // Числовые параметры
+  // Number parameters
   const numberParams = [
     'printSpeed', 
     'eraseSpeed', 
@@ -47,49 +47,49 @@ function convertParamType(key, value) {
     return isNaN(num) ? undefined : num;
   }
   
-  // Цветовые параметры - оставляем как есть (без #, т.к. это может быть transparent)
+  // Color parameters - leave as is (without #, since it can be transparent)
   const colorParams = ['color', 'background'];
   if (colorParams.includes(key)) {
     if (value === 'transparent') return value;
-    // Если уже есть #, оставляем, иначе не добавляем (будет добавлено в генераторе при необходимости)
+    // If # already exists, keep it, otherwise don't add (will be added in generator if needed)
     return value;
   }
   
-  // Для остальных возвращаем строку
+  // For others return string
   return value;
 }
 
 /**
- * Преобразует query параметры Express в объект опций для генераторов SVG
- * @param {Object} query - объект req.query из Express
- * @returns {Object} объект опций для генераторов
+ * Converts Express query parameters to options object for SVG generators
+ * @param {Object} query - req.query object from Express
+ * @returns {Object} options object for generators
  */
 export function parseQueryParams(query) {
   const options = {};
   
-  // Обрабатываем lines (специальный параметр)
-  // Если lines передан - парсим его в массив
-  // Если не передан - оставляем undefined (будет использован дефолт)
+  // Process lines (special parameter)
+  // If lines is provided - parse it to array
+  // If not provided - leave undefined (default will be used)
   if (query.lines !== undefined && query.lines !== null) {
     const parsed = parseLines(query.lines);
-    // Сохраняем только если есть хотя бы одна строка
+    // Save only if there's at least one line
     if (parsed.length > 0) {
       options.lines = parsed;
     }
   }
   
-  // Маппинг параметров URL -> опции функции
+  // Mapping URL parameters -> function options
   const paramMapping = {
-    // Анимация
+    // Animation
     printSpeed: 'printSpeed',
     eraseSpeed: 'eraseSpeed',
-    duration: 'printSpeed', // алиас
+    duration: 'printSpeed', // alias
     delayBetweenLines: 'delayBetweenLines',
-    pause: 'delayBetweenLines', // алиас
+    pause: 'delayBetweenLines', // alias
     
-    // Визуальные параметры
+    // Visual parameters
     fontSize: 'fontSize',
-    font: 'fontSize', // алиас для fontSize
+    font: 'fontSize', // alias for fontSize
     fontWeight: 'fontWeight',
     fontFamily: 'fontFamily',
     lineHeight: 'lineHeight',
@@ -98,20 +98,20 @@ export function parseQueryParams(query) {
     color: 'color',
     background: 'background',
     
-    // Размеры
+    // Dimensions
     width: 'width',
     height: 'height',
     paddingX: 'paddingX',
     paddingY: 'paddingY',
     
-    // Выравнивание
+    // Alignment
     verticalAlign: 'verticalAlign',
-    vAlign: 'verticalAlign', // алиас
+    vAlign: 'verticalAlign', // alias
     horizontalAlign: 'horizontalAlign',
-    hAlign: 'horizontalAlign', // алиас
-    center: null, // обрабатывается отдельно
+    hAlign: 'horizontalAlign', // alias
+    center: null, // handled separately
     
-    // Режимы
+    // Modes
     typingMode: 'typingMode',
     eraseMode: 'eraseMode',
     cursorStyle: 'cursorStyle',
@@ -120,7 +120,7 @@ export function parseQueryParams(query) {
     repeat: 'repeat'
   };
   
-  // Применяем маппинг
+  // Apply mapping
   for (const [urlKey, optionKey] of Object.entries(paramMapping)) {
     if (query[urlKey] !== undefined && optionKey !== null) {
       const value = convertParamType(optionKey, query[urlKey]);
@@ -131,7 +131,7 @@ export function parseQueryParams(query) {
     }
   }
   
-  // Специальная обработка center
+  // Special handling for center
   if (query.center === 'true' || query.center === '1') {
     options.horizontalAlign = 'center';
     options.verticalAlign = 'middle';

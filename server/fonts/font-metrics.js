@@ -1,108 +1,108 @@
 /**
- * Модуль для точного расчёта метрик текста с использованием opentype.js
- * Заменяет приближенные коэффициенты на реальные метрики из шрифтов
+ * Module for precise text metrics calculation using opentype.js
+ * Replaces approximate coefficients with real metrics from fonts
  */
 
 import { parseLetterSpacing } from '../utils/text-utils.js';
 import { parseStyleSegments, hasStyleMarkers, stripStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
- * Регулярное выражение для определения emoji
+ * Regular expression for detecting emoji
  */
 const EMOJI_REGEX = /\p{Emoji_Presentation}|\p{Extended_Pictographic}/u;
 
 /**
- * Fallback коэффициент для расчёта ширины символа без загруженного шрифта
- * Основан на средней ширине символов в популярных пропорциональных шрифтах
+ * Fallback coefficient for calculating character width without loaded font
+ * Based on average character width in popular proportional fonts
  */
 const FALLBACK_CHAR_WIDTH_COEFFICIENT = 0.5;
 
 /**
- * Fallback коэффициент для расчёта ascent (высоты над базовой линией)
- * Основан на средних метриках популярных шрифтов (обычно ascent составляет ~0.8-0.9 от размера шрифта)
+ * Fallback coefficient for calculating ascent (height above baseline)
+ * Based on average metrics of popular fonts (typically ascent is ~0.8-0.9 of font size)
  */
 const FALLBACK_ASCENT_COEFFICIENT = 0.85;
 
 /**
- * Получает ширину одного символа используя метрики шрифта
+ * Gets width of a single character using font metrics
  * 
- * @param {string} char - символ для измерения
- * @param {number} fontSize - размер шрифта в пикселях
- * @param {object|null} font - объект opentype.Font или null
- * @param {string|number} letterSpacing - межбуквенный интервал
- * @returns {number} ширина символа в пикселях
+ * @param {string} char - character to measure
+ * @param {number} fontSize - font size in pixels
+ * @param {object|null} font - opentype.Font object or null
+ * @param {string|number} letterSpacing - letter spacing
+ * @returns {number} character width in pixels
  */
 export function getCharWidth(char, fontSize, font, letterSpacing) {
   const letterSpacingPx = parseLetterSpacing(letterSpacing, fontSize);
   
-  // Emoji обрабатываем особым образом - их ширина обычно больше чем у обычных символов
-  // Используем коэффициент 1.4 для более точного расчёта реальной ширины при отрисовке
+  // Handle emoji specially - their width is usually larger than regular characters
+  // Use coefficient 1.4 for more accurate calculation of actual rendering width
   const isEmoji = EMOJI_REGEX.test(char);
   if (isEmoji) {
     return fontSize * 1.4 + letterSpacingPx;
   }
   
-  // Если шрифт загружен, используем реальные метрики из opentype.js
+  // If font is loaded, use real metrics from opentype.js
   if (font && font.charToGlyph && font.unitsPerEm) {
     try {
       const glyph = font.charToGlyph(char);
       
       if (glyph && typeof glyph.advanceWidth === 'number') {
-        // advanceWidth - это ширина глифа в font units
-        // Конвертируем в пиксели: (advanceWidth / unitsPerEm) * fontSize
+        // advanceWidth - this is glyph width in font units
+        // Convert to pixels: (advanceWidth / unitsPerEm) * fontSize
         const scale = fontSize / font.unitsPerEm;
         const charWidth = glyph.advanceWidth * scale;
         
         return charWidth + letterSpacingPx;
       }
     } catch (error) {
-      // Если произошла ошибка при получении глифа, используем fallback
+      // If error occurred while getting glyph, use fallback
       console.warn(`Failed to get glyph for character "${char}":`, error.message);
     }
   }
   
-  // Fallback: приближенный расчёт если шрифт не загружен или глиф не найден
+  // Fallback: approximate calculation if font is not loaded or glyph not found
   return getApproximateCharWidth(fontSize) + letterSpacingPx;
 }
 
 /**
- * Приближенный расчёт ширины символа без метрик шрифта
- * Используется как fallback когда шрифт не загружен или парсинг не удался
+ * Approximate calculation of character width without font metrics
+ * Used as fallback when font is not loaded or parsing failed
  * 
- * @param {number} fontSize - размер шрифта в пикселях
- * @returns {number} приближенная ширина символа
+ * @param {number} fontSize - font size in pixels
+ * @returns {number} approximate character width
  */
 export function getApproximateCharWidth(fontSize) {
   return fontSize * FALLBACK_CHAR_WIDTH_COEFFICIENT;
 }
 
 /**
- * Вычисляет точную ширину строки текста используя метрики шрифта
+ * Calculates precise text line width using font metrics
  * 
- * @param {string} text - текст для измерения
- * @param {number} fontSize - размер шрифта в пикселях
- * @param {object|null} font - объект opentype.Font или null
- * @param {string|number} letterSpacing - межбуквенный интервал
- * @returns {number} общая ширина текста в пикселях
+ * @param {string} text - text to measure
+ * @param {number} fontSize - font size in pixels
+ * @param {object|null} font - opentype.Font object or null
+ * @param {string|number} letterSpacing - letter spacing
+ * @returns {number} total text width in pixels
  */
 export function computeTextWidthPrecise(text, fontSize, font, letterSpacing) {
   if (!text || text.length === 0) {
     return 0;
   }
   
-  // Разбиваем текст на массив символов (поддержка emoji и комбинированных символов)
+  // Split text into character array (supports emoji and combined characters)
   const chars = [...text];
   
   let totalWidth = 0;
   
-  // Суммируем ширину каждого символа
+  // Sum width of each character
   for (let i = 0; i < chars.length; i++) {
     const char = chars[i];
-    const charWidth = getCharWidth(char, fontSize, font, 0); // letterSpacing добавим отдельно
+    const charWidth = getCharWidth(char, fontSize, font, 0); // letterSpacing will be added separately
     totalWidth += charWidth;
   }
   
-  // Добавляем letterSpacing между символами (не после последнего)
+  // Add letterSpacing between characters (not after last one)
   if (chars.length > 1) {
     const letterSpacingPx = parseLetterSpacing(letterSpacing, fontSize);
     totalWidth += letterSpacingPx * (chars.length - 1);
@@ -112,41 +112,41 @@ export function computeTextWidthPrecise(text, fontSize, font, letterSpacing) {
 }
 
 /**
- * Вычисляет массив накопленных ширин для каждой позиции в тексте с учетом сегментов стилей
- * Используется для точного позиционирования курсора и анимации стирания
+ * Calculates array of accumulated widths for each position in text considering style segments
+ * Used for precise cursor positioning and erase animation
  * 
- * @param {string} text - текст для измерения (может содержать маркеры стилей)
- * @param {number} defaultFontSize - размер шрифта по умолчанию
- * @param {object|null} font - объект opentype.Font или null
- * @param {string|number} letterSpacing - межбуквенный интервал
- * @returns {Array<number>} массив накопленных ширин [0, width1, width1+width2, ...]
+ * @param {string} text - text to measure (may contain style markers)
+ * @param {number} defaultFontSize - default font size
+ * @param {object|null} font - opentype.Font object or null
+ * @param {string|number} letterSpacing - letter spacing
+ * @returns {Array<number>} array of accumulated widths [0, width1, width1+width2, ...]
  */
 export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letterSpacing, fontsMap = null) {
   if (!text || text.length === 0) {
     return [0];
   }
   
-  // Если нет маркеров стилей - используем обычный расчет
+  // If no style markers - use regular calculation
   if (!hasStyleMarkers(text)) {
     return getCharacterWidths(text, defaultFontSize, font, letterSpacing);
   }
   
-  // Парсим сегменты стилей
+  // Parse style segments
   const segments = parseStyleSegments(text, '#000000');
-  const widths = [0]; // Начинаем с 0
+  const widths = [0]; // Start with 0
   let accumulated = 0;
   
-  // Используем letterSpacing по умолчанию для расчета между сегментами
+  // Use default letterSpacing for calculation between segments
   const defaultLetterSpacingPx = parseLetterSpacing(letterSpacing, defaultFontSize);
   
   for (let segIndex = 0; segIndex < segments.length; segIndex++) {
     const segment = segments[segIndex];
     
-    // Определяем fontSize для сегмента
+    // Determine fontSize for segment
     let segmentFontSize = defaultFontSize;
     if (segment.styles?.fontSize) {
       const fontSizeValue = segment.styles.fontSize;
-      // Поддерживаем разные форматы: число, строка с "px", просто число
+      // Support different formats: number, string with "px", just number
       const parsed = typeof fontSizeValue === 'number' 
         ? fontSizeValue 
         : parseFloat(String(fontSizeValue).replace(/px$/i, ''));
@@ -155,11 +155,11 @@ export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letter
       }
     }
     
-    // Определяем letterSpacing для сегмента
+    // Determine letterSpacing for segment
     const segmentLetterSpacing = segment.styles?.letterSpacing || letterSpacing;
     const letterSpacingPx = parseLetterSpacing(segmentLetterSpacing, segmentFontSize);
     
-    // Определяем font для сегмента (если указан fontFamily в стилях)
+    // Determine font for segment (if fontFamily specified in styles)
     let segmentFont = font;
     if (segment.styles?.fontFamily && fontsMap) {
       const segmentFontFamily = segment.styles.fontFamily;
@@ -175,30 +175,30 @@ export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letter
       
       accumulated += charWidth;
       
-      // Добавляем letterSpacing после каждого символа кроме последнего символа всего текста
+      // Add letterSpacing after each character except last character of all text
       const isLastCharOfAll = (segIndex === segments.length - 1) && (i === chars.length - 1);
       if (!isLastCharOfAll) {
         if (i < chars.length - 1) {
-          // Внутри сегмента используем letterSpacing сегмента
+          // Inside segment use segment's letterSpacing
           accumulated += letterSpacingPx;
         }
-        // Между сегментами letterSpacing не добавляем, так как между ними может не быть символов
-        // Если между сегментами есть символы, они будут в следующем сегменте
+        // Don't add letterSpacing between segments, as there may be no characters between them
+        // If there are characters between segments, they will be in next segment
       }
       
       widths.push(accumulated);
     }
   }
   
-  // Проверяем, что количество элементов соответствует количеству символов в cleanLine
-  // Это важно для правильного позиционирования курсора
+  // Check that number of elements matches number of characters in cleanLine
+  // This is important for correct cursor positioning
   const cleanLine = stripStyleMarkers(text);
-  const expectedLength = cleanLine.length + 1; // +1 для начальной позиции 0
+  const expectedLength = cleanLine.length + 1; // +1 for initial position 0
   
   if (widths.length !== expectedLength) {
-    // Если длины не совпадают, это может быть из-за проблем с парсингом
-    // В этом случае используем fallback расчет
-    console.warn(`getCharacterWidthsWithStyles: длины не совпадают. Ожидалось ${expectedLength}, получено ${widths.length}. Используется fallback.`);
+    // If lengths don't match, this may be due to parsing issues
+    // In this case use fallback calculation
+    console.warn(`getCharacterWidthsWithStyles: lengths don't match. Expected ${expectedLength}, got ${widths.length}. Using fallback.`);
     return getCharacterWidths(cleanLine, defaultFontSize, font, letterSpacing);
   }
   
@@ -206,14 +206,14 @@ export function getCharacterWidthsWithStyles(text, defaultFontSize, font, letter
 }
 
 /**
- * Вычисляет массив накопленных ширин для каждой позиции в тексте
- * Используется для точного позиционирования курсора и анимации стирания
+ * Calculates array of accumulated widths for each position in text
+ * Used for precise cursor positioning and erase animation
  * 
- * @param {string} text - текст для измерения
- * @param {number} fontSize - размер шрифта в пикселях
- * @param {object|null} font - объект opentype.Font или null
- * @param {string|number} letterSpacing - межбуквенный интервал
- * @returns {Array<number>} массив накопленных ширин [0, width1, width1+width2, ...]
+ * @param {string} text - text to measure
+ * @param {number} fontSize - font size in pixels
+ * @param {object|null} font - opentype.Font object or null
+ * @param {string|number} letterSpacing - letter spacing
+ * @returns {Array<number>} array of accumulated widths [0, width1, width1+width2, ...]
  */
 export function getCharacterWidths(text, fontSize, font, letterSpacing) {
   if (!text || text.length === 0) {
@@ -221,7 +221,7 @@ export function getCharacterWidths(text, fontSize, font, letterSpacing) {
   }
   
   const chars = [...text];
-  const widths = [0]; // Начинаем с 0
+  const widths = [0]; // Start with 0
   const letterSpacingPx = parseLetterSpacing(letterSpacing, fontSize);
   
   let accumulated = 0;
@@ -232,7 +232,7 @@ export function getCharacterWidths(text, fontSize, font, letterSpacing) {
     
     accumulated += charWidth;
     
-    // Добавляем letterSpacing после каждого символа кроме последнего
+    // Add letterSpacing after each character except last one
     if (i < chars.length - 1) {
       accumulated += letterSpacingPx;
     }
@@ -244,45 +244,45 @@ export function getCharacterWidths(text, fontSize, font, letterSpacing) {
 }
 
 /**
- * Вычисляет ширину оставшегося текста при стирании посимвольно
- * Используется в режиме стирания для точного расчёта анимации
+ * Calculates width of remaining text when erasing character by character
+ * Used in erase mode for precise animation calculation
  * 
- * @param {string} text - полный текст
- * @param {number} remainingChars - количество оставшихся символов
- * @param {number} fontSize - размер шрифта в пикселях
- * @param {object|null} font - объект opentype.Font или null
- * @param {string|number} letterSpacing - межбуквенный интервал
- * @returns {number} ширина оставшегося текста
+ * @param {string} text - full text
+ * @param {number} remainingChars - number of remaining characters
+ * @param {number} fontSize - font size in pixels
+ * @param {object|null} font - opentype.Font object or null
+ * @param {string|number} letterSpacing - letter spacing
+ * @returns {number} width of remaining text
  */
 export function getRemainingTextWidth(text, remainingChars, fontSize, font, letterSpacing, fontsMap = null) {
   if (remainingChars <= 0) {
     return 0;
   }
   
-  // Если есть маркеры стилей и fontsMap, используем расчет с учетом стилей
+  // If there are style markers and fontsMap, use calculation with styles
   if (hasStyleMarkers(text) && fontsMap) {
-    // Извлекаем cleanLine для работы с индексами символов
+    // Extract cleanLine to work with character indices
     const cleanLine = stripStyleMarkers(text);
     const chars = [...cleanLine];
     
-    // Берем только первые remainingChars символов
+    // Take only first remainingChars characters
     const charsToMeasure = chars.slice(0, remainingChars);
     const remainingCleanText = charsToMeasure.join('');
     
-    // Получаем ширины для всех символов с учетом стилей
+    // Get widths for all characters considering styles
     const widths = getCharacterWidthsWithStyles(text, fontSize, font, letterSpacing, fontsMap);
     
-    // Возвращаем ширину до позиции remainingChars
-    // widths[remainingChars] содержит накопленную ширину до этой позиции
+    // Return width up to remainingChars position
+    // widths[remainingChars] contains accumulated width up to this position
     if (remainingChars < widths.length) {
       return widths[remainingChars];
     }
     
-    // Если выходим за границы, возвращаем последнее значение
+    // If out of bounds, return last value
     return widths.length > 0 ? widths[widths.length - 1] : 0;
   }
   
-  // Иначе используем обычный расчет
+  // Otherwise use regular calculation
   const chars = [...text];
   const charsToMeasure = chars.slice(0, remainingChars);
   const remainingText = charsToMeasure.join('');
@@ -291,30 +291,30 @@ export function getRemainingTextWidth(text, remainingChars, fontSize, font, lett
 }
 
 /**
- * Получает ascent (высоту над базовой линией) шрифта в пикселях
- * Используется для корректного позиционирования текста при verticalAlign=top
+ * Gets font ascent (height above baseline) in pixels
+ * Used for correct text positioning when verticalAlign=top
  * 
- * @param {number} fontSize - размер шрифта в пикселях
- * @param {object|null} font - объект opentype.Font или null
- * @returns {number} ascent в пикселях
+ * @param {number} fontSize - font size in pixels
+ * @param {object|null} font - opentype.Font object or null
+ * @returns {number} ascent in pixels
  */
 export function getFontAscent(fontSize, font) {
-  // Если шрифт загружен, используем реальные метрики из opentype.js
+  // If font is loaded, use real metrics from opentype.js
   if (font && typeof font.ascender === 'number' && font.unitsPerEm) {
     try {
-      // ascender - это высота над базовой линией в font units
-      // Конвертируем в пиксели: (ascender / unitsPerEm) * fontSize
+      // ascender - this is height above baseline in font units
+      // Convert to pixels: (ascender / unitsPerEm) * fontSize
       const scale = fontSize / font.unitsPerEm;
       const ascent = font.ascender * scale;
       
       return ascent;
     } catch (error) {
-      // Если произошла ошибка, используем fallback
+      // If error occurred, use fallback
       console.warn('Failed to get font ascent:', error.message);
     }
   }
   
-  // Fallback: приближенный расчёт если шрифт не загружен
+  // Fallback: approximate calculation if font is not loaded
   return fontSize * FALLBACK_ASCENT_COEFFICIENT;
 }
 

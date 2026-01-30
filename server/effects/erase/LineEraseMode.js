@@ -1,12 +1,12 @@
 /**
- * Режим стирания 'line' - текст стирается построчно
+ * Erase mode 'line' - text is erased line by line
  */
 import { EraseMode } from './EraseMode.js';
 import { getRemainingTextWidth } from '../../fonts/font-metrics.js';
 import { stripStyleMarkers } from '../../processors/style-segments-parser.js';
 
 /**
- * Вычисляет временные метки для эффекта стирания
+ * Calculates time marks for erase effect
  */
 function computeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration) {
   const start = (printDuration + delayBetweenLines) / totalDuration;
@@ -15,9 +15,9 @@ function computeEraseTimes(printDuration, delayBetweenLines, eraseDuration, tota
 }
 
 /**
- * Генерирует посимвольное стирание справа налево
- * @param {Object} config - конфигурация
- * @returns {Object} keyTimes и pathValues для посимвольного стирания
+ * Generates character-by-character erase from right to left
+ * @param {Object} config - configuration
+ * @returns {Object} keyTimes and pathValues for character-by-character erase
  */
 function generateCharByCharErase(config) {
   const {
@@ -25,12 +25,12 @@ function generateCharByCharErase(config) {
     eraseStart, eraseEnd, totalDuration, fontFamily, parsedFont, fontsMap
   } = config;
   
-  // Используем cleanLine для подсчета реальных символов (без маркеров стилей)
+  // Use cleanLine to count real characters (without style markers)
   const cleanLine = stripStyleMarkers(line);
   const chars = [...cleanLine];
   const charCount = chars.length;
   
-  // Если строка пустая, возвращаем простую анимацию
+  // If line is empty, return simple animation
   if (charCount === 0) {
     return {
       keyTimes: '0;1',
@@ -38,34 +38,34 @@ function generateCharByCharErase(config) {
     };
   }
   
-  // Вычисляем keyTimes и pathValues для посимвольного стирания
+  // Calculate keyTimes and pathValues for character-by-character erase
   const keyTimes = [];
   const pathValues = [];
   
-  // Добавляем начальные точки (до стирания)
+  // Add initial points (before erase)
   keyTimes.push(0);
   pathValues.push(`m${startX},${y} h0`);
   
-  // Если есть printStart и printEnd, добавляем их (для многострочного режима)
+  // If printStart and printEnd exist, add them (for multiline mode)
   if (config.printStart !== undefined && config.printEnd !== undefined) {
     keyTimes.push(config.printStart);
     pathValues.push(`m${startX},${y} h0`);
     keyTimes.push(config.printEnd);
     pathValues.push(`m${startX},${y} h${textWidth}`);
   } else if (config.printEnd !== undefined) {
-    // Если есть только printEnd (для single line или replacing mode)
+    // If only printEnd exists (for single line or replacing mode)
     keyTimes.push(config.printEnd);
     pathValues.push(`m${startX},${y} h${textWidth}`);
   }
   
-  // Добавляем точку начала стирания (текст еще полностью виден)
+  // Add erase start point (text is still fully visible)
   keyTimes.push(eraseStart);
   pathValues.push(`m${startX},${y} h${textWidth}`);
   
-  // Генерируем промежуточные точки для каждого символа (стираем справа налево)
-  // Начинаем с charCount - 1, чтобы не дублировать точку начала стирания
+  // Generate intermediate points for each character (erase from right to left)
+  // Start from charCount - 1 to avoid duplicating erase start point
   for (let i = charCount - 1; i >= 0; i--) {
-    // Вычисляем оставшуюся ширину используя точные метрики из шрифта с учетом стилей
+    // Calculate remaining width using precise font metrics with styles
     const remainingWidth = getRemainingTextWidth(line, i, fontSize, parsedFont, letterSpacing, fontsMap);
     
     const charIndex = charCount - i;
@@ -76,7 +76,7 @@ function generateCharByCharErase(config) {
     pathValues.push(`m${startX},${y} h${remainingWidth}`);
   }
   
-  // Добавляем финальную точку для завершения анимации
+  // Add final point to complete animation
   if (keyTimes[keyTimes.length - 1] < 1) {
     keyTimes.push(1);
     pathValues.push(`m${startX},${y} h0`);
@@ -98,7 +98,7 @@ export class LineEraseMode extends EraseMode {
     const printEnd = printDuration / totalDuration;
     const eraseTimes = computeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration);
     
-    // Генерируем посимвольное стирание
+    // Generate character-by-character erase
     const eraseAnimation = generateCharByCharErase({
       startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap,
       eraseStart: eraseTimes.start, eraseEnd: eraseTimes.end, totalDuration, printEnd
@@ -119,7 +119,7 @@ export class LineEraseMode extends EraseMode {
       line, fontSize, letterSpacing, eraseSpeed, totalDuration, fontFamily, parsedFont, fontsMap
     } = config;
     
-    // Генерируем посимвольное стирание
+    // Generate character-by-character erase
     const eraseAnimation = generateCharByCharErase({
       startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap,
       eraseStart, eraseEnd, totalDuration, printStart, printEnd
@@ -144,7 +144,7 @@ export class LineEraseMode extends EraseMode {
     const eraseStart = (printDuration + delayBetweenLines) / totalDuration;
     const eraseEnd = (printDuration + delayBetweenLines + eraseDuration) / totalDuration;
     
-    // Генерируем посимвольное стирание
+    // Generate character-by-character erase
     const eraseAnimation = generateCharByCharErase({
       startX, y, textWidth, line, fontSize, letterSpacing, eraseSpeed, fontFamily, parsedFont, fontsMap,
       eraseStart, eraseEnd, totalDuration, printEnd

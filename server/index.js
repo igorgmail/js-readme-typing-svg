@@ -6,21 +6,20 @@ import logger from'morgan';
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Проверка поддержки fetch API при старте
+// Check fetch API support on startup
 if (typeof fetch !== 'function') {
   console.warn('\n⚠️  WARNING: fetch API is not available in your Node.js version');
   console.warn('   Google Fonts will not be loaded. Custom fonts will be ignored.');
   console.warn('   Please upgrade to Node.js >= 18.13.0 for full functionality.\n');
 }
 
-// cod
 app.use(logger('dev'));
-// Статические файлы: раздаем /client/* из папки client/
+// Static files: serve /client/* from client/ folder
 app.use('/client', express.static('client'));
-// Корневые статические файлы (для обратной совместимости)
+// Root static files (for backward compatibility)
 app.use(express.static('client'));
 
-// Роут для главной страницы (генератор)
+// Route for main page (generator)
 app.get('/', (req, res) => {
   res.sendFile('index.html', { root: 'client' });
 });

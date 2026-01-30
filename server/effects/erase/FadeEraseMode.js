@@ -1,10 +1,10 @@
 /**
- * Режим стирания 'fade' - текст исчезает путем затухания (opacity)
+ * Erase mode 'fade' - text disappears by fading out (opacity)
  */
 import { EraseMode } from './EraseMode.js';
 
 /**
- * Вычисляет временные метки для fade эффекта стирания
+ * Calculates time marks for fade erase effect
  */
 function computeFadeEraseTimes(printDuration, delayBetweenLines, eraseDuration, totalDuration) {
   const start = (printDuration + delayBetweenLines) / totalDuration;

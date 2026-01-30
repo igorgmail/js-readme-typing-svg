@@ -1,11 +1,11 @@
 /**
- * Фабрика для создания экземпляров режимов стирания
+ * Factory for creating erase mode instances
  */
 import { FadeEraseMode } from './FadeEraseMode.js';
 import { LineEraseMode } from './LineEraseMode.js';
 import { NoneEraseMode } from './NoneEraseMode.js';
 
-// Кэш экземпляров режимов (singleton pattern)
+// Cache of mode instances (singleton pattern)
 const eraseModeInstances = {
   fade: new FadeEraseMode(),
   line: new LineEraseMode(),
@@ -13,22 +13,22 @@ const eraseModeInstances = {
 };
 
 /**
- * Получает экземпляр режима стирания по имени
- * @param {string} modeName - название режима ('fade', 'line', 'none')
- * @returns {EraseMode} экземпляр режима стирания
+ * Gets erase mode instance by name
+ * @param {string} modeName - mode name ('fade', 'line', 'none')
+ * @returns {EraseMode} erase mode instance
  */
 export function getEraseMode(modeName) {
   const mode = eraseModeInstances[modeName];
   if (!mode) {
-    // По умолчанию используем 'line'
+    // Use 'line' as default
     return eraseModeInstances.line;
   }
   return mode;
 }
 
 /**
- * Получает доступные режимы стирания
- * @returns {string[]} массив названий режимов
+ * Gets available erase modes
+ * @returns {string[]} array of mode names
  */
 export function getAvailableEraseModes() {
   return Object.keys(eraseModeInstances);

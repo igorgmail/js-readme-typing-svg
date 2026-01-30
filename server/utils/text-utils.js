@@ -1,12 +1,12 @@
 /**
- * Утилиты для работы с текстом и вычислений размеров
+ * Utilities for working with text and size calculations
  */
 
 import { computeTextWidthPrecise, getApproximateCharWidth } from '../fonts/font-metrics.js';
 import { parseStyleSegments, hasStyleMarkers } from '../processors/style-segments-parser.js';
 
 /**
- * Экранирование спецсимволов для XML/SVG
+ * Escapes special characters for XML/SVG
  */
 export function escapeXml(str) {
   return str
@@ -18,9 +18,9 @@ export function escapeXml(str) {
 }
 
 /**
- * Валидирует и санитизирует значение font-family для использования в SVG
- * @param {string} fontFamily - значение font-family от пользователя
- * @returns {string} валидное значение font-family для SVG атрибута
+ * Validates and sanitizes font-family value for use in SVG
+ * @param {string} fontFamily - font-family value from user
+ * @returns {string} valid font-family value for SVG attribute
  */
 export function validateAndSanitizeFontFamily(fontFamily) {
   if (!fontFamily || typeof fontFamily !== 'string') {
@@ -32,12 +32,12 @@ export function validateAndSanitizeFontFamily(fontFamily) {
     return 'monospace';
   }
   
-  // Проверяем на наличие опасных символов, которые могут сломать XML
+  // Check for dangerous characters that can break XML
   if (/[<>&]/.test(trimmed)) {
     return 'monospace';
   }
   
-  // Экранируем кавычки для безопасного использования в XML атрибуте
+  // Escape quotes for safe use in XML attribute
   const sanitized = trimmed
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&apos;');
@@ -46,9 +46,9 @@ export function validateAndSanitizeFontFamily(fontFamily) {
 }
 
 /**
- * Обрабатывает background цвет для SVG
- * @param {string} background - цвет фона (transparent, hex, hexa)
- * @returns {{fill: string, style: string}} объект с fill и style атрибутами
+ * Processes background color for SVG
+ * @param {string} background - background color (transparent, hex, hexa)
+ * @returns {{fill: string, style: string}} object with fill and style attributes
  */
 export function processBackground(background) {
   if (background === 'transparent') {
@@ -57,22 +57,22 @@ export function processBackground(background) {
   
   const hexWithoutHash = background.startsWith('#') ? background.substr(1) : background;
   
-  // Если это hexa формат (8 символов), используем style с background-color
+  // If this is hexa format (8 characters), use style with background-color
   if (hexWithoutHash.length === 8) {
     const hexaColor = background.startsWith('#') ? background : '#' + background;
     return { fill: 'none', style: `style="background-color: ${hexaColor};"` };
   }
   
-  // Для обычного hex формата используем fill
+  // For regular hex format use fill
   const hexColor = background.startsWith('#') ? background : '#' + background;
   return { fill: hexColor, style: '' };
 }
 
 /**
- * Парсит значение letterSpacing в пиксели
- * @param {string|number} letterSpacing - значение letter-spacing ('normal', '10px', '0.1em', или число)
- * @param {number} fontSize - размер шрифта (для конвертации em в px)
- * @returns {number} значение в пикселях
+ * Parses letterSpacing value to pixels
+ * @param {string|number} letterSpacing - letter-spacing value ('normal', '10px', '0.1em', or number)
+ * @param {number} fontSize - font size (for converting em to px)
+ * @returns {number} value in pixels
  */
 export function parseLetterSpacing(letterSpacing, fontSize) {
   if (typeof letterSpacing === 'number') {
@@ -93,35 +93,35 @@ export function parseLetterSpacing(letterSpacing, fontSize) {
 }
 
 /**
- * Вычисляет ширину текста с учетом сегментов стилей (разные fontSize и fontFamily)
- * @param {string} text - текст с маркерами стилей
- * @param {number} defaultFontSize - размер шрифта по умолчанию
- * @param {string|number} letterSpacing - расстояние между символами
- * @param {string} fontFamily - семейство шрифта (для логирования)
- * @param {object|null} parsedFont - объект opentype.Font или null (основной шрифт)
- * @param {Map<string, object>|null} fontsMap - карта fontFamily -> parsedFont для шрифтов из стилей
- * @returns {number} ширина текста
+ * Calculates text width considering style segments (different fontSize and fontFamily)
+ * @param {string} text - text with style markers
+ * @param {number} defaultFontSize - default font size
+ * @param {string|number} letterSpacing - spacing between characters
+ * @param {string} fontFamily - font family (for logging)
+ * @param {object|null} parsedFont - opentype.Font object or null (main font)
+ * @param {Map<string, object>|null} fontsMap - map of fontFamily -> parsedFont for fonts from styles
+ * @returns {number} text width
  */
 export function computeTextWidthWithStyles(text, defaultFontSize, letterSpacing, fontFamily, parsedFont, fontsMap = null) {
   if (!text || text.length === 0) {
     return 0;
   }
   
-  // Если нет маркеров стилей - используем обычный расчет
+  // If there are no style markers - use regular calculation
   if (!hasStyleMarkers(text)) {
     return computeTextWidth(text, defaultFontSize, letterSpacing, fontFamily, parsedFont);
   }
   
-  // Парсим сегменты стилей
+  // Parse style segments
   const segments = parseStyleSegments(text, '#000000');
   let totalWidth = 0;
   
   for (const segment of segments) {
-    // Определяем fontSize для сегмента
+    // Determine fontSize for segment
     let segmentFontSize = defaultFontSize;
     if (segment.styles?.fontSize) {
       const fontSizeValue = segment.styles.fontSize;
-      // Поддерживаем разные форматы: число, строка с "px", просто число
+      // Support different formats: number, string with "px", just number
       const parsed = typeof fontSizeValue === 'number' 
         ? fontSizeValue 
         : parseFloat(String(fontSizeValue).replace(/px$/i, ''));
@@ -130,10 +130,10 @@ export function computeTextWidthWithStyles(text, defaultFontSize, letterSpacing,
       }
     }
     
-    // Определяем letterSpacing для сегмента (если указан в стилях)
+    // Determine letterSpacing for segment (if specified in styles)
     const segmentLetterSpacing = segment.styles?.letterSpacing || letterSpacing;
     
-    // Определяем parsedFont для сегмента (если указан fontFamily в стилях)
+    // Determine parsedFont for segment (if fontFamily is specified in styles)
     let segmentParsedFont = parsedFont;
     if (segment.styles?.fontFamily && fontsMap) {
       const segmentFontFamily = segment.styles.fontFamily;
@@ -141,7 +141,7 @@ export function computeTextWidthWithStyles(text, defaultFontSize, letterSpacing,
       segmentParsedFont = fontsMap.get(normalizedSegmentFont) || parsedFont;
     }
     
-    // Вычисляем ширину сегмента
+    // Calculate segment width
     if (segmentParsedFont) {
       totalWidth += computeTextWidthPrecise(segment.text, segmentFontSize, segmentParsedFont, segmentLetterSpacing);
     } else {
@@ -156,25 +156,25 @@ export function computeTextWidthWithStyles(text, defaultFontSize, letterSpacing,
 }
 
 /**
- * Вычисляет ширину текста используя точные метрики шрифта или fallback
- * @param {string} text - текст
- * @param {number} fontSize - размер шрифта
- * @param {string|number} letterSpacing - расстояние между символами
- * @param {string} fontFamily - семейство шрифта (для логирования)
- * @param {object|null} parsedFont - объект opentype.Font или null
- * @returns {number} ширина текста
+ * Calculates text width using precise font metrics or fallback
+ * @param {string} text - text
+ * @param {number} fontSize - font size
+ * @param {string|number} letterSpacing - spacing between characters
+ * @param {string} fontFamily - font family (for logging)
+ * @param {object|null} parsedFont - opentype.Font object or null
+ * @returns {number} text width
  */
 export function computeTextWidth(text, fontSize, letterSpacing, fontFamily, parsedFont) {
   if (!text || text.length === 0) {
     return 0;
   }
   
-  // Если шрифт загружен и распарсен, используем точные метрики
+  // If font is loaded and parsed, use precise metrics
   if (parsedFont) {
     return computeTextWidthPrecise(text, fontSize, parsedFont, letterSpacing);
   }
   
-  // Fallback: приближенный расчёт если шрифт не загружен
+  // Fallback: approximate calculation if font is not loaded
   const chars = [...text];
   const spacing = parseLetterSpacing(letterSpacing, fontSize);
   const charWidth = getApproximateCharWidth(fontSize);
@@ -183,19 +183,19 @@ export function computeTextWidth(text, fontSize, letterSpacing, fontFamily, pars
 }
 
 /**
- * Вычисляет позицию X для текста в зависимости от выравнивания
- * @param {string} text - текст (может содержать маркеры стилей)
- * @param {number} fontSize - размер шрифта по умолчанию
- * @param {string} horizontalAlign - выравнивание (left, center, right)
- * @param {number} width - ширина SVG
- * @param {number} paddingX - горизонтальный отступ
- * @param {string|number} letterSpacing - расстояние между символами
- * @param {string} fontFamily - семейство шрифта (для логирования)
- * @param {object|null} parsedFont - объект opentype.Font или null
- * @returns {number} позиция X
+ * Calculates X position for text based on alignment
+ * @param {string} text - text (may contain style markers)
+ * @param {number} fontSize - default font size
+ * @param {string} horizontalAlign - alignment (left, center, right)
+ * @param {number} width - SVG width
+ * @param {number} paddingX - horizontal padding
+ * @param {string|number} letterSpacing - spacing between characters
+ * @param {string} fontFamily - font family (for logging)
+ * @param {object|null} parsedFont - opentype.Font object or null
+ * @returns {number} X position
  */
 export function computeTextX(text, fontSize, horizontalAlign, width, paddingX, letterSpacing, fontFamily, parsedFont, fontsMap = null) {
-  // Используем функцию с учетом стилей, если есть маркеры
+  // Use function with styles support if there are markers
   const textWidth = hasStyleMarkers(text)
     ? computeTextWidthWithStyles(text, fontSize, letterSpacing, fontFamily, parsedFont, fontsMap)
     : computeTextWidth(text, fontSize, letterSpacing, fontFamily, parsedFont);
@@ -206,9 +206,9 @@ export function computeTextX(text, fontSize, horizontalAlign, width, paddingX, l
 }
 
 /**
- * Форматирует letterSpacing для использования в SVG
- * @param {string|number} letterSpacing - значение letter-spacing
- * @returns {string} форматированное значение для SVG атрибута
+ * Formats letterSpacing for use in SVG
+ * @param {string|number} letterSpacing - letter-spacing value
+ * @returns {string} formatted value for SVG attribute
  */
 export function formatLetterSpacingForSVG(letterSpacing) {
   return typeof letterSpacing === 'number' 

@@ -1,5 +1,5 @@
 /**
- * Vercel Serverless Function для получения дефолтных параметров
+ * Vercel Serverless Function for getting default parameters
  * API Endpoint: /api/defaults
  */
 
@@ -15,7 +15,7 @@ export default function handler(req, res) {
     const defaults = getClientDefaults();
     
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=3600'); // Кеш на 1 час
+    res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
     res.status(200).json(defaults);
   } catch (error) {
     console.error('Error getting defaults:', error);
