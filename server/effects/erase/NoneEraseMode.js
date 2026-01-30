@@ -1,11 +1,11 @@
 /**
- * Режим стирания 'none' - текст не стирается
+ * Erase mode 'none' - text is not erased
  */
 import { EraseMode } from './EraseMode.js';
 
 export class NoneEraseMode extends EraseMode {
   calculateReplacingMode(config) {
-    // Для режима замены без стирания - просто остается на месте
+    // For replacing mode without erase - simply remains in place
     const { startX, y, textWidth, printDuration, totalDuration } = config;
     
     const printEnd = printDuration / totalDuration;

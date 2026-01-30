@@ -1,12 +1,12 @@
 /**
- * Утилита для загрузки CSS шрифта с Google Fonts
- * и замены ссылок на font-файлы на встроенные data-URI.
- * Также парсит шрифт через opentype.js для извлечения метрик.
+ * Utility for loading font CSS from Google Fonts
+ * and replacing font-file links with embedded data-URI.
+ * Also parses font through opentype.js to extract metrics.
  *
- * ВАЖНО:
- * - Логика опциональная: если что-то пошло не так, возвращаем пустую строку
- *   и не ломаем генерацию SVG.
- * - Предполагаем, что используется один font-family из параметров генератора.
+ * IMPORTANT:
+ * - Logic is optional: if something goes wrong, return empty string
+ *   and don't break SVG generation.
+ * - Assume that one font-family is used from generator parameters.
  */
 
 import { Buffer } from 'node:buffer';
@@ -14,15 +14,15 @@ import * as opentype from 'opentype.js';
 
 const GOOGLE_FONTS_API = 'https://fonts.googleapis.com/css2';
 
-// Флаг для единоразового предупреждения об отсутствии fetch
+// Flag for one-time warning about missing fetch
 let fetchWarningShown = false;
 
 /**
- * Нормализует значение font-family для использования в запросе к Google Fonts:
- * - берёт только первое семейство до запятой
- * - убирает кавычки
- * - приводит каждое слово к виду "ПерваяБукваВерхнийРегистр, остальные нижний"
- * Примеры:
+ * Normalizes font-family value for use in Google Fonts request:
+ * - takes only the first family before comma
+ * - removes quotes
+ * - capitalizes each word to "FirstLetterUpperCase, rest lowercase"
+ * Examples:
  *   `"pacifico", cursive` -> `Pacifico`
  *   `"roboto slab", serif` -> `Roboto Slab`
  *   `Roboto` -> `Roboto`
@@ -43,17 +43,17 @@ function normalizeFontFamilyForGoogle(fontFamily) {
 
   const words = withoutQuotes.split(/\s+/).filter(Boolean);
 
-  // Внутри значения оставляем пробелы — URLSearchParams превратит их в '+'
-  // family=Roboto Slab -> family=Roboto+Slab в итоговом URL
-  // ВАЖНО: не меняем регистр, чтобы имя совпадало с тем, что ожидает Google Fonts
+  // Keep spaces inside value — URLSearchParams will convert them to '+'
+  // family=Roboto Slab -> family=Roboto+Slab in final URL
+  // IMPORTANT: don't change case, so name matches what Google Fonts expects
   const normalized = words.join(' ');
 
   return normalized;
 }
 
 /**
- * Проверяет, является ли имя шрифта "общим" CSS-шрифтом,
- * для которых не имеет смысла тянуть Google Fonts.
+ * Checks if font name is a "generic" CSS font,
+ * for which it makes no sense to fetch from Google Fonts.
  * @param {string} fontFamily
  * @returns {boolean}
  */
@@ -64,7 +64,7 @@ function isGenericFontFamily(fontFamily) {
     return true;
   }
 
-  // Базовый набор generic-шрифтов
+  // Basic set of generic fonts
   const genericFamilies = [
     'monospace',
     'serif',
@@ -78,7 +78,7 @@ function isGenericFontFamily(fontFamily) {
 }
 
 /**
- * Собирает URL для Google Fonts API.
+ * Builds URL for Google Fonts API.
  * @param {string} fontFamily
  * @param {string|number} fontWeight
  * @param {string[]} lines
@@ -91,10 +91,10 @@ function buildGoogleFontsUrl(fontFamily, fontWeight, lines) {
   }
 
   const allText = Array.isArray(lines) ? lines.join(' ') : '';
-  // Оставляем только уникальные символы для уменьшения размера шрифта
+  // Keep only unique characters to reduce font size
   const uniqueChars = allText ? [...new Set(allText)].join('') : '';
 
-  // Формируем URL с весом шрифта и уникальными символами для оптимизации
+  // Build URL with font weight and unique characters for optimization
   const url = `${GOOGLE_FONTS_API}?${new URLSearchParams({
     family: `${normalizedFamily}:wght@${fontWeight}`,
     text: uniqueChars,
@@ -105,14 +105,14 @@ function buildGoogleFontsUrl(fontFamily, fontWeight, lines) {
 }
 
 /**
- * Загружает CSS с Google Fonts, заменяет ссылки на font-файлы
- * на встроенные data-URI и парсит первый шрифт через opentype.js.
+ * Loads CSS from Google Fonts, replaces font-file links
+ * with embedded data-URI and parses first font through opentype.js.
  *
  * @param {Object} options
  * @param {string} options.fontFamily
  * @param {string|number} options.fontWeight
  * @param {string[]} options.lines
- * @returns {Promise<{css: string, parsedFont: object|null}>} CSS и распарсенный шрифт
+ * @returns {Promise<{css: string, parsedFont: object|null}>} CSS and parsed font
  */
 export async function getEmbeddedFontCSS(options) {
   const { fontFamily, fontWeight, lines } = options || {};
@@ -121,7 +121,7 @@ export async function getEmbeddedFontCSS(options) {
     return { css: '', parsedFont: null };
   }
 
-  // Если fetch недоступен (старый Node) — выводим предупреждение
+  // If fetch is unavailable (old Node) — show warning
   if (typeof fetch !== 'function') {
     if (!fetchWarningShown) {
       console.warn('⚠️  Cannot load Google Font: fetch API unavailable (Node.js < 18)');
@@ -135,7 +135,7 @@ export async function getEmbeddedFontCSS(options) {
 
     const response = await fetch(url, {
       headers: {
-        // Без нормального User-Agent Google Fonts иногда отдаёт пустой ответ
+        // Without proper User-Agent Google Fonts sometimes returns empty response
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
@@ -149,7 +149,7 @@ export async function getEmbeddedFontCSS(options) {
     let parsedFont = null;
     let firstFontBuffer = null;
 
-    // Ищем все ссылки на font-файлы и заменяем их на data-URI
+    // Find all font-file links and replace them with data-URI
     const urlRegex =
       /url\((https:\/\/fonts\.gstatic\.com[^)]+)\)\s+format\(['"]([^'"]+)['"]\)/g;
     const matches = [...css.matchAll(urlRegex)];
@@ -165,7 +165,7 @@ export async function getEmbeddedFontCSS(options) {
 
         const fontBuffer = await fontResponse.arrayBuffer();
         
-        // Сохраняем первый загруженный шрифт для парсинга
+        // Save first loaded font for parsing
         if (!firstFontBuffer) {
           firstFontBuffer = fontBuffer;
         }
@@ -175,38 +175,38 @@ export async function getEmbeddedFontCSS(options) {
 
         css = css.replace(fontUrl, dataUri);
       } catch (fontError) {
-        // Не логируем в проде, чтобы не заспамить консоль
+        // Don't log in production to avoid spamming console
       }
     }
 
-    // Парсим первый загруженный шрифт через opentype.js для получения метрик
+    // Parse first loaded font through opentype.js to get metrics
     if (firstFontBuffer) {
       try {
         parsedFont = opentype.parse(firstFontBuffer);
       } catch (parseError) {
         console.warn(`Failed to parse font ${fontFamily}:`, parseError.message);
-        // parsedFont остаётся null, будет использован fallback
+        // parsedFont remains null, fallback will be used
       }
     }
 
     return { css, parsedFont };
   } catch (error) {
-    // На любой ошибке просто возвращаем пустые значения
+    // On any error just return empty values
     return { css: '', parsedFont: null };
   }
 }
 
 /**
- * Загружает CSS для нескольких шрифтов и объединяет их в один CSS блок
- * @param {Array<{fontFamily: string, fontWeight: string|number, lines: string[]}>} fonts - массив объектов с параметрами шрифтов
- * @returns {Promise<string>} объединенный CSS для всех шрифтов
+ * Loads CSS for multiple fonts and combines them into one CSS block
+ * @param {Array<{fontFamily: string, fontWeight: string|number, lines: string[]}>} fonts - array of objects with font parameters
+ * @returns {Promise<string>} combined CSS for all fonts
  */
 export async function getMultipleEmbeddedFontsCSS(fonts) {
   if (!Array.isArray(fonts) || fonts.length === 0) {
     return '';
   }
   
-  // Убираем дубликаты шрифтов перед загрузкой
+  // Remove duplicate fonts before loading
   const uniqueFonts = [];
   const seenFonts = new Set();
   
@@ -224,21 +224,21 @@ export async function getMultipleEmbeddedFontsCSS(fonts) {
     return '';
   }
   
-  // Загружаем все шрифты параллельно
+  // Load all fonts in parallel
   const cssPromises = uniqueFonts.map(font => getEmbeddedFontCSS(font));
   const results = await Promise.all(cssPromises);
   
-  // Объединяем все CSS
+  // Combine all CSS
   const allCSS = results.map(r => r.css).filter(Boolean).join('\n');
   
-  // Удаляем дубликаты @font-face с одинаковыми font-family и font-weight
+  // Remove duplicate @font-face with same font-family and font-weight
   const fontFaceRegex = /@font-face\s*\{[^}]*\}/gs;
   const fontFaces = new Map();
   
   const matches = allCSS.matchAll(fontFaceRegex);
   for (const match of matches) {
     const fontFace = match[0];
-    // Извлекаем font-family и font-weight из @font-face для уникальной идентификации
+    // Extract font-family and font-weight from @font-face for unique identification
     const familyMatch = fontFace.match(/font-family:\s*['"]?([^'";}]+)['"]?/i);
     const weightMatch = fontFace.match(/font-weight:\s*([^;}+]+)/i);
     
@@ -247,13 +247,13 @@ export async function getMultipleEmbeddedFontsCSS(fonts) {
       const weight = weightMatch ? weightMatch[1].trim() : 'normal';
       const key = `${family}:${weight}`;
       
-      // Сохраняем первый вариант (они все одинаковые после загрузки)
+      // Save first variant (they are all identical after loading)
       if (!fontFaces.has(key)) {
         fontFaces.set(key, fontFace);
       }
     }
   }
   
-  // Объединяем уникальные @font-face
+  // Combine unique @font-face
   return Array.from(fontFaces.values()).join('\n');
 }

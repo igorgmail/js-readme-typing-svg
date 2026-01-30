@@ -1,4 +1,4 @@
-# Не загружаем на Vercel
+# Don't upload to Vercel	
 node_modules
 .git
 .gitignore
@@ -6,12 +6,12 @@ node_modules
 .env
 .env.local
 
-# Файлы разработки
+# Development files
 server/index.js
 
-# Документация (опционально, можно убрать если нужна в проде)
+# Documentation (optional, can be removed if needed in production)
 docs/*.md
 !docs/VERCEL_DEPLOYMENT.md
 
-# Утилиты генерации
+# Generation utilities
 

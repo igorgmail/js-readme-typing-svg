@@ -1,30 +1,30 @@
 /**
- * Базовый класс для режимов стирания текста
- * Использует паттерн Strategy для различных типов анимации стирания
+ * Base class for text erase modes
+ * Uses Strategy pattern for different types of erase animation
  */
 export class EraseMode {
   /**
-   * Вычисляет параметры анимации стирания для режима замены (replacing mode)
-   * @param {Object} config - конфигурация анимации
-   * @returns {Object} параметры анимации (useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues)
+   * Calculates erase animation parameters for replacing mode
+   * @param {Object} config - animation configuration
+   * @returns {Object} animation parameters (useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues)
    */
   calculateReplacingMode(config) {
     throw new Error('calculateReplacingMode must be implemented');
   }
   
   /**
-   * Вычисляет параметры анимации стирания для многострочного режима (multiline mode)
-   * @param {Object} config - конфигурация анимации
-   * @returns {Object} параметры анимации (useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues)
+   * Calculates erase animation parameters for multiline mode
+   * @param {Object} config - animation configuration
+   * @returns {Object} animation parameters (useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues)
    */
   calculateMultiLineMode(config) {
     throw new Error('calculateMultiLineMode must be implemented');
   }
   
   /**
-   * Вычисляет параметры анимации стирания для одной строки (single line mode)
-   * @param {Object} config - конфигурация анимации
-   * @returns {Object} параметры анимации (useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues)
+   * Calculates erase animation parameters for single line mode
+   * @param {Object} config - animation configuration
+   * @returns {Object} animation parameters (useFadeErase, fadeEraseStart, fadeEraseEnd, keyTimes, pathValues)
    */
   calculateSingleLineMode(config) {
     throw new Error('calculateSingleLineMode must be implemented');

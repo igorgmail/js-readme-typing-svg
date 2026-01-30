@@ -1,7 +1,7 @@
 /**
- * Фабрика для создания экземпляров режимов печати
+ * Factory for creating print mode instances
  * 
- * TODO: Добавить импорты и регистрацию новых режимов печати
+ * TODO: Add imports and registration of new print modes
  */
 
 // import { TypewriterPrintMode } from './TypewriterPrintMode.js';
@@ -9,7 +9,7 @@
 // import { InstantPrintMode } from './InstantPrintMode.js';
 // import { FadeInPrintMode } from './FadeInPrintMode.js';
 
-// Кэш экземпляров режимов (singleton pattern)
+// Cache of mode instances (singleton pattern)
 const printModeInstances = {
   // typewriter: new TypewriterPrintMode(),
   // word: new WordPrintMode(),
@@ -18,22 +18,22 @@ const printModeInstances = {
 };
 
 /**
- * Получает экземпляр режима печати по имени
- * @param {string} modeName - название режима
- * @returns {PrintMode} экземпляр режима печати
+ * Gets print mode instance by name
+ * @param {string} modeName - mode name
+ * @returns {PrintMode} print mode instance
  */
 export function getPrintMode(modeName) {
   const mode = printModeInstances[modeName];
   if (!mode) {
-    // TODO: По умолчанию возвращать typewriter mode
+    // TODO: Return typewriter mode as default
     return null;
   }
   return mode;
 }
 
 /**
- * Получает доступные режимы печати
- * @returns {string[]} массив названий режимов
+ * Gets available print modes
+ * @returns {string[]} array of mode names
  */
 export function getAvailablePrintModes() {
   return Object.keys(printModeInstances);

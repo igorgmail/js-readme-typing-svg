@@ -1,18 +1,18 @@
 /**
- * Модуль для парсинга строк с маркерами стилей на сегменты
- * Обрабатывает специальные маркеры, созданные parseVariables($STYLE{...})
+ * Module for parsing strings with style markers into segments
+ * Processes special markers created by parseVariables($STYLE{...})
  */
 
 /**
- * Парсит строку с маркерами стилей на массив сегментов
- * @param {string} text - строка с маркерами стилей
- * @param {string} defaultColor - цвет по умолчанию для сегментов без стилей
- * @returns {Array<Object>} массив сегментов {text, color, styles}
+ * Parses a string with style markers into an array of segments
+ * @param {string} text - string with style markers
+ * @param {string} defaultColor - default color for segments without styles
+ * @returns {Array<Object>} array of segments {text, color, styles}
  */
 export function parseStyleSegments(text, defaultColor = '#000000') {
   const segments = [];
   
-  // Регулярка для поиска маркеров стилей
+  // Regex for finding style markers
   const styleMarkerRegex = /\x00STYLE_START\x00(.*?)\x00(.*?)\x00STYLE_END\x00/g;
   
   let lastIndex = 0;
@@ -22,7 +22,7 @@ export function parseStyleSegments(text, defaultColor = '#000000') {
     const startIndex = match.index;
     const endIndex = styleMarkerRegex.lastIndex;
     
-    // Добавляем текст до маркера (если есть)
+    // Add text before the marker (if any)
     if (startIndex > lastIndex) {
       const plainText = text.substring(lastIndex, startIndex);
       if (plainText) {
@@ -34,7 +34,7 @@ export function parseStyleSegments(text, defaultColor = '#000000') {
       }
     }
     
-    // Парсим стили из маркера
+    // Parse styles from the marker
     try {
       const stylesJson = match[1];
       const styledText = match[2];
@@ -47,7 +47,7 @@ export function parseStyleSegments(text, defaultColor = '#000000') {
       });
     } catch (error) {
       console.error('Error parsing style marker:', error);
-      // В случае ошибки добавляем как обычный текст
+      // In case of error, add as plain text
       segments.push({
         text: match[2] || '',
         color: defaultColor,
@@ -58,7 +58,7 @@ export function parseStyleSegments(text, defaultColor = '#000000') {
     lastIndex = endIndex;
   }
   
-  // Добавляем оставшийся текст после последнего маркера
+  // Add remaining text after the last marker
   if (lastIndex < text.length) {
     const remainingText = text.substring(lastIndex);
     if (remainingText) {
@@ -70,7 +70,7 @@ export function parseStyleSegments(text, defaultColor = '#000000') {
     }
   }
   
-  // Если маркеров не было, возвращаем всю строку как один сегмент
+  // If there were no markers, return the entire string as one segment
   if (segments.length === 0 && text) {
     segments.push({
       text: text,
@@ -83,26 +83,26 @@ export function parseStyleSegments(text, defaultColor = '#000000') {
 }
 
 /**
- * Проверяет, содержит ли строка маркеры стилей
- * @param {string} text - строка для проверки
- * @returns {boolean} true если строка содержит маркеры стилей
+ * Checks if a string contains style markers
+ * @param {string} text - string to check
+ * @returns {boolean} true if the string contains style markers
  */
 export function hasStyleMarkers(text) {
   return text.includes('\x00STYLE_START\x00');
 }
 
 /**
- * Удаляет маркеры стилей из текста, оставляя только "чистый" текст
- * Используется для расчета ширины текста
- * @param {string} text - строка с маркерами
- * @returns {string} строка без маркеров, только текстовое содержимое
+ * Removes style markers from text, leaving only "clean" text
+ * Used for calculating text width
+ * @param {string} text - string with markers
+ * @returns {string} string without markers, only text content
  */
 export function stripStyleMarkers(text) {
   if (!hasStyleMarkers(text)) {
     return text;
   }
   
-  // Извлекаем текст из всех маркеров стилей
+  // Extract text from all style markers
   const styleMarkerRegex = /\x00STYLE_START\x00(.*?)\x00(.*?)\x00STYLE_END\x00/g;
   
   return text.replace(styleMarkerRegex, (match, stylesJson, styledText) => {
@@ -111,9 +111,9 @@ export function stripStyleMarkers(text) {
 }
 
 /**
- * Извлекает все уникальные fontFamily из маркеров стилей в строках
- * @param {Array<string>} lines - массив строк с маркерами стилей
- * @returns {Set<string>} множество уникальных fontFamily
+ * Extracts all unique fontFamily values from style markers in strings
+ * @param {Array<string>} lines - array of strings with style markers
+ * @returns {Set<string>} set of unique fontFamily values
  */
 export function extractFontFamiliesFromStyles(lines) {
   const fontFamilies = new Set();
@@ -142,7 +142,7 @@ export function extractFontFamiliesFromStyles(lines) {
           }
         }
       } catch (error) {
-        // Игнорируем ошибки парсинга отдельных маркеров
+        // Ignore parsing errors for individual markers
       }
     }
   }

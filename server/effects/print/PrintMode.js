@@ -1,18 +1,18 @@
 /**
- * Базовый класс для режимов печати текста
- * Использует паттерн Strategy для различных типов анимации печати
+ * Base class for text print modes
+ * Uses Strategy pattern for different types of print animation
  * 
- * TODO: Добавить реализации различных режимов печати:
- * - TypewriterPrintMode (печатает символ за символом)
- * - WordPrintMode (печатает слово за словом)
- * - InstantPrintMode (мгновенное появление)
- * - FadeInPrintMode (появление через затухание)
+ * TODO: Add implementations of various print modes:
+ * - TypewriterPrintMode (prints character by character)
+ * - WordPrintMode (prints word by word)
+ * - InstantPrintMode (instant appearance)
+ * - FadeInPrintMode (appearance through fade-in)
  */
 export class PrintMode {
   /**
-   * Вычисляет параметры анимации печати
-   * @param {Object} config - конфигурация анимации
-   * @returns {Object} параметры анимации
+   * Calculates print animation parameters
+   * @param {Object} config - animation configuration
+   * @returns {Object} animation parameters
    */
   calculateAnimation(config) {
     throw new Error('calculateAnimation must be implemented');
