@@ -1,6 +1,6 @@
 import { fetchDefaults } from '../utils/defaults.js';
+import { highlight } from '../utils/highlight.js';
 import '../utils/colorPicker.js';
-import '../utils/highlight.js';
 
 export default class GeneratorPage {
 	constructor() {
@@ -33,6 +33,7 @@ export default class GeneratorPage {
 		
 		// Now we can initialize the rest
 		this.bindEvents();
+		this.initAutoResizeTextarea();
 		this.setAutoUpdate(true);
 		this.handleGenerate();
 	}
@@ -92,6 +93,125 @@ export default class GeneratorPage {
 		document
 			.querySelector('[data-js-action="copy-svg-preview"]')
 			.addEventListener('click', () => this.handleCopySVGPreview());
+		document
+			.querySelector('[data-js-action="remove-sample"]')
+			.addEventListener('click', () => this.handleRemoveSample());
+	}
+
+	/**
+	 * Initializes auto-resize and syntax highlighting for sample code input
+	 */
+	initAutoResizeTextarea() {
+		const editable = document.querySelector('[data-js="sample-code-input"]');
+		if (!editable) return;
+
+		let isUpdating = false;
+
+		const updateHighlight = () => {
+			if (isUpdating) return;
+			isUpdating = true;
+
+			// Save cursor position
+			const selection = window.getSelection();
+			const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+			const cursorOffset = range ? this.getCaretCharacterOffset(editable) : 0;
+
+			// Get plain text content
+			const text = editable.textContent || '';
+
+			// Apply highlighting
+			if (text.trim()) {
+				// Escape HTML entities for processing
+				const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+				
+				// Apply syntax highlighting
+				editable.innerHTML = highlight(escapedText);
+
+				// Restore cursor position
+				this.setCaretCharacterOffset(editable, cursorOffset);
+			}
+
+			isUpdating = false;
+		};
+
+		// Handle input
+		editable.addEventListener('input', () => {
+			updateHighlight();
+		});
+
+		// Handle paste - insert plain text only
+		editable.addEventListener('paste', (e) => {
+			e.preventDefault();
+			const text = e.clipboardData.getData('text/plain');
+			
+			// Insert text at cursor position
+			const selection = window.getSelection();
+			if (selection.rangeCount > 0) {
+				const range = selection.getRangeAt(0);
+				range.deleteContents();
+				range.insertNode(document.createTextNode(text));
+				range.collapse(false);
+			}
+
+			// Update highlighting after paste
+			setTimeout(updateHighlight, 0);
+		});
+
+		// Initial update
+		updateHighlight();
+	}
+
+	/**
+	 * Gets the current caret position in a contenteditable element
+	 */
+	getCaretCharacterOffset(element) {
+		let caretOffset = 0;
+		const selection = window.getSelection();
+		
+		if (selection.rangeCount > 0) {
+			const range = selection.getRangeAt(0);
+			const preCaretRange = range.cloneRange();
+			preCaretRange.selectNodeContents(element);
+			preCaretRange.setEnd(range.endContainer, range.endOffset);
+			caretOffset = preCaretRange.toString().length;
+		}
+		
+		return caretOffset;
+	}
+
+	/**
+	 * Sets the caret position in a contenteditable element
+	 */
+	setCaretCharacterOffset(element, offset) {
+		const range = document.createRange();
+		const selection = window.getSelection();
+		
+		let charCount = 0;
+		let nodeStack = [element];
+		let node;
+		let foundStart = false;
+
+		while (!foundStart && (node = nodeStack.pop())) {
+			if (node.nodeType === Node.TEXT_NODE) {
+				const nextCharCount = charCount + node.length;
+				if (offset >= charCount && offset <= nextCharCount) {
+					range.setStart(node, offset - charCount);
+					range.setEnd(node, offset - charCount);
+					foundStart = true;
+				}
+				charCount = nextCharCount;
+			} else {
+				let i = node.childNodes.length;
+				while (i--) {
+					nodeStack.push(node.childNodes[i]);
+				}
+			}
+		}
+
+		if (foundStart) {
+			selection.removeAllRanges();
+			selection.addRange(range);
+		}
 	}
 
 	collectParams() {
@@ -194,6 +314,18 @@ export default class GeneratorPage {
 			setTimeout(() => btn.classList.remove('copied'), 1000);
 		});
 	}
+
+	/**
+	 * Очищает вставленный код в sample code input
+	 */
+	handleRemoveSample() {
+		const sampleInput = document.querySelector('[data-js="sample-code-input"]');
+		if (sampleInput) {
+			sampleInput.innerHTML = '';
+			sampleInput.textContent = '';
+			sampleInput.focus();
+		}
+	}
 	
 	handleDownloadSVGPreview() {
 		if (!this.svgDataObjectURL) {
@@ -237,22 +369,15 @@ export default class GeneratorPage {
 		const htmlCode = `<img src="${fullURL}" alt="Typing SVG" />`;
 
 		// Apply syntax highlighting for all fields
-		if (typeof highlight === 'function') {
-			this.outputs.url.innerHTML = highlight(
-				fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-			this.outputs.markdown.innerHTML = highlight(
-				markdownCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-			this.outputs.html.innerHTML = highlight(
-				htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-		} else {
-			// Fallback if highlight function is not available
-			this.outputs.url.textContent = fullURL;
-			this.outputs.markdown.textContent = markdownCode;
-			this.outputs.html.textContent = htmlCode;
-		}
+		this.outputs.url.innerHTML = highlight(
+			fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		);
+		this.outputs.markdown.innerHTML = highlight(
+			markdownCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		);
+		this.outputs.html.innerHTML = highlight(
+			htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		);
 		
 		this.updatePreview(fullURL);
 	}

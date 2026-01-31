@@ -47,6 +47,8 @@ body {
 .generator-page__grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
+	grid-template-rows: 1fr auto;
+	grid-auto-rows: min-content;
 	gap: 24px;
 	margin-top: 20px;
 }
@@ -112,10 +114,13 @@ body {
 
 .generator-page__panel--preview {
 	grid-column: span 1;
-
+	
 	@media (min-width: 768px) {
 		grid-column: span 2;
 	}
+}
+.generator-page__panel--form {
+	grid-row: 2 / 4;
 }
 
 .generator-page__panel--preview.pin {
@@ -125,6 +130,12 @@ body {
 }
 
 .generator-page__panel--result {
+	grid-row: 2 / 3;
+	height: fit-content;
+}
+
+.generator-page__panel--sample-code {
+	grid-row: 3 / 4;
 	height: fit-content;
 }
 
@@ -200,6 +211,33 @@ body {
 	font-family: monospace;
 	resize: vertical;
 	min-height: 80px;
+}
+
+.code-container__editable {
+	min-height: 60px;
+	width: 100%;
+	padding: 8px 10px;
+	border: 1px solid #d5d5d5;
+	border-radius: 4px;
+	font-size: 13px;
+	background: #fff;
+	font-family: monospace;
+	overflow: hidden;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	outline: none;
+	color: #333;
+	margin: 0;
+}
+
+.code-container__editable:focus {
+	border-color: #006ddf;
+	box-shadow: 0 0 0 2px rgba(0, 109, 223, 0.1);
+}
+
+.code-container__editable:empty:before {
+	content: attr(data-placeholder);
+	color: #999;
 }
 
 .generator-form__color-group {
