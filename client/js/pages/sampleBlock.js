@@ -1,14 +1,14 @@
 import { highlight } from '../utils/highlight.js';
 
 /**
- * Управляет блоком вставки примеров кода с подсветкой синтаксиса
+ * Manages the code sample insertion block with syntax highlighting
  */
 export default class SampleBlock {
 	constructor(generatorPage) {
 		this.generatorPage = generatorPage;
 		this.editable = document.querySelector('[data-js="sample-code-input"]');
 		this.removeBtn = document.querySelector('[data-js-action="remove-sample"]');
-		this.isValid = null; // null - пустое поле, true - валидно, false - невалидно
+		this.isValid = null; // null - empty field, true - valid, false - invalid
 		
 		if (this.editable) {
 			this.init();
@@ -21,19 +21,19 @@ export default class SampleBlock {
 	}
 
 	bindEvents() {
-		// Обработчик очистки поля
+		// Handler for clearing the field
 		if (this.removeBtn) {
 			this.removeBtn.addEventListener('click', () => this.handleRemove());
 		}
 
-		// Обработчик потери фокуса для валидации и парсинга
+		// Blur handler for validation and parsing
 		if (this.editable) {
 			this.editable.addEventListener('blur', () => this.handleBlur());
 		}
 	}
 
 	/**
-	 * Инициализация авто-ресайза и подсветки синтаксиса для поля ввода кода
+	 * Initialize auto-resize and syntax highlighting for code input field
 	 */
 	initAutoResize() {
 		if (!this.editable) return;
@@ -44,40 +44,40 @@ export default class SampleBlock {
 			if (isUpdating) return;
 			isUpdating = true;
 
-			// Сохраняем позицию курсора
+			// Save cursor position
 			const selection = window.getSelection();
 			const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
 			const cursorOffset = range ? this.getCaretCharacterOffset(this.editable) : 0;
 
-			// Получаем текстовое содержимое
+			// Get text content
 			const text = this.editable.textContent || '';
 
-			// Применяем подсветку
+			// Apply highlighting
 			if (text.trim()) {
-				// Экранируем HTML-сущности для обработки
+				// Escape HTML entities for processing
 				const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 				
-				// Применяем подсветку синтаксиса
+				// Apply syntax highlighting
 				this.editable.innerHTML = highlight(escapedText);
 
-				// Восстанавливаем позицию курсора
+				// Restore cursor position
 				this.setCaretCharacterOffset(this.editable, cursorOffset);
 			}
 
 			isUpdating = false;
 		};
 
-		// Обработка ввода
+		// Handle input
 		this.editable.addEventListener('input', () => {
 			updateHighlight();
 		});
 
-		// Обработка вставки - вставляем только plain text
+		// Handle paste - insert plain text only
 		this.editable.addEventListener('paste', (e) => {
 			e.preventDefault();
 			const text = e.clipboardData.getData('text/plain');
 			
-			// Вставляем текст в позицию курсора
+			// Insert text at cursor position
 			const selection = window.getSelection();
 			if (selection.rangeCount > 0) {
 				const range = selection.getRangeAt(0);
@@ -86,16 +86,16 @@ export default class SampleBlock {
 				range.collapse(false);
 			}
 
-			// Обновляем подсветку после вставки
+			// Update highlighting after paste
 			setTimeout(updateHighlight, 0);
 		});
 
-		// Первоначальное обновление
+		// Initial update
 		updateHighlight();
 	}
 
 	/**
-	 * Получает текущую позицию курсора в contenteditable элементе
+	 * Gets the current cursor position in a contenteditable element
 	 * @param {HTMLElement} element 
 	 * @returns {number}
 	 */
@@ -115,7 +115,7 @@ export default class SampleBlock {
 	}
 
 	/**
-	 * Устанавливает позицию курсора в contenteditable элементе
+	 * Sets the cursor position in a contenteditable element
 	 * @param {HTMLElement} element 
 	 * @param {number} offset 
 	 */
@@ -152,7 +152,7 @@ export default class SampleBlock {
 	}
 
 	/**
-	 * Очищает вставленный код в поле ввода
+	 * Clears the inserted code in the input field
 	 */
 	handleRemove() {
 		if (this.editable) {
@@ -165,7 +165,7 @@ export default class SampleBlock {
 	}
 
 	/**
-	 * Обработчик потери фокуса - валидация и парсинг
+	 * Blur handler - validation and parsing
 	 */
 	handleBlur() {
 		const text = this.editable.textContent?.trim() || '';
@@ -182,7 +182,7 @@ export default class SampleBlock {
 			this.isValid = true;
 			console.log('Parsed parameters:', parsedData);
 			
-			// Применяем параметры к форме и генерируем новый SVG
+			// Apply parameters to the form and generate new SVG
 			if (this.generatorPage) {
 				this.generatorPage.applyParsedParams(parsedData.params);
 			}
@@ -194,25 +194,25 @@ export default class SampleBlock {
 	}
 
 	/**
-	 * Парсит входную строку (URL, Markdown или HTML) и извлекает параметры
-	 * @param {string} input - входная строка
-	 * @returns {Object|null} - объект с параметрами или null если парсинг не удался
+	 * Parses input string (URL, Markdown or HTML) and extracts parameters
+	 * @param {string} input - input string
+	 * @returns {Object|null} - object with parameters or null if parsing failed
 	 */
 	parseInput(input) {
 		let url = null;
 
-		// Проверяем тип входной строки и извлекаем URL
+		// Check input string type and extract URL
 		if (input.startsWith('http://') || input.startsWith('https://')) {
-			// Формат: URL
+			// Format: URL
 			url = input;
 		} else if (input.startsWith('![')) {
-			// Формат: Markdown - ![alt](url)
+			// Format: Markdown - ![alt](url)
 			const markdownMatch = input.match(/!\[.*?\]\((https?:\/\/[^)]+)\)/);
 			if (markdownMatch) {
 				url = markdownMatch[1];
 			}
 		} else if (input.startsWith('<img')) {
-			// Формат: HTML - <img src="url" ... />
+			// Format: HTML - <img src="url" ... />
 			const htmlMatch = input.match(/<img[^>]+src=["']([^"']+)["']/);
 			if (htmlMatch) {
 				url = htmlMatch[1];
@@ -223,17 +223,17 @@ export default class SampleBlock {
 			return null;
 		}
 
-		// Парсим URL и извлекаем параметры
+		// Parse URL and extract parameters
 		try {
 			const urlObj = new URL(url);
 			const params = {};
 
-			// Проверяем, что путь содержит /svg
+			// Check that the path contains /svg
 			if (!urlObj.pathname.includes('/svg')) {
 				return null;
 			}
 
-			// Извлекаем все параметры из query string
+			// Extract all parameters from query string
 			urlObj.searchParams.forEach((value, key) => {
 				params[key] = value;
 			});
@@ -249,9 +249,9 @@ export default class SampleBlock {
 	}
 
 	/**
-	 * Определяет тип входной строки
+	 * Detects the type of input string
 	 * @param {string} input 
-	 * @returns {string} - 'url', 'markdown' или 'html'
+	 * @returns {string} - 'url', 'markdown' or 'html'
 	 */
 	detectInputType(input) {
 		if (input.startsWith('![')) {
@@ -263,7 +263,7 @@ export default class SampleBlock {
 	}
 
 	/**
-	 * Обновляет визуальное состояние валидности поля
+	 * Updates the visual validation state of the field
 	 */
 	updateValidationState() {
 		if (!this.editable) return;
