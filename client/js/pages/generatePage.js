@@ -1,6 +1,7 @@
 import { fetchDefaults } from '../utils/defaults.js';
+import { highlight } from '../utils/highlight.js';
 import '../utils/colorPicker.js';
-import '../utils/highlight.js';
+import SampleBlock from './sampleBlock.js';
 
 export default class GeneratorPage {
 	constructor() {
@@ -16,6 +17,9 @@ export default class GeneratorPage {
 		this.fieldHandlers = [];
 		this.fetchController = null;
 		this.previewObjectURL = null;
+		
+		// Initialize sample block with callback
+		this.sampleBlock = new SampleBlock(this);
 		
 		// Alias for the generate method, as it's used in autoUpdate and handleReset
 		this.generate = this.handleGenerate.bind(this);
@@ -237,22 +241,15 @@ export default class GeneratorPage {
 		const htmlCode = `<img src="${fullURL}" alt="Typing SVG" />`;
 
 		// Apply syntax highlighting for all fields
-		if (typeof highlight === 'function') {
-			this.outputs.url.innerHTML = highlight(
-				fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-			this.outputs.markdown.innerHTML = highlight(
-				markdownCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-			this.outputs.html.innerHTML = highlight(
-				htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-			);
-		} else {
-			// Fallback if highlight function is not available
-			this.outputs.url.textContent = fullURL;
-			this.outputs.markdown.textContent = markdownCode;
-			this.outputs.html.textContent = htmlCode;
-		}
+		this.outputs.url.innerHTML = highlight(
+			fullURL.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		);
+		this.outputs.markdown.innerHTML = highlight(
+			markdownCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		);
+		this.outputs.html.innerHTML = highlight(
+			htmlCode.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+		);
 		
 		this.updatePreview(fullURL);
 	}
@@ -378,6 +375,98 @@ export default class GeneratorPage {
 		this.controls['vertical-align'].checked = this.defaults.verticalAlign === 'middle';
 		this.controls.multiline.checked = this.defaults.multiLine;
 		this.controls.repeat.checked = this.defaults.repeat;
+	}
+
+	/**
+	 * Применяет параметры из распарсенной строки к форме
+	 * @param {Object} params - объект с параметрами
+	 */
+	applyParsedParams(params) {
+		if (!params) return;
+
+		// Сначала сбрасываем все параметры к значениям по умолчанию
+		// Это гарантирует, что параметры, не указанные в строке, будут установлены в дефолты
+		this.applyDefaultsToForm();
+
+		// Маппинг параметров из URL в названия полей формы
+		const paramMapping = {
+			lines: 'lines',
+			fontSize: 'font-size',
+			fontFamily: 'font-family',
+			fontWeight: 'font-weight',
+			letterSpacing: 'letter-spacing',
+			color: 'color',
+			background: 'background',
+			width: 'width',
+			height: 'height',
+			printSpeed: 'print-speed',
+			delayBetweenLines: 'delay-after-print',
+			eraseSpeed: 'erase-speed',
+			eraseMode: 'erase-mode',
+			cursorStyle: 'cursor-style',
+			horizontalAlign: 'horizontal-align',
+			verticalAlign: 'vertical-align',
+			multiLine: 'multiline',
+			repeat: 'repeat'
+		};
+
+		// Применяем каждый параметр из распарсенной строки к соответствующему полю
+		Object.entries(params).forEach(([key, value]) => {
+			const fieldName = paramMapping[key];
+			if (!fieldName || !this.controls[fieldName]) return;
+
+			const control = this.controls[fieldName];
+
+			// Обработка специальных полей
+			if (key === 'lines') {
+				// Преобразуем параметр lines из формата "line1;line2" в многострочный текст
+				control.value = value.split(';').join('\n');
+			} else if (key === 'color') {
+				// Обработка цвета через jscolor
+				if (control.jscolor) {
+					// Если цвет transparent, устанавливаем черный с альфа-каналом 00
+					if (value === 'transparent') {
+						control.jscolor.fromString('#00000000');
+					} else {
+						// Добавляем # если его нет и проверяем альфа-канал
+						const colorValue = value.startsWith('#') ? value : `#${value}`;
+						// Если формат без альфа-канала (6 символов), добавляем FF
+						const hexaValue = colorValue.length === 7 ? colorValue + 'FF' : colorValue;
+						control.jscolor.fromString(hexaValue);
+					}
+				} else {
+					control.value = value.startsWith('#') ? value : `#${value}`;
+				}
+			} else if (key === 'background') {
+				// Обработка фона через jscolor
+				if (control.jscolor) {
+					if (value === 'transparent') {
+						control.jscolor.fromString('#FFFFFF00');
+					} else {
+						const bgValue = value.startsWith('#') ? value : `#${value}`;
+						const hexaValue = bgValue.length === 7 ? bgValue + 'FF' : bgValue;
+						control.jscolor.fromString(hexaValue);
+					}
+				} else {
+					control.value = value === 'transparent' ? 'transparent' : (value.startsWith('#') ? value : `#${value}`);
+				}
+			} else if (key === 'horizontalAlign') {
+				// Checkbox: checked если center, иначе unchecked (left)
+				control.checked = value === 'center';
+			} else if (key === 'verticalAlign') {
+				// Checkbox: checked если middle, иначе unchecked (top)
+				control.checked = value === 'middle';
+			} else if (key === 'multiLine' || key === 'repeat') {
+				// Булевы значения для чекбоксов
+				control.checked = value === 'true' || value === true;
+			} else {
+				// Остальные поля - просто присваиваем значение
+				control.value = value;
+			}
+		});
+
+		// После применения параметров генерируем новый SVG
+		this.handleGenerate();
 	}
 
 
