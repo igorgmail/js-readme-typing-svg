@@ -1,6 +1,7 @@
 import { fetchDefaults } from '../utils/defaults.js';
 import { highlight } from '../utils/highlight.js';
 import '../utils/colorPicker.js';
+import SampleBlock from './sampleBlock.js';
 
 export default class GeneratorPage {
 	constructor() {
@@ -16,6 +17,9 @@ export default class GeneratorPage {
 		this.fieldHandlers = [];
 		this.fetchController = null;
 		this.previewObjectURL = null;
+		
+		// Initialize sample block with callback
+		this.sampleBlock = new SampleBlock(this);
 		
 		// Alias for the generate method, as it's used in autoUpdate and handleReset
 		this.generate = this.handleGenerate.bind(this);
@@ -33,7 +37,6 @@ export default class GeneratorPage {
 		
 		// Now we can initialize the rest
 		this.bindEvents();
-		this.initAutoResizeTextarea();
 		this.setAutoUpdate(true);
 		this.handleGenerate();
 	}
@@ -93,125 +96,6 @@ export default class GeneratorPage {
 		document
 			.querySelector('[data-js-action="copy-svg-preview"]')
 			.addEventListener('click', () => this.handleCopySVGPreview());
-		document
-			.querySelector('[data-js-action="remove-sample"]')
-			.addEventListener('click', () => this.handleRemoveSample());
-	}
-
-	/**
-	 * Initializes auto-resize and syntax highlighting for sample code input
-	 */
-	initAutoResizeTextarea() {
-		const editable = document.querySelector('[data-js="sample-code-input"]');
-		if (!editable) return;
-
-		let isUpdating = false;
-
-		const updateHighlight = () => {
-			if (isUpdating) return;
-			isUpdating = true;
-
-			// Save cursor position
-			const selection = window.getSelection();
-			const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-			const cursorOffset = range ? this.getCaretCharacterOffset(editable) : 0;
-
-			// Get plain text content
-			const text = editable.textContent || '';
-
-			// Apply highlighting
-			if (text.trim()) {
-				// Escape HTML entities for processing
-				const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-				
-				// Apply syntax highlighting
-				editable.innerHTML = highlight(escapedText);
-
-				// Restore cursor position
-				this.setCaretCharacterOffset(editable, cursorOffset);
-			}
-
-			isUpdating = false;
-		};
-
-		// Handle input
-		editable.addEventListener('input', () => {
-			updateHighlight();
-		});
-
-		// Handle paste - insert plain text only
-		editable.addEventListener('paste', (e) => {
-			e.preventDefault();
-			const text = e.clipboardData.getData('text/plain');
-			
-			// Insert text at cursor position
-			const selection = window.getSelection();
-			if (selection.rangeCount > 0) {
-				const range = selection.getRangeAt(0);
-				range.deleteContents();
-				range.insertNode(document.createTextNode(text));
-				range.collapse(false);
-			}
-
-			// Update highlighting after paste
-			setTimeout(updateHighlight, 0);
-		});
-
-		// Initial update
-		updateHighlight();
-	}
-
-	/**
-	 * Gets the current caret position in a contenteditable element
-	 */
-	getCaretCharacterOffset(element) {
-		let caretOffset = 0;
-		const selection = window.getSelection();
-		
-		if (selection.rangeCount > 0) {
-			const range = selection.getRangeAt(0);
-			const preCaretRange = range.cloneRange();
-			preCaretRange.selectNodeContents(element);
-			preCaretRange.setEnd(range.endContainer, range.endOffset);
-			caretOffset = preCaretRange.toString().length;
-		}
-		
-		return caretOffset;
-	}
-
-	/**
-	 * Sets the caret position in a contenteditable element
-	 */
-	setCaretCharacterOffset(element, offset) {
-		const range = document.createRange();
-		const selection = window.getSelection();
-		
-		let charCount = 0;
-		let nodeStack = [element];
-		let node;
-		let foundStart = false;
-
-		while (!foundStart && (node = nodeStack.pop())) {
-			if (node.nodeType === Node.TEXT_NODE) {
-				const nextCharCount = charCount + node.length;
-				if (offset >= charCount && offset <= nextCharCount) {
-					range.setStart(node, offset - charCount);
-					range.setEnd(node, offset - charCount);
-					foundStart = true;
-				}
-				charCount = nextCharCount;
-			} else {
-				let i = node.childNodes.length;
-				while (i--) {
-					nodeStack.push(node.childNodes[i]);
-				}
-			}
-		}
-
-		if (foundStart) {
-			selection.removeAllRanges();
-			selection.addRange(range);
-		}
 	}
 
 	collectParams() {
@@ -313,18 +197,6 @@ export default class GeneratorPage {
 			btn.classList.add('copied');
 			setTimeout(() => btn.classList.remove('copied'), 1000);
 		});
-	}
-
-	/**
-	 * Очищает вставленный код в sample code input
-	 */
-	handleRemoveSample() {
-		const sampleInput = document.querySelector('[data-js="sample-code-input"]');
-		if (sampleInput) {
-			sampleInput.innerHTML = '';
-			sampleInput.textContent = '';
-			sampleInput.focus();
-		}
 	}
 	
 	handleDownloadSVGPreview() {
@@ -503,6 +375,98 @@ export default class GeneratorPage {
 		this.controls['vertical-align'].checked = this.defaults.verticalAlign === 'middle';
 		this.controls.multiline.checked = this.defaults.multiLine;
 		this.controls.repeat.checked = this.defaults.repeat;
+	}
+
+	/**
+	 * Применяет параметры из распарсенной строки к форме
+	 * @param {Object} params - объект с параметрами
+	 */
+	applyParsedParams(params) {
+		if (!params) return;
+
+		// Сначала сбрасываем все параметры к значениям по умолчанию
+		// Это гарантирует, что параметры, не указанные в строке, будут установлены в дефолты
+		this.applyDefaultsToForm();
+
+		// Маппинг параметров из URL в названия полей формы
+		const paramMapping = {
+			lines: 'lines',
+			fontSize: 'font-size',
+			fontFamily: 'font-family',
+			fontWeight: 'font-weight',
+			letterSpacing: 'letter-spacing',
+			color: 'color',
+			background: 'background',
+			width: 'width',
+			height: 'height',
+			printSpeed: 'print-speed',
+			delayBetweenLines: 'delay-after-print',
+			eraseSpeed: 'erase-speed',
+			eraseMode: 'erase-mode',
+			cursorStyle: 'cursor-style',
+			horizontalAlign: 'horizontal-align',
+			verticalAlign: 'vertical-align',
+			multiLine: 'multiline',
+			repeat: 'repeat'
+		};
+
+		// Применяем каждый параметр из распарсенной строки к соответствующему полю
+		Object.entries(params).forEach(([key, value]) => {
+			const fieldName = paramMapping[key];
+			if (!fieldName || !this.controls[fieldName]) return;
+
+			const control = this.controls[fieldName];
+
+			// Обработка специальных полей
+			if (key === 'lines') {
+				// Преобразуем параметр lines из формата "line1;line2" в многострочный текст
+				control.value = value.split(';').join('\n');
+			} else if (key === 'color') {
+				// Обработка цвета через jscolor
+				if (control.jscolor) {
+					// Если цвет transparent, устанавливаем черный с альфа-каналом 00
+					if (value === 'transparent') {
+						control.jscolor.fromString('#00000000');
+					} else {
+						// Добавляем # если его нет и проверяем альфа-канал
+						const colorValue = value.startsWith('#') ? value : `#${value}`;
+						// Если формат без альфа-канала (6 символов), добавляем FF
+						const hexaValue = colorValue.length === 7 ? colorValue + 'FF' : colorValue;
+						control.jscolor.fromString(hexaValue);
+					}
+				} else {
+					control.value = value.startsWith('#') ? value : `#${value}`;
+				}
+			} else if (key === 'background') {
+				// Обработка фона через jscolor
+				if (control.jscolor) {
+					if (value === 'transparent') {
+						control.jscolor.fromString('#FFFFFF00');
+					} else {
+						const bgValue = value.startsWith('#') ? value : `#${value}`;
+						const hexaValue = bgValue.length === 7 ? bgValue + 'FF' : bgValue;
+						control.jscolor.fromString(hexaValue);
+					}
+				} else {
+					control.value = value === 'transparent' ? 'transparent' : (value.startsWith('#') ? value : `#${value}`);
+				}
+			} else if (key === 'horizontalAlign') {
+				// Checkbox: checked если center, иначе unchecked (left)
+				control.checked = value === 'center';
+			} else if (key === 'verticalAlign') {
+				// Checkbox: checked если middle, иначе unchecked (top)
+				control.checked = value === 'middle';
+			} else if (key === 'multiLine' || key === 'repeat') {
+				// Булевы значения для чекбоксов
+				control.checked = value === 'true' || value === true;
+			} else {
+				// Остальные поля - просто присваиваем значение
+				control.value = value;
+			}
+		});
+
+		// После применения параметров генерируем новый SVG
+		this.handleGenerate();
 	}
 
 

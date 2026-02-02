@@ -19,7 +19,7 @@ const FALLBACK_DEFAULTS = {
   letterSpacing: 0,
 
   width: 800,
-  height: 200,
+  height: 100,
 
   // printSpeed and eraseSpeed - characters per second
   printSpeed: 10,
