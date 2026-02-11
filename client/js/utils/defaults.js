@@ -10,7 +10,11 @@
  * Synchronized with server/config/defaults.js
  */
 const FALLBACK_DEFAULTS = {
-  lines: 'You text here;$STYLE{text:\'H\', color:FFB84CFF}$STYLE{text:\'e\', color: F266AB}$STYLE{text:\'ll\', color: A459D1}$STYLE{text:\'o\', color: 2CD3E1}',
+  lines: 'You text here\n' +
+    '$STYLE{text:\'H\', color:FFB84CFF}' +
+    '$STYLE{text:\'e\', color: F266AB}' +
+    '$STYLE{text:\'ll\', color: A459D1}' +
+    '$STYLE{text:\'o\', color: 2CD3E1}',
   color: '6F08FF',
   background: 'FFFFFF',
   fontSize: 48,
