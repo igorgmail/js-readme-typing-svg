@@ -20,6 +20,33 @@ body {
 
 .generator-page__header {
 	margin-bottom: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+}
+
+.generator-page__header-content {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.generator-page__header-actions {
+	align-self: flex-start;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 24px;
+}
+
+.generator-page__github>img {
+	width: 24px;
+	height: 24px;
+}
+
+.generator-page__github:hover img {
+  filter: brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(4238%) hue-rotate(201deg) brightness(91%) contrast(99%);
 }
 
 .generator-page__title {

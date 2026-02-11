@@ -13,7 +13,11 @@ export const DEFAULT_PARAMS = {
   // lines can be a string or an array
   // If string - will be parsed in params-parser
   // If array - used as is
-  lines: 'You text here;$STYLE{text:\'H\', color:FFB84CFF}$STYLE{text:\'e\', color: F266AB}$STYLE{text:\'ll\', color: A459D1}$STYLE{text:\'o\', color: 2CD3E1}',
+  lines: 'You text here;' +
+    '$STYLE{text:\'H\', color:FFB84CFF}' +
+    '$STYLE{text:\'e\', color: F266AB}' +
+    '$STYLE{text:\'ll\', color: A459D1}' +
+    '$STYLE{text:\'o\', color: 2CD3E1}',
   color: '6F08FF',
   background: 'FFFFFF',
   fontSize: 48,
@@ -72,6 +76,12 @@ export function applyDefaults(params) {
  */
 export function getClientDefaults() {
   const { paddingX, paddingY, lineHeight, ...clientParams } = DEFAULT_PARAMS;
+  
+  // Convert ; to \n for textarea display on client
+  if (typeof clientParams.lines === 'string') {
+    clientParams.lines = clientParams.lines.replace(/;/g, '\n');
+  }
+  
   return clientParams;
 }
 
