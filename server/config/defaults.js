@@ -13,11 +13,11 @@ export const DEFAULT_PARAMS = {
   // lines can be a string or an array
   // If string - will be parsed in params-parser
   // If array - used as is
-  lines: 'Your text here',
-  color: '000000',
-  background: 'transparent',
-  fontSize: 16,
-  fontWeight: 400,
+  lines: 'You text here;$STYLE{text:\'H\', color:FFB84CFF}$STYLE{text:\'e\', color: F266AB}$STYLE{text:\'ll\', color: A459D1}$STYLE{text:\'o\', color: 2CD3E1}',
+  color: '6F08FF',
+  background: 'FFFFFF',
+  fontSize: 48,
+  fontWeight: 800,
   fontFamily: 'Roboto',
   letterSpacing: 0,
 
@@ -25,16 +25,16 @@ export const DEFAULT_PARAMS = {
   height: 100,
 
   // printSpeed and eraseSpeed - characters per second
-  printSpeed: 30,
-  eraseSpeed: 30,
+  printSpeed: 10,
+  eraseSpeed: 10,
 
   delayBetweenLines: 800,
 
-  repeat: false,
-  verticalAlign: 'top',
-  horizontalAlign: 'left',
+  repeat: true,
+  verticalAlign: 'middle',
+  horizontalAlign: 'center',
 
-  multiLine: false,
+  multiLine: true,
   eraseMode: 'line', // none | line | fade
   cursorStyle: 'none', // none | straight | underlined | block
 

@@ -10,11 +10,11 @@
  * Synchronized with server/config/defaults.js
  */
 const FALLBACK_DEFAULTS = {
-  lines: 'Your text here',
-  color: '000000',
-  background: 'transparent',
-  fontSize: 16,
-  fontWeight: 700,
+  lines: 'You text here;$STYLE{text:\'H\', color:FFB84CFF}$STYLE{text:\'e\', color: F266AB}$STYLE{text:\'ll\', color: A459D1}$STYLE{text:\'o\', color: 2CD3E1}',
+  color: '6F08FF',
+  background: 'FFFFFF',
+  fontSize: 48,
+  fontWeight: 800,
   fontFamily: 'Roboto',
   letterSpacing: 0,
 
@@ -27,11 +27,11 @@ const FALLBACK_DEFAULTS = {
 
   delayBetweenLines: 800,
 
-  repeat: false,
-  verticalAlign: 'top',
-  horizontalAlign: 'left',
+  repeat: true,
+  verticalAlign: 'middle',
+  horizontalAlign: 'center',
 
-  multiLine: false,
+  multiLine: true,
   eraseMode: 'line', // none | line | fade
   cursorStyle: 'none' // none | straight | underlined | block
 };
